@@ -1,0 +1,139 @@
+:root {
+  --color-bg: #1a1a1a;
+  --color-text: #e0e0e0;
+  --color-primary: #d4af37;
+  --color-danger: #e57373;
+  --color-success: #81c784;
+  --font-main: 'Inter', system-ui, sans-serif;
+  --font-serif: 'Times New Roman', serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-main);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Layout Screens */
+.menu-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  text-align: center;
+  background: radial-gradient(circle at center, #222 0%, #111 100%);
+  padding: 20px;
+}
+
+.game-screen {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Typography */
+.title {
+  font-family: var(--font-serif);
+  font-size: 3rem;
+  color: var(--color-primary);
+  margin-bottom: 0.5rem;
+  letter-spacing: 2px;
+}
+
+.title.error {
+  color: var(--color-danger);
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  color: #888;
+  margin-bottom: 3rem;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+}
+
+.reason {
+  font-size: 2rem;
+  margin-top: 0;
+  color: #ccc;
+}
+
+.summary {
+  font-size: 1.2rem;
+  color: #888;
+  margin-bottom: 2rem;
+}
+
+/* Buttons */
+.primary-button {
+  background-color: transparent;
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
+  padding: 15px 40px;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: bold;
+}
+
+.primary-button:hover:not(:disabled) {
+  background-color: var(--color-primary);
+  color: #1a1a1a;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+}
+
+.primary-button:disabled {
+  border-color: #444;
+  color: #444;
+  cursor: not-allowed;
+}
+
+.next-turn {
+  width: 100%;
+  max-width: 300px;
+}
+
+/* Components */
+.controls {
+  margin-top: auto;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.artifacts-bar {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 25px;
+}
+
+.artifact-tag {
+  background-color: #333;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  border: 1px solid #555;
+  color: #aaa;
+  cursor: help;
+}
+
+.artifact-tag:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
