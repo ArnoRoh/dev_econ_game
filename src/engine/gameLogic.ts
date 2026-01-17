@@ -180,6 +180,11 @@ export const selectWeightedEvent = (events: GameEvent[], state: GameState): Game
             const missingFlag = event.reqFlags.some(flag => !flags[flag]);
             if (missingFlag) return false;
         }
+
+        // v1.9: Historical Timeline Logic
+        if (event.minYear && state.year < event.minYear) return false;
+        if (event.maxYear && state.year > event.maxYear) return false;
+
         return true;
     });
 

@@ -13,6 +13,7 @@ export const EVENTS: GameEvent[] = [
         wikiLink: 'https://en.wikipedia.org/wiki/Dutch_disease',
         image: 'assets/industry.png',
         tags: ['mining', 'resource_curse'],
+        minYear: 1970, // Oil shocks era
         options: [
             {
                 text: 'Sterilize: Sovereign Wealth Fund',
@@ -164,6 +165,8 @@ export const EVENTS: GameEvent[] = [
         wikiLink: 'https://en.wikipedia.org/wiki/Green_Revolution',
         image: 'assets/agriculture.png',
         tags: ['agriculture', 'food', 'technology'],
+        minYear: 1960,
+        maxYear: 1985, // Mostly irrelevant after this era
         options: [
             {
                 text: 'Subsidize Inputs for All',
@@ -318,6 +321,7 @@ export const EVENTS: GameEvent[] = [
         wikiLink: 'https://en.wikipedia.org/wiki/TRIPS_Agreement#Access_to_essential_medicines',
         image: 'assets/finance.png',
         tags: ['health', 'trade', 'crisis'],
+        minYear: 1995, // TRIPS signed 1994, Crisis peaked late 90s
         options: [
             {
                 text: 'Issue Compulsory License (Generics)',
@@ -346,6 +350,7 @@ export const EVENTS: GameEvent[] = [
         wikiLink: 'https://en.wikipedia.org/wiki/Blood_diamond',
         image: 'assets/mining.png',
         tags: ['mining', 'war', 'resource_curse'],
+        minYear: 1990, // Post-Cold War phenomenon
         options: [
             {
                 text: 'Nationalize & Militarize Mines',
@@ -572,6 +577,7 @@ export const EVENTS: GameEvent[] = [
         wikiLink: 'https://en.wikipedia.org/wiki/Climate_change_adaptation',
         image: 'assets/environment.png',
         tags: ['environment', 'infrastructure', 'future'],
+        minYear: 2005, // Became a major development topic recently
         options: [
             {
                 text: 'Build Sea Walls (Adaptation)',
@@ -588,6 +594,304 @@ export const EVENTS: GameEvent[] = [
                 text: 'Seek Green Climate Fund Aid',
                 effects: { externalDebt: 10, internationalRelations: 10, stability: 5 },
                 explanation: 'Lobby rich nations to pay for the mess they made. Slow and bureaucratic.'
+            }
+        ]
+    },
+    // ==========================================
+    // HISTORICAL TIMELINE: 1960s - 2020s (v1.9)
+    // ==========================================
+    {
+        id: 'nationalization_drive',
+        title: 'Commanding Heights (1960s)',
+        description: 'Post-independence fervor is high. Radicals demand we seize foreign-owned banks and mines to reclaim our sovereignty.',
+        theory: 'In the 1950s/60s, "State Capitalism" was the dominant model (influenced by the Soviet Union). Leaders believed the state should control the "Commanding Heights" of the economy to direct surplus into development rather than foreign dividends.\n\nWhile politically popular, these State-Owned Enterprises (SOEs) often became inefficient patronage networks, lacking the discipline of competition (The Soft Budget Constraint).',
+        source: 'Daniel Yergin',
+        wikiLink: 'https://en.wikipedia.org/wiki/Commanding_heights_of_the_economy',
+        image: 'assets/industry.png',
+        tags: ['industry', 'statist', 'sovereignty'],
+        minYear: 1960,
+        maxYear: 1975,
+        options: [
+            {
+                text: 'Nationalize Everything',
+                effects: { eliteSatisfaction: -30, stability: 20, gdp: 100, internationalRelations: -40 },
+                explanation: 'Seizes assets for the state, but destroys foreign investor confidence for decades.',
+                setFlags: ['nationalized_economy']
+            },
+            {
+                text: 'Partial State Ownership (51%)',
+                effects: { gdpGrowthRate: -0.2, internationalRelations: -10, stability: 5 },
+                explanation: 'A forced joint venture. Keeps some foreign expertise but asserts control.'
+            },
+            {
+                text: 'Encourage Private Enterprise',
+                effects: { eliteSatisfaction: 20, gdpGrowthRate: 0.5, stability: -10 },
+                explanation: 'The "Capitalist Road". Risks neo-colonial criticism but ensures efficiency.'
+            }
+        ]
+    },
+    {
+        id: 'cold_war_proxy',
+        title: 'Cold War Alignment (1970s)',
+        description: 'The Americans and Soviets are both offering massive military aid, but only if we align exclusively with their bloc.',
+        theory: 'During the Cold War, development aid was often a tool of geopolitical bribery ("Clientelism"). Dictators like Mobutu (Zaire) received billions despite corruption because they were anti-Communist.\n\nThis "Strategic Rent" allowed regimes to survive without being accountable to their own tax-paying citizens. When the Cold War ended, this support vanished overnight.',
+        source: 'Dambisa Moyo (Dead Aid)',
+        wikiLink: 'https://en.wikipedia.org/wiki/Foreign_policy_of_the_United_States#Cold_War',
+        image: 'assets/military.png',
+        tags: ['war', 'geopolitics', 'history'],
+        minYear: 1960,
+        maxYear: 1989,
+        options: [
+            {
+                text: 'Align with USA',
+                effects: { militaryPower: 20, gdp: 50, internationalRelations: 20, stability: -10 },
+                explanation: 'Access to Western markets and IMF loans, but risks leftist insurgency.',
+                setFlags: ['aligned_usa']
+            },
+            {
+                text: 'Align with USSR',
+                effects: { militaryPower: 30, internationalRelations: -30, eliteSatisfaction: -20 },
+                explanation: 'Heavy weapons and industrial support, but isolated from global bank trade.',
+                setFlags: ['aligned_ussr']
+            },
+            {
+                text: 'Non-Aligned Movement',
+                effects: { internationalRelations: 5, stability: 5, externalDebt: -10 },
+                explanation: 'Play both sides. Harder to get free money, but keeps independence.'
+            }
+        ]
+    },
+    {
+        id: 'oil_shock_1973',
+        title: 'The Oil Shock (1973)',
+        description: 'OPEC has quadrupled oil prices! Our fuel import bill has skyrocketed overnight.',
+        theory: 'The 1973 Oil Crisis caused a "Terms of Trade Shock" for non-oil developing nations. They had to borrow massive amounts of "Petrodollars" from Western banks just to keep the lights on.\n\nThis borrowing spree laid the groundwork for the 1980s Debt Crisis. When interest rates eventually rose (Volcker Shock), these debts became unpayable.',
+        source: 'Global Economic History',
+        wikiLink: 'https://en.wikipedia.org/wiki/1973_oil_crisis',
+        image: 'assets/industry.png',
+        tags: ['crisis', 'finance', 'history'],
+        minYear: 1973,
+        maxYear: 1979,
+        options: [
+            {
+                text: 'Borrow to Subsidize Fuel',
+                effects: { externalDebt: 100, stability: 10, gdpGrowthRate: 0.2 },
+                explanation: 'Kicks the can down the road. Keeps the economy running but accumulates toxic debt.'
+            },
+            {
+                text: 'Pass Prices to Consumers',
+                effects: { stability: -20, gdpGrowthRate: -1.0, famineRisk: 10 },
+                explanation: 'Causes immediate recession and unrest, but keeps the budget balanced.'
+            },
+            {
+                text: 'Ration Fuel',
+                effects: { gdp: -50, eliteSatisfaction: -10, stability: -5 },
+                explanation: 'Controls costs via shortage. Creates black markets and inefficiency.'
+            }
+        ]
+    },
+    {
+        id: 'hyperinflation_1980s',
+        title: 'Hyperinflation Spirals (1980s)',
+        description: 'To pay our debts, the previous administration just printed money. Prices now double every month.',
+        theory: 'Hyperinflation is almost always a fiscal problem (budget deficit) solved by monetary means (printing). Once expectations unanchor, money loses its function as a store of value (Velocity of Money skyrockets).\n\nEnding it requires a "Nominal Anchor"—usually replacing the currency entirely or pegging it to a hard foreign currency, which forces immediate cessation of deficit spending.',
+        source: 'Sargent & Wallace',
+        wikiLink: 'https://en.wikipedia.org/wiki/Hyperinflation',
+        image: 'assets/finance.png',
+        tags: ['crisis', 'finance', 'history'],
+        minYear: 1980,
+        maxYear: 1995,
+        options: [
+            {
+                text: 'Shock Therapy: New Currency',
+                effects: { stability: -20, gdpGrowthRate: -1.5, externalDebt: 10, internationalRelations: 10 },
+                explanation: 'Wipes out savings but restores price stability instantly if credible.',
+                setFlags: ['shock_therapy']
+            },
+            {
+                text: 'Price Controls',
+                effects: { famineRisk: 20, gdpGrowthRate: -1.0, stability: 5 },
+                explanation: 'Bans price increases. Leads to immediate empty shelves and shortages.'
+            },
+            {
+                text: 'Dollarization',
+                effects: { internationalRelations: 20, gdpGrowthRate: 0.5, eliteSatisfaction: 10 },
+                explanation: 'Adopt the US Dollar. Ends inflation forever but we lose all monetary sovereignty.'
+            }
+        ]
+    },
+    {
+        id: 'capital_flight',
+        title: 'Capital Flight (1980s)',
+        description: 'Fearing instability, the wealthy are moving their assets to Swiss bank accounts and Miami condos.',
+        theory: 'Capital Flight drains a developing nation of its investment pool. It is often driven by an overvalued exchange rate (people expect a devaluation, so they move money out now).\n\nIt creates a vicious cycle: as money leaves, the government must borrow more abroad to cover the gap, leading to more fear and more flight.',
+        source: 'James Henry',
+        wikiLink: 'https://en.wikipedia.org/wiki/Capital_flight',
+        image: 'assets/finance.png',
+        tags: ['finance', 'corruption', 'history'],
+        minYear: 1980,
+        maxYear: 1999,
+        options: [
+            {
+                text: 'Impose Strict Capital Controls',
+                effects: { gdpGrowthRate: -0.5, stability: 10, eliteSatisfaction: -20 },
+                explanation: 'Makes it illegal to move money out. Stops the bleeding but prevents new money coming in.'
+            },
+            {
+                text: 'Raise Interest Rates (20%)',
+                effects: { gdpGrowthRate: -1.5, externalDebt: 10, internationalRelations: 5 },
+                explanation: 'Rewards keeping money in local banks, but crushes local business borrowing.'
+            },
+            {
+                text: 'Ignore it',
+                effects: { gdp: -100, externalDebt: 50 },
+                explanation: 'The economy slowly bleeds dry.'
+            }
+        ]
+    },
+    {
+        id: 'privatization_1990s',
+        title: 'The Fire Sale (1990s)',
+        description: 'The IMF says our State Telecom and Airline are bleeding money. We must sell them to private investors.',
+        theory: 'Privatization was a key pillar of the 1990s Washington Consensus. In theory, private owners are more efficient than bureaucrats.\n\nIn practice, without strong regulators, privatization often turned public monopolies into private monopolies (owned by the President\'s cronies). This "Oligarchization" (e.g., Russia) created a class of billionaires without improving services for the poor.',
+        source: 'Joseph Stiglitz',
+        wikiLink: 'https://en.wikipedia.org/wiki/Privatization#Criticism',
+        image: 'assets/industry.png',
+        tags: ['industry', 'history', 'corruption'],
+        reqFlags: ['imf_program'],
+        minYear: 1990,
+        maxYear: 2005,
+        options: [
+            {
+                text: 'Sell to Highest Bidder (Foreign)',
+                effects: { gdp: 300, internationalRelations: 10, stability: -5, eliteSatisfaction: -10 },
+                explanation: 'Maximizes revenue and efficiency but profits flow overseas.',
+                setFlags: ['privatized_telecom']
+            },
+            {
+                text: 'Voucher Privatization (To Citizens)',
+                effects: { eliteSatisfaction: 10, stability: 5, gdpGrowthRate: 0.1 },
+                explanation: 'Gives shares to the people. Often they sell them cheaply to oligarchs immediately.'
+            },
+            {
+                text: 'Keep State Control',
+                effects: { externalDebt: 20, internationalRelations: -10 },
+                explanation: 'Refuse the sale. The company remains a drain on the budget.'
+            }
+        ]
+    },
+    {
+        id: 'brain_drain_visa',
+        title: 'The Brain Drain (1990s)',
+        description: 'Western nations have introduced "High Skill Visas". Our best doctors and engineers are lining up at the embassy.',
+        theory: 'Human Capital Flight is a subsidy from the poor to the rich. A developing nation pays to educate a doctor for 20 years, only for them to move to the UK/US to work.\n\nHowever, in the long run, "Brain Gain" can occur if they return with new skills or send back Remittances. But in the short run, the health and engineering sectors collapse.',
+        source: 'Jagdish Bhagwati',
+        wikiLink: 'https://en.wikipedia.org/wiki/Human_capital_flight',
+        image: 'assets/social.png',
+        tags: ['education', 'social', 'history'],
+        minYear: 1990,
+        options: [
+            {
+                text: 'Exit Tax on Graduates',
+                effects: { educationLevel: -5, gdp: 20, eliteSatisfaction: -15 },
+                explanation: 'Force them to pay back their tuition before leaving. Discourages education enrollment.'
+            },
+            {
+                text: 'Diaspora Bonds',
+                effects: { externalDebt: 0, gdp: 50, internationalRelations: 5 },
+                explanation: 'Encourage them to leave but invest their high salaries back home.'
+            },
+            {
+                text: 'Improve Local Salaries',
+                effects: { externalDebt: 30, stability: 5 },
+                explanation: 'Pay them enough to stay. Very expensive for the state budget.'
+            }
+        ]
+    },
+    {
+        id: 'mobile_money',
+        title: 'The Digital Leapfrog (2000s)',
+        description: 'A local telecom startup wants to let people send money via SMS text messages, bypassing the corrupt banks.',
+        theory: 'Financial Inclusion via "Leapfrogging". In the West, finance went Cash -> Cheques -> Cards -> Apps. In Africa (e.g., M-Pesa in Kenya), it went Cash -> SMS.\n\nThis dramatically reduced transaction costs for the poor, allowing them to save and receive money securely without a bank account. It is one of the most successful development innovations in history.',
+        source: 'Tavneet Suri & William Jack',
+        wikiLink: 'https://en.wikipedia.org/wiki/M-Pesa',
+        image: 'assets/industry.png',
+        tags: ['technology', 'finance', 'history'],
+        minYear: 2005,
+        options: [
+            {
+                text: 'Dereigulate Telecoms (Allow it)',
+                effects: { gdpGrowthRate: 1.5, eliteSatisfaction: -10, stability: 10 },
+                explanation: 'Unleashes a massive productivity boom. Banks hate the competition.',
+                setFlags: ['mobile_banking_revolution']
+            },
+            {
+                text: 'Protect Banking Monopoly',
+                effects: { eliteSatisfaction: 10, gdpGrowthRate: -0.2 },
+                explanation: 'Stifles innovation to protect politically connected bank owners.'
+            },
+            {
+                text: 'State-Run Alternative',
+                effects: { externalDebt: 10, gdpGrowthRate: 0.1 },
+                explanation: 'Government tries to build its own app. Likely fails due to UX/Correction.'
+            }
+        ]
+    },
+    {
+        id: 'belt_road_initiative',
+        title: 'New Silk Road (2010s)',
+        description: 'A new superpower offers to build a high-speed railway and deep-water port. No questions asked about human rights, unlike the West.',
+        theory: 'The Belt and Road Initiative (BRI) represents a shift in development financing away from the conditional Western model (OECD) to the Chinese infrastructure-led model.\n\nIt fills a massive infrastructure gap ($1 Trillion). However, critics warn of "Debt Trap Diplomacy" (e.g., Sri Lanka port seizure) if the projects are not economically viable enough to pay back the loans.',
+        source: 'Deborah Brautigam',
+        wikiLink: 'https://en.wikipedia.org/wiki/Belt_and_Road_Initiative',
+        image: 'assets/infrastructure.png',
+        tags: ['infrastructure', 'geopolitics', 'history'],
+        minYear: 2013,
+        options: [
+            {
+                text: 'Sign the Deal (Massive Infra)',
+                effects: { gdpGrowthRate: 2.0, externalDebt: 200, internationalRelations: -10 },
+                explanation: 'Huge immediate growth boost, but the debt burden is colossal.',
+                setFlags: ['bri_debt']
+            },
+            {
+                text: 'Reject (Fear Debt Trap)',
+                effects: { internationalRelations: 10, gdpGrowthRate: -0.1 },
+                explanation: 'Stay safe but stagnant. The West praises you but offers no money.'
+            },
+            {
+                text: 'Renegotiate (Mixed Financing)',
+                effects: { externalDebt: 80, gdpGrowthRate: 0.8 },
+                explanation: 'Hard bargaining for better terms. Takes years to start.'
+            }
+        ]
+    },
+    {
+        id: 'tech_hub_startup',
+        title: 'Silicon Savannah (2010s)',
+        description: 'Tech startups are booming in the capital. Venture Capital is flowing in, but they need faster internet and fewer regulations.',
+        theory: 'The "Service Export" model (like India). Instead of factories, the country sells code and BPO services.\n\nIt creates a wealthy urban middle class but often leaves the rural poor behind (The "Dual Economy" problem). It requires high education investment and reliable electricity.',
+        source: 'World Bank Digital Economy Report',
+        wikiLink: 'https://en.wikipedia.org/wiki/Silicon_Savannah',
+        image: 'assets/technology.png',
+        tags: ['technology', 'education', 'future'],
+        minYear: 2010,
+        options: [
+            {
+                text: 'Create Tech Parks (Tax Free)',
+                effects: { gdpGrowthRate: 1.0, educationLevel: 5, eliteSatisfaction: 10, externalDebt: 10 },
+                explanation: 'Subsidize the sector heavily. Creates high-paying jobs for the elite.',
+                setFlags: ['tech_hub']
+            },
+            {
+                text: 'Focus on Rural Internet',
+                effects: { educationLevel: 10, stability: 10, gdpGrowthRate: 0.3 },
+                explanation: 'Broad based digital inclusion rather than elite clusters.'
+            },
+            {
+                text: 'Tax the Startups',
+                effects: { gdp: 20, gdpGrowthRate: -0.5 },
+                explanation: 'Treat them as a cash cow. They will move to Delaware/London immediately.'
             }
         ]
     }

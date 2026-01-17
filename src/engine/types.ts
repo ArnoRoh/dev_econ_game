@@ -42,6 +42,7 @@ export interface GameEvent {
     tags?: string[]; // Matches artifact tags
     reqFlags?: string[]; // v1.6: Only trigger if these flags exist
     wikiLink?: string; // v1.6: Link to Wikipedia for deep learning
+    maxYear?: number; // v1.9: Event stops triggering after this year
 }
 
 export interface GameState {
