@@ -7,10 +7,13 @@
     background-color: rgba(0, 0, 0, 0.85);
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
+    /* Changed to start for scroll position */
     padding: 20px;
     backdrop-filter: blur(4px);
     z-index: 100;
+    overflow-y: auto;
+    /* Enable scrolling on tall content */
 }
 
 .modal-content {
@@ -93,4 +96,32 @@
     border-color: var(--color-primary);
     background-color: rgba(212, 175, 55, 0.1);
     transform: scale(1.02);
+}
+
+/* v1.8: Improved Effect Chip Styling */
+.option-effects {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 0.75rem;
+}
+
+.option-effects span {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.effect-pos {
+    background-color: rgba(129, 199, 132, 0.2);
+    color: #81c784;
+    border: 1px solid #81c784;
+}
+
+.effect-neg {
+    background-color: rgba(229, 115, 115, 0.2);
+    color: #e57373;
+    border: 1px solid #e57373;
 }
