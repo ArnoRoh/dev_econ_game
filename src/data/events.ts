@@ -11,7 +11,7 @@ export const EVENTS: GameEvent[] = [
         theory: 'Dutch Disease is an economic concept that explains the apparent relationship between the exploitation of natural resources and a decline in the manufacturing or agricultural sectors. The term was coined in 1977 by The Economist to describe the decline of the manufacturing sector in the Netherlands after the discovery of the large Groningen natural gas field in 1959.\n\nThe mechanism is primarily monetary: as foreign currency rushes in to buy the oil, the local currency appreciates (strengthens). This makes the country\'s other exports (like textiles or cocoa) more expensive for foreign buyers, and imports cheaper for domestic consumers. Effectively, the resource sector "crowds out" other tradable sectors.\n\nEscaping this requires "sterilization"—keeping the foreign inflows out of the local economy by parking them in a Sovereign Wealth Fund (like Norway) or investing in foreign assets, rather than spending the windfall immediately on domestic consumption.',
         source: 'Corden & Neary (1982)',
         wikiLink: 'https://en.wikipedia.org/wiki/Dutch_disease',
-        image: '/assets/industry.png',
+        image: 'assets/industry.png',
         tags: ['mining', 'resource_curse'],
         options: [
             {
@@ -39,7 +39,7 @@ export const EVENTS: GameEvent[] = [
         theory: 'Import Substitution Industrialization (ISI) is a trade and economic policy which advocates replacing foreign imports with domestic production. It is based on the premise that a country should attempt to reduce its foreign dependency through the local production of industrialized products.\n\nHistorically popular in Latin America (1950s-80s), ISI argues that developing nations are trapped in a system where they export cheap raw materials and import expensive finished goods (Prebisch-Singer hypothesis). By blocking imports, the state guarantees a market for local firms.\n\nHowever, ISI often resulted in inefficient, high-cost local monopolies that never became globally competitive. Because they had a captive market, they had no incentive to innovate. It also hurt consumers who had to pay higher prices for worse goods.',
         source: 'Raúl Prebisch',
         wikiLink: 'https://en.wikipedia.org/wiki/Import_substitution_industrialization',
-        image: '/assets/industry.png',
+        image: 'assets/industry.png',
         tags: ['industry', 'trade', 'statist'],
         options: [
             {
@@ -68,7 +68,7 @@ export const EVENTS: GameEvent[] = [
         theory: 'The "Race to the Bottom" is a socio-economic phrase to describe government deregulation of the business environment, or reduction in tax rates, in order to attract or retain economic activity in their jurisdictions.\n\nProponents argue that "sweatshops" are the first rung on the ladder of development (Paul Krugman). A low-wage job in a factory is often an improvement over subsistence farming. As capital accumulates, wages will naturally rise.\n\nCritics argue this traps the country in low-value-added production. If the only competitive advantage is cheap labor, the country cannot upgrade its technology or skills, and investors will leave as soon as wages rise slightly.',
         source: 'Dani Rodrik / Paul Krugman',
         wikiLink: 'https://en.wikipedia.org/wiki/Race_to_the_bottom',
-        image: '/assets/industry.png',
+        image: 'assets/industry.png',
         tags: ['fdi', 'labor', 'trade'],
         options: [
             {
@@ -98,7 +98,7 @@ export const EVENTS: GameEvent[] = [
         theory: 'Labor Unions played a critical role in the development of the West, transforming the working class into a middle class with purchasing power. In developing nations, early unionization is often suppressed to keep exports cheap.\n\nThis conflict represents the tension between capital accumulation (profit) and distribution (wages). If wages rise faster than productivity, the country invites inflation and loses competitiveness. If wages stagnate while productivity rises, inequality explodes and demand collapses.\n\nPolitical stability requires a "social contract" where workers feel they share in the gains of growth.',
         source: 'Historical Case Studies (Triangle Shirtwaist Fire)',
         wikiLink: 'https://en.wikipedia.org/wiki/Rana_Plaza_collapse',
-        image: '/assets/unrest.png',
+        image: 'assets/unrest.png',
         tags: ['labor', 'unrest', 'industry'],
         reqFlags: ['allowed_sweatshops'], // CHAIN TRIGGER
         options: [
@@ -132,7 +132,7 @@ export const EVENTS: GameEvent[] = [
         theory: 'Land Reform is often the single most critical structural change in development. In feudal systems, landlords extract "rents" without investing in productivity. Tenants have no incentive to improve land they don\'t own.\n\nSuccessful land reform (Japan, South Korea, Taiwan) broke the power of the landed aristocracy, created a broad base of assets for the poor, and forced the elite to move their capital into manufacturing.\n\nHowever, failed land reform (Zimbabwe, Venezuela) often destroys the agricultural capital stock, disperses productive clusters, and leads to famine if the new smallholders are not supported with credit and training.',
         source: 'Klaus Deininger (World Bank)',
         wikiLink: 'https://en.wikipedia.org/wiki/Land_reform',
-        image: '/assets/agriculture.png',
+        image: 'assets/agriculture.png',
         tags: ['agriculture', 'inequality', 'rural'],
         options: [
             {
@@ -162,7 +162,7 @@ export const EVENTS: GameEvent[] = [
         theory: 'The Green Revolution refers to the technology transfer initiatives in the 1960s (led by Norman Borlaug) that drastically increased crop yields via HYV seeds, fertilizers, and irrigation.\n\nIt prevented global famine as population exploded. However, it had complex social effects. Because the inputs (fertilizer, pumps) were capital-intensive, rich farmers often benefited more than poor ones, leading to land concentration.\n\nIf land reform has already happened, the benefits are widely shared. If not, the Green Revolution can actually increase rural inequality and landlessness.',
         source: 'Norman Borlaug',
         wikiLink: 'https://en.wikipedia.org/wiki/Green_Revolution',
-        image: '/assets/agriculture.png',
+        image: 'assets/agriculture.png',
         tags: ['agriculture', 'food', 'technology'],
         options: [
             {
@@ -194,7 +194,7 @@ export const EVENTS: GameEvent[] = [
         theory: 'Educating girls is widely considered the highest return-on-investment in development economics (Lawrence Summers). It does not just increase the labor force; it fundamentally transforms society.\n\nEducated women have fewer, healthier children (Demographic Transition), effectively ending the "Malthusian Trap". They invest more of their income into their families compared to men. They also gain political agency.\n\nResistance usually stems from a "PATRIARCHAL BARGAIN" where traditional societies view women primarily as reproducers of the lineage rather than independent economic agents.',
         source: 'Amartya Sen / World Bank',
         wikiLink: 'https://en.wikipedia.org/wiki/Female_education',
-        image: '/assets/unrest.png',
+        image: 'assets/unrest.png',
         tags: ['education', 'gender', 'social'],
         options: [
             {
@@ -222,7 +222,7 @@ export const EVENTS: GameEvent[] = [
         theory: 'Female Labor Force Participation (FLFP) follows a U-shaped curve during development. In poor agrarian societies, women work in fields. As incomes rise (middle income), they often withdraw to domestic roles due to status/stigma. In rich economies, they return to the workforce.\n\nPolicies can flatten this U-curve. Removing legal barriers (e.g., needing husband\'s permission to work) and providing childcare effectively doubles the talent pool of the nation.\n\nThis shift also changes the "bargaining power" within the household, leading to better outcomes for children.',
         source: 'Esther Duflo / Claudia Goldin',
         wikiLink: 'https://en.wikipedia.org/wiki/Female_labor_force_participation',
-        image: '/assets/industry.png',
+        image: 'assets/industry.png',
         tags: ['labor', 'gender', 'industry'],
         options: [
             {
@@ -254,7 +254,7 @@ export const EVENTS: GameEvent[] = [
         theory: 'The Washington Consensus refers to a set of standard policy prescriptions recommended by the IMF and World Bank to developing countries in crisis. These usually involve "Structural Adjustment Programs" (SAPs).\n\nThe typical conditions correspond to the "Trinity": Austerity (cutting spending), Privatization (selling state assets), and Liberalization (opening markets).\n\nWhile these measures often stabilize hyperinflation and restore creditworthiness, they have been heavily criticized for causing unnecessary recession, increasing poverty by cutting safety nets, and ignoring the specific institutional constraints of developing nations.',
         source: 'John Williamson (1989)',
         wikiLink: 'https://en.wikipedia.org/wiki/Washington_Consensus',
-        image: '/assets/finance.png',
+        image: 'assets/finance.png',
         tags: ['debt', 'finance', 'crisis'],
         options: [
             {
@@ -283,7 +283,7 @@ export const EVENTS: GameEvent[] = [
         theory: 'The "IMF Riot" is a common phenomenon in countries undergoing Structural Adjustment. Economics assumes that subsidies are "inefficient" market distortions. However, for the urban poor living on the margin, a subsidy on staple foods (like bread or fuel) is the only social safety net.\n\nRemoving it abruptly to balance a budget sheet ignores the political economy of survival. The resulting unrest often destroys more economic value than the subsidy cost in the first place.',
         source: 'Joseph Stiglitz',
         wikiLink: 'https://en.wikipedia.org/wiki/Structural_adjustment',
-        image: '/assets/unrest.png',
+        image: 'assets/unrest.png',
         tags: ['unrest', 'poverty', 'crisis'],
         reqFlags: ['imf_program'], // CHAIN TRIGGER
         options: [
@@ -316,7 +316,7 @@ export const EVENTS: GameEvent[] = [
         theory: 'The TRIPS Agreement (Trade-Related Aspects of Intellectual Property Rights) sets global standards for IP. While intended to encourage R&D by protecting patents, it created a massive moral crisis during the HIV epidemic in the 90s/00s.\n\nDeveloping nations argued that public health should trump patent rights. If a government breaks a patent to save lives (Compulsory Licensing), they risk trade sanctions from the US/EU. If they respect the patent, their citizens die. This tension remains central to the debate on Global Public Goods.',
         source: 'WTO Doha Declaration',
         wikiLink: 'https://en.wikipedia.org/wiki/TRIPS_Agreement#Access_to_essential_medicines',
-        image: '/assets/finance.png',
+        image: 'assets/finance.png',
         tags: ['health', 'trade', 'crisis'],
         options: [
             {
@@ -344,7 +344,7 @@ export const EVENTS: GameEvent[] = [
         theory: 'Resource wealth can fuel civil war by providing "lootable" assets (Paul Collier). This is a specific form of the Resource Curse.\n\nUnlike oil (which requires deep state infrastructure), alluvial diamonds or timber can be extracted by low-tech rebels ("Lootability"). This makes conflict self-sustaining. The Kimberley Process was designed to certify that diamonds are "conflict-free" to cut off this funding.',
         source: 'Paul Collier (Greed vs Grievance)',
         wikiLink: 'https://en.wikipedia.org/wiki/Blood_diamond',
-        image: '/assets/mining.png',
+        image: 'assets/mining.png',
         tags: ['mining', 'war', 'resource_curse'],
         options: [
             {
@@ -373,7 +373,7 @@ export const EVENTS: GameEvent[] = [
         theory: 'Large infrastructure projects are the hallmark of "High Modernism" (James C. Scott). Central planners see the benefits (electricity, irrigation) as "legible" and quantifiable, while the costs (displaced communities, ecology) are complex and ignored.\n\nWhile electricity is a prerequisite for growth, the human cost of these projects often leads to long-term resistance and the destruction of local social capital.',
         source: 'James C. Scott (Seeing Like a State)',
         wikiLink: 'https://en.wikipedia.org/wiki/Three_Gorges_Dam#Relocation_of_residents',
-        image: '/assets/industry.png',
+        image: 'assets/industry.png',
         tags: ['infrastructure', 'energy', 'environment'],
         options: [
             {
@@ -401,7 +401,7 @@ export const EVENTS: GameEvent[] = [
         theory: 'The Prebisch-Singer Hypothesis suggests that over time, the price of primary commodities (crops, minerals) falls relative to manufactured goods. This means a country relying on cocoa/coffee/cotton must run faster just to stay in the same place.\n\nFurthermore, commodity prices are highly volatile. Without diversification or a stabilization fund, these price shocks transmit directly into poverty and political instability.',
         source: 'Raúl Prebisch',
         wikiLink: 'https://en.wikipedia.org/wiki/Prebisch%E2%80%93Singer_hypothesis',
-        image: '/assets/agriculture.png',
+        image: 'assets/agriculture.png',
         tags: ['agriculture', 'trade', 'crisis'],
         options: [
             {
@@ -428,7 +428,7 @@ export const EVENTS: GameEvent[] = [
         theory: 'In many fragile states, NGOs provide better services than the government. However, this can lead to a "hollow state" where the government never develops the capacity to serve its own people.\n\nCitizens stop looking to the state for legitimacy and instead look to donors. It also drains talent, as local doctors work for NGOs at 10x the government salary ("Internal Brain Drain").',
         source: 'Alice Amsden',
         wikiLink: 'https://en.wikipedia.org/wiki/Non-governmental_organization#Criticisms',
-        image: '/assets/social.png',
+        image: 'assets/social.png',
         tags: ['social', 'aid', 'institutions'],
         options: [
             {
@@ -456,7 +456,7 @@ export const EVENTS: GameEvent[] = [
         theory: 'The "Impossible Trinity" (Mundell-Fleming) states a country can only have 2 of 3: Free Capital Flow, Fixed Exchange Rate, and Independent Monetary Policy.\n\nPegging to the Dollar (Fixed Rate) stabilizes prices and encourages trade. However, you lose Independent Monetary Policy. If the US raises interest rates, you must too, even if your economy is in recession (e.g., Argentina Crisis 2001).',
         source: 'Mundell-Fleming Model',
         wikiLink: 'https://en.wikipedia.org/wiki/Impossible_trinity',
-        image: '/assets/finance.png',
+        image: 'assets/finance.png',
         tags: ['finance', 'macro', 'trade'],
         options: [
             {
@@ -484,7 +484,7 @@ export const EVENTS: GameEvent[] = [
         theory: 'Development by becoming a "Tax Haven" is a strategy used by small states (e.g., Caribbean, Luxembourg). It brings in fee revenue and high-end service jobs (lawyers, accountants).\n\nHowever, it contributes to global inequality (The "Hidden Wealth of Nations") and invites "Blacklisting" by the G7/OECD. It also brings money laundering and potentially corrupts the local political system.',
         source: 'Gabriel Zucman',
         wikiLink: 'https://en.wikipedia.org/wiki/Tax_haven',
-        image: '/assets/finance.png',
+        image: 'assets/finance.png',
         tags: ['finance', 'corruption', 'trade'],
         options: [
             {
@@ -512,7 +512,7 @@ export const EVENTS: GameEvent[] = [
         theory: 'Geopolitics often trumps economics. For small, strategic nations (Djibouti, Philippines), leasing bases is a major export.\n\nIt provides guaranteed revenue and a security umbrella (deterring neighbors). However, it compromises sovereignty. The host nation becomes a target for the Superpower\'s enemies and the foreign soldiers often cause social friction (crime, prostitution) locally.',
         source: 'Realpolitik',
         wikiLink: 'https://en.wikipedia.org/wiki/Overseas_military_bases',
-        image: '/assets/military.png',
+        image: 'assets/military.png',
         tags: ['military', 'geopolitics', 'sovereignty'],
         options: [
             {
@@ -541,7 +541,7 @@ export const EVENTS: GameEvent[] = [
         theory: 'Language policy is a deep driver of inequality. Teaching in the Colonial Language connects the elite to the global economy (World Bank jobs, trade). However, the poor rural population doesn\'t speak it at home.\n\nEvidence shows children learn best in their mother tongue early on. Forcing a foreign language results in high dropout rates and a "dual society"—a small English-speaking elite ruling over a vernacular-speaking mass.',
         source: 'Ngũgĩ wa Thiong\'o',
         wikiLink: 'https://en.wikipedia.org/wiki/Medium_of_instruction',
-        image: '/assets/social.png',
+        image: 'assets/social.png',
         tags: ['education', 'culture', 'social'],
         options: [
             {
@@ -570,7 +570,7 @@ export const EVENTS: GameEvent[] = [
         theory: 'Developing nations contribute the least to climate change but suffer the most. The "Adaptation vs Mitigation" debate is cruel here.\n\nShould a poor country spend its limited budget on "Adaptation" (sea walls, drought-resistant seeds) which has no immediate economic return? Or spend on "Growth" to get rich enough to deal with it later? The "discount rate" applied to the future often dictates the choice.',
         source: 'Stern Review',
         wikiLink: 'https://en.wikipedia.org/wiki/Climate_change_adaptation',
-        image: '/assets/environment.png',
+        image: 'assets/environment.png',
         tags: ['environment', 'infrastructure', 'future'],
         options: [
             {
