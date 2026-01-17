@@ -10,6 +10,7 @@ export interface CountryStats {
     internationalRelations: number; // 0-100
     genderEquality: number; // 0-100% (New v1.5 stat)
     externalDebt: number; // In millions USD
+    popGrowthRate?: number; // v2.0: Tracked for UI display
 }
 
 export interface Artifact {

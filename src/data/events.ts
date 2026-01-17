@@ -894,5 +894,248 @@ export const EVENTS: GameEvent[] = [
                 explanation: 'Treat them as a cash cow. They will move to Delaware/London immediately.'
             }
         ]
+    },
+    // ==========================================
+    // "HARD MODE" TRADEOFFS (v2.0)
+    // ==========================================
+    {
+        id: 'austerity_riots',
+        title: 'IMF Bread Riots',
+        description: 'The IMF demands we cut the bread subsidy to balance the budget. The poor are burning tires in the capital.',
+        theory: 'The classic "IMF Riot". Removing subsidies corrects price distortions but shatters the social contract. Governments often fall because of the price of bread (e.g., Arab Spring).',
+        source: 'Joseph Stiglitz',
+        wikiLink: 'https://en.wikipedia.org/wiki/Food_riot',
+        image: 'assets/unrest.png',
+        tags: ['crisis', 'poverty', 'finance'],
+        options: [
+            {
+                text: 'Cut Subsidy (Obey IMF)',
+                effects: { externalDebt: -50, gdpGrowthRate: 0.5, stability: -25, eliteSatisfaction: 10 },
+                explanation: 'Solves the debt crisis but risks immediate revolution.'
+            },
+            {
+                text: 'Maintain Subsidy (Ignore IMF)',
+                effects: { externalDebt: 50, stability: 5, gdpGrowthRate: -1.0, internationalRelations: -30 },
+                explanation: 'Keeps the peace for now, but the economy spiral continues.'
+            },
+            {
+                text: 'Violent Crackdown',
+                effects: { stability: 10, eliteSatisfaction: -10, militaryPower: 10, internationalRelations: -20 },
+                explanation: 'Use the army to force the price hike. Costs legitimacy.'
+            }
+        ]
+    },
+    {
+        id: 'resource_nationalism_seizure',
+        title: 'Resource Nationalism',
+        description: 'Global prices for our minerals are high. Populists demand we tear up the contracts and seize the foreign mines.',
+        theory: 'Expropriation is tempting when prices are high. It provides immediate cash but creates a reputation for lawlessness ("Obsolescing Bargain"). Future investors will demand huge risk premiums.',
+        source: 'Raymond Vernon',
+        wikiLink: 'https://en.wikipedia.org/wiki/Resource_nationalism',
+        image: 'assets/mining.png',
+        tags: ['mining', 'sovereignty', 'crisis'],
+        options: [
+            {
+                text: 'Seize Without Compensation',
+                effects: { gdp: 200, internationalRelations: -50, stability: 20 },
+                explanation: 'Huge immediate windfall. We become a pariah state in global markets.'
+            },
+            {
+                text: 'Renegotiate Tax Rate (60%)',
+                effects: { gdp: 50, internationalRelations: -10, stability: 5 },
+                explanation: 'Push them to the limit without breaking the law completely.'
+            },
+            {
+                text: 'Honor Contracts',
+                effects: { internationalRelations: 10, eliteSatisfaction: 5, stability: -10 },
+                explanation: 'The people feel betrayed, but the World Bank applauds our rule of law.'
+            }
+        ]
+    },
+    {
+        id: 'ethnic_civil_service',
+        title: 'Ethnic Quotas',
+        description: 'One ethnic group dominates the civil service. Minority leaders demand a quota system to share the jobs.',
+        theory: 'Affirmative Action in fragile states is a double-edged sword. It buys peace ("Horizontal Inequality" reduction) but destroys state capacity by replacing merit with identity politics.',
+        source: 'Frances Stewart',
+        wikiLink: 'https://en.wikipedia.org/wiki/Horizontal_inequality',
+        image: 'assets/social.png',
+        tags: ['social', 'politics', 'stability'],
+        options: [
+            {
+                text: 'Implement Strict Quotas',
+                effects: { stability: 15, gdpGrowthRate: -0.5, eliteSatisfaction: -10 },
+                explanation: 'Buys peace between tribes but makes the government incompetent.'
+            },
+            {
+                text: 'Meritocracy Only',
+                effects: { gdpGrowthRate: 0.2, stability: -25 }, // Increased stability hit to simulate civil war risk
+                explanation: 'Efficient government, but the excluded minority starts buying guns.'
+            }
+        ]
+    },
+    {
+        id: 'press_freedom',
+        title: 'The Investigative Journalist',
+        description: 'A famous journalist is about to publish data on the President\'s corruption. Generals want him silenced.',
+        theory: 'A free press acts as an information feedback loop. Without it, the leader is surrounded by "Yes Men" and makes catastrophic errors. However, a free press undermines the "Strongman" image required to hold diverse tribes together.',
+        source: 'Amartya Sen (Famines and Democracy)',
+        wikiLink: 'https://en.wikipedia.org/wiki/Freedom_of_the_press#Economic_development',
+        image: 'assets/unrest.png',
+        tags: ['politics', 'corruption', 'social'],
+        options: [
+            {
+                text: 'Assassinate Him',
+                effects: { stability: 10, eliteSatisfaction: 10, internationalRelations: -20, gdpGrowthRate: -0.2 }, // Corruption/Coverup cost
+                explanation: 'Protects the regime\'s secrets. The West cuts aid in protest.'
+            },
+            {
+                text: 'Allow Publication',
+                effects: { stability: -20, eliteSatisfaction: -30, internationalRelations: 10, gdpGrowthRate: 0.2 }, // Cleanup bonus
+                explanation: 'The scandal rocks the government, but corruption decreases slightly.'
+            }
+        ]
+    },
+    {
+        id: 'pension_crisis',
+        title: 'The Pension Timebomb',
+        description: 'The state pension fund has been looted by previous administrations. There is no money to pay the elderly this month.',
+        theory: 'Social Security is the third rail of politics. Defaulting on the elderly (who vote) ensures electoral defeat. Printing money to pay them ensures hyperinflation.',
+        source: 'Public Choice Theory',
+        wikiLink: 'https://en.wikipedia.org/wiki/Pensions_crisis',
+        image: 'assets/finance.png',
+        tags: ['finance', 'social', 'crisis'],
+        options: [
+            {
+                text: 'Print Money to Pay',
+                effects: { gdpGrowthRate: -1.0, stability: 5, externalDebt: 0 },
+                explanation: 'Avoids riots today by causing inflation tomorrow.'
+            },
+            {
+                text: 'Cut Payments by 50%',
+                effects: { stability: -30, externalDebt: -10, famineRisk: 5 },
+                explanation: 'Condemns the elderly to poverty. Massive protests guaranteed.'
+            },
+            {
+                text: 'Borrow from Foreign Banks',
+                effects: { externalDebt: 50, stability: 10 },
+                explanation: 'Solves the problem for 1 year. The debt pile grows higher.'
+            }
+        ]
+    },
+    {
+        id: 'drug_trade_hub',
+        title: 'The Narco State',
+        description: 'International cartels want to use our ports as a transit hub. They offer bribes larger than our entire education budget.',
+        theory: 'The "Narco-State" trap. Drug money is easy liquidity for a cash-strapped state. But eventually, the cartels become stronger than the army (e.g., Mexico, Colombia in the 90s).',
+        source: 'Moises Naim (Illicit)',
+        wikiLink: 'https://en.wikipedia.org/wiki/Narco-state',
+        image: 'assets/crime.png',
+        tags: ['crime', 'corruption', 'finance'],
+        options: [
+            {
+                text: 'Look the Other Way (Take Bribes)',
+                effects: { gdp: 50, eliteSatisfaction: 30, stability: -20 }, // Instability from crime
+                explanation: 'Injects massive cash into the elite, but rule of law collapses.'
+            },
+            {
+                text: 'Total War on Cartels',
+                effects: { militaryPower: -10, stability: -20, gdp: -20, internationalRelations: 20 },
+                explanation: 'Violent and expensive. The US sends DEA agents to help.'
+            }
+        ]
+    },
+    {
+        id: 'currency_speculation_attack',
+        title: 'Currency Attack',
+        description: 'Hedge funds are shorting our currency, betting it will crash. Our foreign reserves are draining fast.',
+        theory: 'A "Speculative Attack" (e.g., Soros vs Bank of England). If the market doesn\'t believe your exchange rate peg, they will sell it until you run out of dollars to buy it back.',
+        source: 'Paul Krugman (Currency Crises)',
+        wikiLink: 'https://en.wikipedia.org/wiki/Currency_crisis',
+        image: 'assets/finance.png',
+        tags: ['finance', 'crisis', 'macro'],
+        options: [
+            {
+                text: 'Raise Rates to 50%',
+                effects: { gdpGrowthRate: -3.0, stability: 10 }, // Inflation control implied by rates
+                explanation: 'Defends the currency by crushing the domestic economy (Recession).'
+            },
+            {
+                text: 'Devalue Currency',
+                effects: { gdpGrowthRate: 1.0, stability: -30, externalDebt: 30 }, // Unrest from Inflation
+                explanation: 'Admit defeat. Exports become cheaper, but inflation explodes.'
+            }
+        ]
+    },
+    {
+        id: 'education_vs_army',
+        title: 'Guns or Books?',
+        description: 'The budget is tight. The General demands new jets, while the Minister of Education demands textbooks.',
+        theory: 'The classic "Guns vs Butter" tradeoff. Military spending protects against invasion/coups but has low economic multiplier. Education has high long-term multiplier but offers no short-term security.',
+        source: 'Macroeconomics 101',
+        wikiLink: 'https://en.wikipedia.org/wiki/Guns_versus_butter_model',
+        image: 'assets/education.png',
+        tags: ['education', 'military', 'budget'],
+        options: [
+            {
+                text: 'Buy the Jets',
+                effects: { militaryPower: 15, educationLevel: -5, gdpGrowthRate: -0.1 },
+                explanation: 'Keeps the army happy. Kids share 1 book per 10 students.'
+            },
+            {
+                text: 'Buy the Textbooks',
+                effects: { educationLevel: 10, militaryPower: -10, eliteSatisfaction: -10 },
+                explanation: 'Invests in the future. The General starts plotting a coup.'
+            }
+        ]
+    },
+    {
+        id: 'epidemic_outbreak',
+        title: 'Regional Epidemic',
+        description: 'A mystery hemorrhagic fever is spreading in the slums. We need to quarantine the capital.',
+        theory: 'Epidemics in weak states expose the lack of trust. If you lock down the city to save lives, the poor (who earn daily wages) starve. If you don\'t, the disease kills thousands.',
+        source: 'Amartya Sen',
+        wikiLink: 'https://en.wikipedia.org/wiki/West_African_Ebola_virus_epidemic',
+        image: 'assets/health.png',
+        tags: ['health', 'crisis', 'poverty'],
+        options: [
+            {
+                text: 'Strict Military Lockdown',
+                effects: { stability: -15, famineRisk: 20, population: -0.1 },
+                explanation: 'Stops the virus but causes starvation and riots in the slums.'
+            },
+            {
+                text: 'Keep Markets Open',
+                effects: { population: -0.5, stability: 5, gdp: -10 },
+                explanation: 'People can eat, but the virus spreads uncontrolled (High death toll).'
+            }
+        ]
+    },
+    {
+        id: 'refugee_crisis',
+        title: 'Neighboring Civil War',
+        description: 'Our neighbor has collapsed into war. 500,000 refugees are crossing our border looking for safety.',
+        theory: 'Refugee shocks can destabilize a fragile host country. They strain resources (water, land) and can bring conflict spillover. However, they are also a source of labor and international aid.',
+        source: 'Alexander Betts',
+        wikiLink: 'https://en.wikipedia.org/wiki/Refugee_crisis',
+        image: 'assets/social.png',
+        tags: ['war', 'social', 'geopolitics'],
+        options: [
+            {
+                text: 'Build Camps (Accept Aid)',
+                effects: { internationalRelations: 20, stability: -5, gdp: 10 },
+                explanation: 'The UN sends money, but local resentment grows over time.'
+            },
+            {
+                text: 'Close the Border',
+                effects: { internationalRelations: -50, stability: 10 }, // Merged IR hit
+                explanation: 'Protect national security. The refugees are massacred on the other side.'
+            },
+            {
+                text: 'Integrate into Workforce',
+                effects: { gdpGrowthRate: 0.5, stability: -15, eliteSatisfaction: -5 },
+                explanation: 'Let them work. Boosts economy but lowers wages for locals (Xenophobia risk).'
+            }
+        ]
     }
 ];

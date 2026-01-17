@@ -60,11 +60,17 @@ export function advanceTurn(state: GameState): GameState {
     // Debt Interest (5%)
     newStats.externalDebt = newStats.externalDebt * 1.05;
 
-    // Dynamic Population Growth
-    // Base 2% + Stability bonus - Education penalty - Gender Equality penalty (Demographic transition)
-    const genderPopPenalty = newStats.genderEquality > 60 ? 0.05 * (newStats.genderEquality - 60) : 0;
-    const popGrowthRate = 2.0 + (newStats.stability > 60 ? 0.5 : 0) - (newStats.educationLevel * 0.04) - genderPopPenalty;
-    newStats.population = newStats.population * (1 + Math.max(0.1, popGrowthRate) / 100);
+    // Dynamic Population Growth (v2.0 Tuned)
+    // Base 3.0% (Harder Malthusian Trap)
+    // Education strongly reduces it (Demographic Transition)
+    const genderPopPenalty = newStats.genderEquality > 50 ? 0.06 * (newStats.genderEquality - 50) : 0;
+    const eduPenalty = newStats.educationLevel * 0.05; // Max -5% at 100 Edu
+
+    let popGrowthRate = 3.0 + (newStats.stability > 70 ? 0.5 : 0) - eduPenalty - genderPopPenalty;
+    popGrowthRate = Math.max(0.1, popGrowthRate); // Min 0.1%
+
+    newStats.popGrowthRate = popGrowthRate; // Store for UI
+    newStats.population = newStats.population * (1 + popGrowthRate / 100);
 
     // Gender Equality Bonus to GDP (Labor Force Participation)
     if (newStats.genderEquality > 50) {
