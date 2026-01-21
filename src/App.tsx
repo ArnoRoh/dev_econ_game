@@ -6,13 +6,13 @@ import { EVENTS } from './data/events';
 import { Dashboard } from './components/Dashboard';
 import { EventModal } from './components/EventModal';
 import { IntroModal } from './components/IntroModal';
+import { Leaderboard } from './components/Leaderboard';
 
 import './components/Tooltip.css';
 
 function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [currentEvent, setCurrentEvent] = useState<GameEvent | null>(null);
-  const [introShown, setIntroShown] = useState(false);
 
   // v1.3 Point Buy System
   const [selectedArtifacts, setSelectedArtifacts] = useState<Artifact[]>([]);
@@ -30,13 +30,32 @@ function App() {
   const pointsRemaining = POINTS_BUDGET - getPointsUsed();
   const isValidSelection = pointsRemaining >= 0;
 
-  const startGame = () => {
+  // Intermediate state to show IntroModal before GameState is fully active?
+  // Previous flow: 
+  // 1. !gameState -> Menu
+  // 2. startGame -> setGameState (initial) -> setIntroShown(false)
+  // 3. Render -> if gameState && !introShown -> IntroModal
+  // 4. IntroModal onStart -> setIntroShown(true) -> Dashboard
+
+  // NEW FLOW:
+  // 1. !gameState -> Menu
+  // 2. User clicks "Ratify" -> Set a flag `isNaming`? Or just use `introShown` logic?
+  // We need to delay `createInitialState` until we have the name.
+
+  // Let's implement an `isNaming` state.
+  const [isNaming, setIsNaming] = useState(false);
+
+  const startNaming = () => {
     if (!isValidSelection || selectedArtifacts.length === 0) return;
-    const initial = createInitialState(selectedArtifacts);
+    setIsNaming(true);
+  }
+
+  const finalizeGameStart = (name: string) => {
+    const initial = createInitialState(selectedArtifacts, name);
     setGameState(initial);
     setCurrentEvent(null);
-    setIntroShown(false);
-  };
+    setIsNaming(false);
+  }
 
   const handleNextTurn = () => {
     if (!gameState) return;
@@ -44,7 +63,7 @@ function App() {
     // Check for game over first (though usually checked after actions)
     let state = checkGameOver(gameState);
     if (state.gameOver) {
-      setGameState(state);
+      handleGameOver(state);
       return;
     }
 
@@ -53,9 +72,13 @@ function App() {
 
     // Check again after advancing (e.g. Famine)
     state = checkGameOver(state);
-    setGameState(state);
 
-    if (state.gameOver) return;
+    if (state.gameOver) {
+      handleGameOver(state);
+      return;
+    }
+
+    setGameState(state);
 
     // v1.4: Annual Policy Decision (100% Chance)
     // Weighted by current artifacts
@@ -70,14 +93,49 @@ function App() {
 
     // Check game over immediately after choice
     nextState = checkGameOver(nextState);
-    setGameState(nextState);
+    if (nextState.gameOver) {
+      handleGameOver(nextState);
+    } else {
+      setGameState(nextState);
+    }
   };
 
-  if (!gameState) {
+  const handleGameOver = (finalState: GameState) => {
+    setGameState(finalState);
+
+    // Save to Leaderboard
+    const score = Math.round(
+      (finalState.country.gdp / 10) +
+      (finalState.country.stability * 10) +
+      (finalState.country.educationLevel * 20) -
+      (finalState.country.externalDebt / 5)
+    );
+
+    const entry = {
+      name: finalState.countryName,
+      score: score,
+      year: finalState.year,
+      reason: finalState.gameOverReason || 'Unknown',
+      date: Date.now()
+    };
+
+    const STORAGE_KEY = 'dev_econ_leaderboard';
+    const stored = localStorage.getItem(STORAGE_KEY);
+    let entries = stored ? JSON.parse(stored) : [];
+    entries.push(entry);
+
+    // Keep top 20
+    entries.sort((a: any, b: any) => b.score - a.score);
+    entries = entries.slice(0, 20);
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  };
+
+  if (!gameState && !isNaming) {
     return (
       <div className="menu-screen">
         <h1 className="title">Post-Colonial Republic</h1>
-        <p className="subtitle">Constitutional Convention (v1.5)</p>
+        <p className="subtitle">Constitutional Convention (v2.1)</p>
 
         <div className="selection-container" style={{ textAlign: 'left', maxWidth: '800px', margin: '0 auto' }}>
           <div className="points-display" style={{
@@ -122,7 +180,7 @@ function App() {
 
         <button
           className="primary-button"
-          onClick={startGame}
+          onClick={startNaming}
           disabled={!isValidSelection || selectedArtifacts.length === 0}
           style={{ marginTop: '30px' }}
         >
@@ -132,7 +190,12 @@ function App() {
     );
   }
 
-  if (gameState.gameOver) {
+  // Naming Phase (Reusing IntroModal)
+  if (!gameState && isNaming) {
+    return <IntroModal onStart={finalizeGameStart} />;
+  }
+
+  if (gameState && gameState.gameOver) {
     const score = Math.round(
       (gameState.country.gdp / 10) +
       (gameState.country.stability * 10) +
@@ -144,7 +207,7 @@ function App() {
       <div className="menu-screen game-over">
         <h1 className="title error">Regime Collapse</h1>
         <h2 className="reason">{gameState.gameOverReason}</h2>
-        <p className="summary">You governed for {gameState.turn} years (1960 - {gameState.year}).</p>
+        <p className="summary">You governed {gameState.countryName} for {gameState.turn} years (1960 - {gameState.year}).</p>
 
         <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', margin: '30px 0', textAlign: 'left' }}>
           <div><strong>Final GDP:</strong> ${Math.round(gameState.country.gdp).toLocaleString()}M</div>
@@ -157,25 +220,27 @@ function App() {
           Legacy Score: {score}
         </div>
 
+        <Leaderboard />
+
         <button className="primary-button" onClick={() => setGameState(null)} style={{ marginTop: '30px' }}>Return to History</button>
       </div>
     );
   }
 
-  // v1.7: Intro Narrative
-  if (gameState && !introShown) {
-    return <IntroModal onStart={() => setIntroShown(true)} />;
-  }
+  // Removed old intro check logic since we do it before game start now
 
   return (
     <div className="game-screen">
-      <div className="artifacts-bar">
-        {gameState.artifacts.map(a => (
-          <span key={a.id} className="artifact-tag" data-tooltip={a.description}>{a.name}</span>
-        ))}
+      <div className="header-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px', background: '#111', borderBottom: '1px solid #333' }}>
+        <div className="country-name" style={{ color: '#d4af37', fontWeight: 'bold', fontSize: '1.2rem' }}>{gameState?.countryName}</div>
+        <div className="artifacts-bar">
+          {gameState?.artifacts.map(a => (
+            <span key={a.id} className="artifact-tag" data-tooltip={a.description}>{a.name}</span>
+          ))}
+        </div>
       </div>
 
-      <Dashboard stats={gameState.country} year={gameState.year} />
+      <Dashboard stats={gameState!.country} year={gameState!.year} />
 
       <div className="controls">
         <button className="primary-button next-turn" onClick={handleNextTurn} disabled={!!currentEvent}>

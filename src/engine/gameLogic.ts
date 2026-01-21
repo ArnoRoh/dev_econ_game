@@ -14,7 +14,7 @@ export const INITIAL_STATS: CountryStats = {
     externalDebt: 0,
 };
 
-export function createInitialState(artifacts: Artifact[]): GameState {
+export function createInitialState(artifacts: Artifact[], countryName: string): GameState {
     let stats = { ...INITIAL_STATS };
 
     // Apply artifact modifiers
@@ -34,6 +34,7 @@ export function createInitialState(artifacts: Artifact[]): GameState {
         artifacts,
         gameOver: false,
         flags: {}, // Initialize empty flags
+        countryName,
     };
 }
 

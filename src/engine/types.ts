@@ -54,4 +54,5 @@ export interface GameState {
     gameOver: boolean;
     gameOverReason?: string; // Relaxed from specific union type to allow diverse reasons
     flags: Record<string, boolean>; // v1.6: Persistent narrative flags
+    countryName: string; // v2.1: Customizable country name
 }
