@@ -8,10 +8,34 @@ interface EventModalProps {
 }
 
 export const EventModal: React.FC<EventModalProps> = ({ event, onOptionSelect }) => {
+    const [isMinimized, setIsMinimized] = React.useState(false);
+
+    if (isMinimized) {
+        return (
+            <div className="modal-minimized-controls">
+                <button
+                    className="restore-button"
+                    onClick={() => setIsMinimized(false)}
+                >
+                    Return to Decision
+                </button>
+            </div>
+        );
+    }
+
     return (
         <div className="modal-overlay">
             <div className="modal-content">
-                <h2 className="event-title">{event.title}</h2>
+                <div className="modal-header">
+                    <h2 className="event-title">{event.title}</h2>
+                    <button
+                        className="view-stats-button"
+                        onClick={() => setIsMinimized(true)}
+                        title="Hide event temporarily to view stats"
+                    >
+                        👁️ View Stats
+                    </button>
+                </div>
 
                 {event.image && (
                     <div className="event-image-container" style={{ margin: '15px 0', textAlign: 'center' }}>
