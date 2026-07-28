@@ -24,6 +24,265 @@ export interface Artifact {
 
 export type StatKey = keyof CountryStats;
 
+export type FactionId = 'military' | 'labor' | 'business' | 'provincial';
+export type CharacterId = 'finance_minister' | 'army_chief' | 'labor_leader' | 'provincial_chair';
+export type ConceptId =
+    | 'land_tenure'
+    | 'green_revolution'
+    | 'import_substitution'
+    | 'export_orientation'
+    | 'infant_industry'
+    | 'labor_standards'
+    | 'dutch_disease'
+    | 'sovereign_wealth_fund'
+    | 'resource_curse';
+
+export interface SourceCitation {
+    id: string;
+    title: string;
+    author: string;
+    year?: number;
+    publisher?: string;
+    url?: string;
+    sourceType: 'paper' | 'book' | 'institution' | 'teaching' | 'caseStudy';
+}
+
+export interface EconomicConcept {
+    id: ConceptId;
+    title: string;
+    oneSentenceSummary: string;
+    mechanismSteps: string[];
+    assumptions: string[];
+    commonMisconceptions: string[];
+    competingViews: string[];
+    observableIndicators: Array<keyof CountryStats | 'treasury' | 'factionPower'>;
+    sourceIds: string[];
+}
+
+export interface FactionDefinition {
+    id: FactionId;
+    name: string;
+    shortName: string;
+    description: string;
+    leaderId: CharacterId;
+    priorities: string[];
+    redLines: string[];
+}
+
+export interface FactionState {
+    support: number;
+    power: number;
+    radicalization: number;
+    promisesOwed: string[];
+    grievances: string[];
+}
+
+export interface CharacterDefinition {
+    id: CharacterId;
+    name: string;
+    title: string;
+    factionId: FactionId;
+    publicGoal: string;
+    privateGoal: string;
+    portrait?: string;
+}
+
+export interface CharacterState {
+    trust: number;
+    influence: number;
+    loyalty: number;
+    memories: string[];
+}
+
+export interface QualitativeForecast {
+    advisorId: CharacterId;
+    summary: string;
+    predictedDirection: 'stronglyDown' | 'down' | 'mixed' | 'up' | 'stronglyUp';
+    confidence: 'low' | 'medium' | 'high';
+    affectedMetric?: keyof CountryStats | 'treasury';
+    hiddenBias?: string;
+}
+
+export interface FactionEffect {
+    factionId: FactionId;
+    support?: number;
+    power?: number;
+    radicalization?: number;
+    grievance?: string;
+}
+
+export interface DelayedConsequenceSpec {
+    id: string;
+    delayTurns: number;
+    headline: string;
+    narrative: string;
+    effects: Partial<CountryStats>;
+    treasuryEffect?: number;
+    factionEffects?: FactionEffect[];
+    requiredFlags?: string[];
+    blockedByFlags?: string[];
+    setsFlags?: string[];
+    conceptIds: ConceptId[];
+}
+
+export interface EducationalPolicyOption {
+    id: string;
+    text: string;
+    rationale: string;
+    immediateNarrative: string;
+    effects: Partial<CountryStats>;
+    treasuryEffect?: number;
+    factionEffects: FactionEffect[];
+    forecasts: QualitativeForecast[];
+    conceptIds: ConceptId[];
+    sourceIds: string[];
+    delayedConsequences: DelayedConsequenceSpec[];
+    setFlags?: string[];
+}
+
+export interface PolicyProposal {
+    id: string;
+    arcId: string;
+    arcStep: number;
+    title: string;
+    sponsorId: CharacterId;
+    brief: string;
+    stakeholderSummary: string;
+    conceptIds: ConceptId[];
+    sourceIds: string[];
+    options: EducationalPolicyOption[];
+    ignoreOutcome: DelayedConsequenceSpec;
+    minYear?: number;
+    maxYear?: number;
+    requiredFlags?: string[];
+    blockedByFlags?: string[];
+}
+
+export interface ScheduledConsequence {
+    id: string;
+    sourceDecisionId: string;
+    dueTurn: number;
+    spec: DelayedConsequenceSpec;
+}
+
+export interface PlayerPrediction {
+    questionId: string;
+    selectedAnswerId: string;
+    createdTurn: number;
+}
+
+export interface PolicyDecisionRecord {
+    id: string;
+    turn: number;
+    year: number;
+    proposalId: string;
+    proposalTitle: string;
+    sponsorId: CharacterId;
+    status: 'chosen' | 'ignored' | 'rejected' | 'reversed';
+    optionId?: string;
+    optionText?: string;
+    prediction?: PlayerPrediction;
+    immediateEffects: Partial<CountryStats>;
+    treasuryEffect?: number;
+    factionEffects: FactionEffect[];
+    conceptIds: ConceptId[];
+    sourceIds: string[];
+    scheduledConsequenceIds: string[];
+    resolvedConsequenceIds: string[];
+}
+
+export interface PromiseRecord {
+    id: string;
+    madeTurn: number;
+    factionId: FactionId;
+    description: string;
+    deadlineTurn: number;
+    completionFlag: string;
+    status: 'active' | 'kept' | 'broken';
+}
+
+export interface ConceptProgress {
+    exposures: number;
+    correctPredictions: number;
+    correctKnowledgeChecks: number;
+    lastSeenTurn: number;
+}
+
+export interface KnowledgeCheck {
+    id: string;
+    conceptId: ConceptId;
+    prompt: string;
+    answers: Array<{ id: string; text: string }>;
+    correctAnswerId: string;
+    explanation: string;
+}
+
+export type MissionMetric = StatKey | 'gdpPerCapita';
+
+export interface MissionGoal {
+    metric: MissionMetric;
+    label: string;
+    target: number;
+    direction: 'atLeast' | 'atMost';
+    format: 'number' | 'percent' | 'currency';
+}
+
+export interface NationalMission {
+    id: string;
+    name: string;
+    description: string;
+    goals: MissionGoal[];
+}
+
+export interface DevelopmentProject {
+    id: string;
+    name: string;
+    icon: string;
+    description: string;
+    treasuryCost: number;
+    effects: Partial<CountryStats>;
+    annualEffects: Partial<CountryStats>;
+    maxLevel: number;
+}
+
+export interface EconomicSnapshot {
+    year: number;
+    gdp: number;
+    stability: number;
+    educationLevel: number;
+    famineRisk: number;
+    externalDebt: number;
+}
+
+export interface DiplomaticPartner {
+    id: string;
+    name: string;
+    shortName: string;
+    position: 'north' | 'east' | 'south' | 'west';
+    pactName: string;
+    description: string;
+    doctrine: string;
+    initialRelations: number;
+    pactEffects: Partial<CountryStats>;
+    annualEffects: Partial<CountryStats>;
+}
+
+export interface ChronicleEntry {
+    id: string;
+    year: number;
+    category: 'policy' | 'project' | 'diplomacy';
+    title: string;
+    decision: string;
+    effects: Partial<CountryStats>;
+}
+
+export interface DecisionOutcome {
+    eventTitle: string;
+    optionText: string;
+    explanation?: string;
+    effects: Partial<CountryStats>;
+}
+
 export interface EventOption {
     text: string;
     effects: Partial<CountryStats>; // Immediate effect (delta)
@@ -55,4 +314,26 @@ export interface GameState {
     gameOverReason?: string; // Relaxed from specific union type to allow diverse reasons
     flags: Record<string, boolean>; // v1.6: Persistent narrative flags
     countryName: string; // v2.1: Customizable country name
+    missionId: string;
+    recentEventIds: string[];
+    projectLevels: Record<string, number>;
+    lastProjectYear: number;
+    chronicle: ChronicleEntry[];
+    neighborRelations: Record<string, number>;
+    activePartnerId: string | null;
+    lastDiplomacyYear: number;
+    treasury: number;
+    lastFiscalBalance: number;
+    lastBondYear: number;
+    economicHistory: EconomicSnapshot[];
+    factions?: Record<FactionId, FactionState>;
+    characters?: Record<CharacterId, CharacterState>;
+    agendaProposalIds?: string[];
+    actionsRemaining?: number;
+    scheduledConsequences?: ScheduledConsequence[];
+    policyDecisions?: PolicyDecisionRecord[];
+    promises?: PromiseRecord[];
+    conceptProgress?: Partial<Record<ConceptId, ConceptProgress>>;
+    advisorInsight?: number;
+    chapter?: 'independence' | 'complete';
 }

@@ -1,4 +1,5 @@
-import type { GameState, CountryStats, EventOption, Artifact, GameEvent } from './types';
+import type { GameState, CountryStats, EventOption, Artifact, GameEvent, DevelopmentProject, DiplomaticPartner } from './types';
+import { createInitialCharacterStates, createInitialFactionStates } from './factionLogic.ts';
 
 export const INITIAL_STATS: CountryStats = {
     gdp: 1000,
@@ -14,8 +15,13 @@ export const INITIAL_STATS: CountryStats = {
     externalDebt: 0,
 };
 
-export function createInitialState(artifacts: Artifact[], countryName: string): GameState {
-    let stats = { ...INITIAL_STATS };
+export function createInitialState(
+    artifacts: Artifact[],
+    countryName: string,
+    missionId: string,
+    partners: DiplomaticPartner[] = [],
+): GameState {
+    const stats = { ...INITIAL_STATS };
 
     // Apply artifact modifiers
     artifacts.forEach(artifact => {
@@ -27,18 +33,93 @@ export function createInitialState(artifacts: Artifact[], countryName: string): 
         });
     });
 
+    const initialCountry = clampStats(stats);
+
     return {
         year: 1960,
         turn: 1,
-        country: clampStats(stats),
+        country: initialCountry,
         artifacts,
         gameOver: false,
         flags: {}, // Initialize empty flags
         countryName,
+        missionId,
+        recentEventIds: [],
+        projectLevels: {},
+        lastProjectYear: 1960,
+        chronicle: [],
+        neighborRelations: Object.fromEntries(partners.map(partner => [partner.id, partner.initialRelations])),
+        activePartnerId: null,
+        lastDiplomacyYear: 1960,
+        treasury: 150,
+        lastFiscalBalance: 0,
+        lastBondYear: 1960,
+        economicHistory: [{
+            year: 1960,
+            gdp: initialCountry.gdp,
+            stability: initialCountry.stability,
+            educationLevel: initialCountry.educationLevel,
+            famineRisk: initialCountry.famineRisk,
+            externalDebt: initialCountry.externalDebt,
+        }],
+        factions: createInitialFactionStates(),
+        characters: createInitialCharacterStates(),
     };
 }
 
-export function advanceTurn(state: GameState): GameState {
+export function buildProject(state: GameState, project: DevelopmentProject): GameState {
+    const currentLevel = state.projectLevels[project.id] ?? 0;
+    if (
+        state.year % 5 !== 0 ||
+        currentLevel >= project.maxLevel ||
+        state.lastProjectYear === state.year ||
+        state.treasury < project.treasuryCost
+    ) return state;
+
+    const newStats = { ...state.country };
+    Object.entries(project.effects).forEach(([key, value]) => {
+        const statKey = key as keyof CountryStats;
+        if (typeof newStats[statKey] === 'number') {
+            newStats[statKey] = (newStats[statKey] as number) + (value as number);
+        }
+    });
+
+    return {
+        ...state,
+        country: clampStats(newStats),
+        projectLevels: {
+            ...state.projectLevels,
+            [project.id]: currentLevel + 1,
+        },
+        lastProjectYear: state.year,
+        treasury: state.treasury - project.treasuryCost,
+    };
+}
+
+export function issueDevelopmentBonds(state: GameState): GameState {
+    if (state.year % 5 !== 0 || state.lastProjectYear === state.year || state.lastBondYear === state.year) return state;
+
+    return {
+        ...state,
+        treasury: state.treasury + 150,
+        country: clampStats({
+            ...state.country,
+            externalDebt: state.country.externalDebt + 180,
+        }),
+        lastBondYear: state.year,
+    };
+}
+
+export function deferDevelopmentPlan(state: GameState): GameState {
+    if (state.year % 5 !== 0 || state.lastProjectYear === state.year) return state;
+    return { ...state, lastProjectYear: state.year };
+}
+
+export function advanceTurn(
+    state: GameState,
+    projects: DevelopmentProject[] = [],
+    partners: DiplomaticPartner[] = [],
+): GameState {
     if (state.gameOver) return state;
 
     const newStats = { ...state.country };
@@ -64,11 +145,7 @@ export function advanceTurn(state: GameState): GameState {
     // Dynamic Population Growth (v2.0 Tuned)
     // Base 3.0% (Harder Malthusian Trap)
     // Education strongly reduces it (Demographic Transition)
-    const genderPopPenalty = newStats.genderEquality > 50 ? 0.06 * (newStats.genderEquality - 50) : 0;
-    const eduPenalty = newStats.educationLevel * 0.05; // Max -5% at 100 Edu
-
-    let popGrowthRate = 3.0 + (newStats.stability > 70 ? 0.5 : 0) - eduPenalty - genderPopPenalty;
-    popGrowthRate = Math.max(0.1, popGrowthRate); // Min 0.1%
+    const popGrowthRate = calculatePopulationGrowthRate(newStats);
 
     newStats.popGrowthRate = popGrowthRate; // Store for UI
     newStats.population = newStats.population * (1 + popGrowthRate / 100);
@@ -80,8 +157,38 @@ export function advanceTurn(state: GameState): GameState {
         newStats.gdpGrowthRate += genderBonus;
     }
 
+    // Built institutions keep paying dividends after their construction year.
+    projects.forEach(project => {
+        const level = state.projectLevels[project.id] ?? 0;
+        if (level === 0) return;
+
+        Object.entries(project.annualEffects).forEach(([key, value]) => {
+            const statKey = key as keyof CountryStats;
+            if (typeof newStats[statKey] === 'number') {
+                newStats[statKey] = (newStats[statKey] as number) + (value as number) * level;
+            }
+        });
+    });
+
+    const activePartner = partners.find(partner => partner.id === state.activePartnerId);
+    if (activePartner) {
+        Object.entries(activePartner.annualEffects).forEach(([key, value]) => {
+            const statKey = key as keyof CountryStats;
+            if (typeof newStats[statKey] === 'number') {
+                newStats[statKey] = (newStats[statKey] as number) + (value as number);
+            }
+        });
+    }
+
     // Entropy/Decay
-    // Stability naturally decays if elites are unhappy
+    // Young institutions and military equipment require continuous investment.
+    const transportLevel = state.projectLevels.transport ?? 0;
+    const institutionalErosion = Math.max(0.35, 1.25 - newStats.educationLevel * 0.008 - transportLevel * 0.12);
+    newStats.stability -= institutionalErosion;
+    newStats.militaryPower -= 0.35;
+    newStats.eliteSatisfaction -= 0.1;
+
+    // Stability decays faster if elites are unhappy.
     if (newStats.eliteSatisfaction < 40) {
         newStats.stability -= 2;
     }
@@ -93,12 +200,77 @@ export function advanceTurn(state: GameState): GameState {
         newStats.famineRisk -= 1;
     }
 
+    const finalStats = clampStats(newStats);
+    const collectionEfficiency = Math.min(0.85, 0.35 + finalStats.stability * 0.003 + finalStats.educationLevel * 0.002);
+    const taxRevenue = finalStats.gdp * 0.04 * collectionEfficiency;
+    const debtService = finalStats.externalDebt * 0.03;
+    const fiscalBalance = taxRevenue - debtService;
+    let treasury = state.treasury + fiscalBalance;
+    if (treasury < 0) {
+        finalStats.externalDebt += Math.abs(treasury);
+        treasury = 0;
+    }
+    const nextYear = state.year + 1;
+
     return {
         ...state,
-        year: state.year + 1,
+        year: nextYear,
         turn: state.turn + 1,
-        country: clampStats(newStats), // Helper also used here
+        country: finalStats,
+        treasury,
+        lastFiscalBalance: fiscalBalance,
+        economicHistory: [
+            ...state.economicHistory,
+            {
+                year: nextYear,
+                gdp: finalStats.gdp,
+                stability: finalStats.stability,
+                educationLevel: finalStats.educationLevel,
+                famineRisk: finalStats.famineRisk,
+                externalDebt: finalStats.externalDebt,
+            },
+        ].slice(-20),
+        neighborRelations: activePartner
+            ? {
+                ...state.neighborRelations,
+                [activePartner.id]: Math.min(100, (state.neighborRelations[activePartner.id] ?? activePartner.initialRelations) + 0.5),
+            }
+            : state.neighborRelations,
     };
+}
+
+export function signDiplomaticPact(state: GameState, partner: DiplomaticPartner): GameState {
+    const isSummitYear = state.year >= 1965 && (state.year - 1965) % 10 === 0;
+    if (!isSummitYear || state.lastDiplomacyYear === state.year) return state;
+
+    const newStats = { ...state.country };
+    Object.entries(partner.pactEffects).forEach(([key, value]) => {
+        const statKey = key as keyof CountryStats;
+        if (typeof newStats[statKey] === 'number') {
+            newStats[statKey] = (newStats[statKey] as number) + (value as number);
+        }
+    });
+
+    const neighborRelations = Object.fromEntries(
+        Object.entries(state.neighborRelations).map(([partnerId, relations]) => [
+            partnerId,
+            Math.max(0, Math.min(100, relations + (partnerId === partner.id ? 20 : -5))),
+        ]),
+    );
+
+    return {
+        ...state,
+        country: clampStats(newStats),
+        neighborRelations,
+        activePartnerId: partner.id,
+        lastDiplomacyYear: state.year,
+    };
+}
+
+export function calculatePopulationGrowthRate(stats: CountryStats): number {
+    const genderPopPenalty = stats.genderEquality > 50 ? 0.06 * (stats.genderEquality - 50) : 0;
+    const educationPenalty = stats.educationLevel * 0.05;
+    return Math.max(0.1, 3.0 + (stats.stability > 70 ? 0.5 : 0) - educationPenalty - genderPopPenalty);
 }
 
 export function applyOption(state: GameState, option: EventOption): GameState {
@@ -138,6 +310,11 @@ export const checkGameOver = (state: GameState): GameState => {
         };
     }
 
+    // The transitional government has a short founding mandate. Let the player
+    // reach the first diplomacy summit and development plan before collapse rules
+    // become active; the underlying risks continue accumulating during this time.
+    if (state.year <= 1965) return state;
+
     // Coup Logic (Updated v1.3)
     // If military is too strong (>80), they are harder to control.
     const coupThreshold = militaryPower > 80 ? 55 : 40; // Needs higher stability to prevent coup if army is strong
@@ -165,6 +342,9 @@ export const checkGameOver = (state: GameState): GameState => {
 
 function clampStats(stats: CountryStats): CountryStats {
     const clamped = { ...stats };
+    clamped.gdp = Math.max(1, clamped.gdp);
+    clamped.population = Math.max(0.1, clamped.population);
+    clamped.externalDebt = Math.max(0, clamped.externalDebt);
     // Clamp 0-100 ranges
     (['stability', 'eliteSatisfaction', 'militaryPower', 'educationLevel', 'famineRisk', 'internationalRelations', 'genderEquality'] as const).forEach(key => {
         clamped[key] = Math.max(0, Math.min(100, clamped[key]));
@@ -173,7 +353,7 @@ function clampStats(stats: CountryStats): CountryStats {
 }
 
 // Weighted RNG for Event Selection
-export const selectWeightedEvent = (events: GameEvent[], state: GameState): GameEvent => {
+export const selectWeightedEvent = (events: GameEvent[], state: GameState): GameEvent | null => {
     const artifacts = state.artifacts;
     const flags = state.flags;
     // 1. Collect playing active tags
@@ -181,7 +361,7 @@ export const selectWeightedEvent = (events: GameEvent[], state: GameState): Game
     artifacts.forEach(a => a.tags?.forEach(t => activeTags.add(t)));
 
     // 2. Calculate weights (and filter by reqFlags)
-    const candidates = events.filter(event => {
+    const eligibleEvents = events.filter(event => {
         // Filter out if requirements not met
         if (event.reqFlags) {
             const missingFlag = event.reqFlags.some(flag => !flags[flag]);
@@ -194,6 +374,13 @@ export const selectWeightedEvent = (events: GameEvent[], state: GameState): Game
 
         return true;
     });
+
+    // Keep annual dilemmas varied. Once all currently eligible events have appeared
+    // recently, allow the oldest ones back into the pool rather than returning no event.
+    const freshEvents = eligibleEvents.filter(event => !state.recentEventIds.includes(event.id));
+    const candidates = freshEvents.length > 0 ? freshEvents : eligibleEvents;
+
+    if (candidates.length === 0) return null;
 
     const weightedEvents = candidates.map(event => {
         let weight = 1;
@@ -213,5 +400,5 @@ export const selectWeightedEvent = (events: GameEvent[], state: GameState): Game
         if (random <= 0) return item.event;
     }
 
-    return events[0]; // Fallback
+    return candidates[0] ?? null;
 };

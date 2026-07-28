@@ -1,0 +1,121 @@
+.trend-panel {
+    margin: 0 0 18px;
+    padding: 18px;
+    background: #181b1a;
+    border: 1px solid #363d39;
+    border-radius: 9px;
+}
+
+.trend-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 14px;
+}
+
+.trend-heading h3 {
+    margin: 4px 0 0;
+    color: #dcd9cb;
+    font-size: 1rem;
+}
+
+.trend-heading > span {
+    color: #686f6b;
+    font-size: 0.67rem;
+    text-transform: uppercase;
+}
+
+.trend-charts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.trend-charts article {
+    min-width: 0;
+    padding: 12px;
+    background: #1e2220;
+    border: 1px solid #303633;
+    border-radius: 6px;
+}
+
+.trend-chart-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    color: #8e9691;
+    font-size: 0.62rem;
+}
+
+.trend-chart-title strong {
+    color: #c8c5b9;
+    font-size: 0.75rem;
+}
+
+.trend-chart-title div {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.trend-chart-title i {
+    width: 8px;
+    height: 2px;
+    margin-left: 4px;
+}
+
+.trend-chart-title i.gdp { background: #d4af37; }
+.trend-chart-title i.debt { background: #d87968; }
+.trend-chart-title i.stability { background: #81c784; }
+.trend-chart-title i.education { background: #64b5f6; }
+.trend-chart-title i.famine { background: #e57373; }
+
+.trend-charts svg {
+    display: block;
+    width: 100%;
+    height: 135px;
+    margin-top: 5px;
+}
+
+.trend-grid line {
+    stroke: #3a403d;
+    stroke-width: 1;
+    stroke-dasharray: 4 7;
+}
+
+.trend-line {
+    fill: none;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+
+.trend-line.gdp { stroke: #d4af37; }
+.trend-line.debt { stroke: #d87968; }
+.trend-line.stability { stroke: #81c784; }
+.trend-line.education { stroke: #64b5f6; }
+.trend-line.famine { stroke: #e57373; }
+
+.trend-axis {
+    display: flex;
+    justify-content: space-between;
+    color: #626864;
+    font-size: 0.58rem;
+}
+
+@media (max-width: 780px) {
+    .trend-charts {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 500px) {
+    .trend-heading,
+    .trend-chart-title {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

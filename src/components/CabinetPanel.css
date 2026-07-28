@@ -1,0 +1,165 @@
+.cabinet-panel {
+    padding: 17px 18px;
+    margin: 4px 0 18px;
+    background: rgba(27, 29, 28, 0.92);
+    border: 1px solid #3b403d;
+    border-radius: 9px;
+}
+
+.cabinet-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.cabinet-heading h3 {
+    margin: 4px 0 0;
+    color: #dfded6;
+    font-size: 1rem;
+}
+
+.cabinet-status {
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-size: 0.67rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.cabinet-status.steady {
+    color: #a5d6a7;
+    background: rgba(76, 175, 80, 0.13);
+}
+
+.cabinet-status.watch {
+    color: #ffe082;
+    background: rgba(255, 193, 7, 0.13);
+}
+
+.cabinet-status.danger {
+    color: #ef9a9a;
+    background: rgba(244, 67, 54, 0.14);
+}
+
+.cabinet-alerts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.cabinet-alert {
+    display: flex;
+    padding: 10px 12px;
+    flex-direction: column;
+    gap: 4px;
+    border-left: 3px solid;
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.cabinet-alert.watch {
+    border-color: #d4af37;
+}
+
+.cabinet-alert.danger {
+    border-color: #e57373;
+}
+
+.cabinet-alert strong {
+    color: #ddd7c5;
+    font-size: 0.78rem;
+}
+
+.cabinet-alert span {
+    color: #979b98;
+    font-size: 0.72rem;
+    line-height: 1.4;
+}
+
+.chronicle {
+    margin-top: 14px;
+    border-top: 1px solid #353936;
+}
+
+.chronicle summary {
+    display: flex;
+    padding-top: 13px;
+    justify-content: space-between;
+    gap: 15px;
+    color: #c9c3ac;
+    font-size: 0.76rem;
+    cursor: pointer;
+}
+
+.chronicle summary span {
+    color: #777d79;
+}
+
+.chronicle-list {
+    display: grid;
+    gap: 1px;
+    margin-top: 13px;
+    background: #353936;
+}
+
+.chronicle-list article {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 12px;
+    padding: 11px;
+    background: #1c1e1d;
+}
+
+.chronicle-year {
+    align-self: start;
+    padding: 4px;
+    color: #c5b36f;
+    text-align: center;
+    border: 1px solid #5b5236;
+    font-size: 0.7rem;
+}
+
+.chronicle-year.project {
+    color: #8fc39a;
+    border-color: #3e6747;
+}
+
+.chronicle-year.diplomacy {
+    color: #8fbacf;
+    border-color: #3f6070;
+}
+
+.chronicle-list small,
+.chronicle-list strong {
+    display: block;
+}
+
+.chronicle-list small {
+    color: #777e79;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+}
+
+.chronicle-list strong {
+    margin: 3px 0;
+    color: #dad7cd;
+    font-size: 0.8rem;
+}
+
+.chronicle-list p,
+.chronicle-empty {
+    margin: 0;
+    color: #858a87;
+    font-size: 0.67rem;
+    text-transform: capitalize;
+}
+
+@media (max-width: 560px) {
+    .chronicle summary,
+    .cabinet-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

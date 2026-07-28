@@ -1,0 +1,221 @@
+.regional-panel {
+    display: grid;
+    grid-template-columns: minmax(360px, 1.2fr) minmax(290px, 0.8fr);
+    gap: 14px;
+    margin: 0 0 18px;
+}
+
+.regional-map {
+    position: relative;
+    min-height: 330px;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 50% 50%, rgba(129, 199, 132, 0.1), transparent 27%),
+        linear-gradient(145deg, #18201e, #101413);
+    border: 1px solid #3c4943;
+    border-radius: 10px;
+}
+
+.map-contours {
+    position: absolute;
+    inset: 0;
+    opacity: 0.18;
+    background:
+        radial-gradient(ellipse at 20% 30%, transparent 0 25px, #7d8e82 26px 27px, transparent 28px 50px, #7d8e82 51px 52px, transparent 53px),
+        radial-gradient(ellipse at 78% 68%, transparent 0 34px, #7d8e82 35px 36px, transparent 37px 67px, #7d8e82 68px 69px, transparent 70px);
+}
+
+.home-state,
+.neighbor-state {
+    position: absolute;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    transition: border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+}
+
+.home-state {
+    top: 50%;
+    left: 50%;
+    width: 150px;
+    height: 128px;
+    transform: translate(-50%, -50%);
+    color: #e8daa8;
+    background: linear-gradient(145deg, #4b5c42, #27372e);
+    border: 2px solid #d4af37;
+    clip-path: polygon(20% 0, 82% 8%, 100% 55%, 72% 100%, 18% 90%, 0 42%);
+}
+
+.neighbor-state {
+    width: 112px;
+    height: 76px;
+    color: #a7ada9;
+    background: #252b29;
+    border: 1px solid #47514c;
+    border-radius: 38% 62% 44% 56% / 50% 42% 58% 50%;
+}
+
+.neighbor-state.active {
+    transform: scale(1.06);
+    color: #efe0ae;
+    background: #3b4638;
+    border-color: #d4af37;
+    box-shadow: 0 0 24px rgba(212, 175, 55, 0.18);
+}
+
+.neighbor-state.north { top: 20px; left: calc(50% - 56px); }
+.neighbor-state.east { top: calc(50% - 38px); right: 24px; }
+.neighbor-state.south { bottom: 20px; left: calc(50% - 56px); }
+.neighbor-state.west { top: calc(50% - 38px); left: 24px; }
+
+.home-state span,
+.neighbor-state span {
+    max-width: 105px;
+    font-family: var(--font-serif);
+    font-size: 0.78rem;
+    line-height: 1.1;
+}
+
+.home-state strong,
+.neighbor-state strong {
+    margin-top: 3px;
+    font-size: 1.12rem;
+}
+
+.home-state small,
+.neighbor-state small {
+    color: #89928d;
+    font-size: 0.56rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.pact-line {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    left: 50%;
+    background: linear-gradient(90deg, #d4af37, rgba(212, 175, 55, 0.1));
+    transform-origin: 0 50%;
+}
+
+.pact-line.east,
+.pact-line.west {
+    width: 34%;
+    height: 2px;
+}
+
+.pact-line.west { transform: rotate(180deg); }
+
+.pact-line.north,
+.pact-line.south {
+    width: 25%;
+    height: 2px;
+}
+
+.pact-line.north { transform: rotate(-90deg); }
+.pact-line.south { transform: rotate(90deg); }
+
+.map-compass {
+    position: absolute;
+    top: 14px;
+    right: 15px;
+    color: #768079;
+    font-family: var(--font-serif);
+    font-size: 0.75rem;
+}
+
+.regional-brief {
+    padding: 20px;
+    background: linear-gradient(145deg, #1d211f, #171918);
+    border: 1px solid #363d39;
+    border-radius: 10px;
+}
+
+.regional-brief h3 {
+    margin: 5px 0 8px;
+    color: #e6d7a6;
+    font-family: var(--font-serif);
+    font-size: 1.2rem;
+}
+
+.regional-brief > p {
+    margin: 0 0 18px;
+    color: #8f9792;
+    font-size: 0.76rem;
+    line-height: 1.5;
+}
+
+.relation-list {
+    display: grid;
+    gap: 10px;
+}
+
+.relation-list > div {
+    display: grid;
+    grid-template-columns: 118px 1fr 28px;
+    align-items: center;
+    gap: 8px;
+    color: #a8aaa5;
+    font-size: 0.67rem;
+}
+
+.relation-list strong {
+    color: #d4c992;
+    text-align: right;
+}
+
+.relation-track {
+    height: 4px;
+    overflow: hidden;
+    background: #303633;
+    border-radius: 2px;
+}
+
+.relation-track i {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #815e4d, #d4af37, #81c784);
+}
+
+.summit-note {
+    display: block;
+    margin-top: 18px;
+    color: #626965;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+}
+
+@media (max-width: 850px) {
+    .regional-panel {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 500px) {
+    .regional-map {
+        min-height: 300px;
+    }
+
+    .neighbor-state {
+        width: 94px;
+        height: 66px;
+    }
+
+    .neighbor-state.north { left: calc(50% - 47px); }
+    .neighbor-state.south { left: calc(50% - 47px); }
+    .neighbor-state.east { right: 8px; }
+    .neighbor-state.west { left: 8px; }
+
+    .home-state {
+        width: 125px;
+        height: 108px;
+    }
+
+    .relation-list > div {
+        grid-template-columns: 105px 1fr 26px;
+    }
+}

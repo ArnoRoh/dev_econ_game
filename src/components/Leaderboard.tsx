@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import './Leaderboard.css';
 
-interface LeaderboardEntry {
+export interface LeaderboardEntry {
     name: string;
     score: number;
     year: number;
     reason: string;
     date: number; // Timestamp
+    mission?: string;
 }
 
 interface LeaderboardProps {
@@ -16,21 +17,12 @@ interface LeaderboardProps {
 const STORAGE_KEY = 'dev_econ_leaderboard';
 
 export const Leaderboard: React.FC<LeaderboardProps> = ({ currentScore }) => {
-    const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
-
-    useEffect(() => {
+    const [entries, setEntries] = useState<LeaderboardEntry[]>(() => {
         // Load entries from local storage
         const stored = localStorage.getItem(STORAGE_KEY);
-        let loadedEntries: LeaderboardEntry[] = stored ? JSON.parse(stored) : [];
-
-        // If a new score is provided, retrieve it from the storage logic handled in App.tsx 
-        // OR pass it in and merge here?
-        // Better: App.tsx handles saving to storage, this component just reads and displays.
-        // Re-read storage on mount.
-
-        // However, if we just saved it in App.tsx before rendering this, it should be there.
-        setEntries(loadedEntries.sort((a, b) => b.score - a.score));
-    }, []);
+        const loadedEntries: LeaderboardEntry[] = stored ? JSON.parse(stored) as LeaderboardEntry[] : [];
+        return loadedEntries.sort((a, b) => b.score - a.score);
+    });
 
     const clearHistory = () => {
         if (window.confirm('Are you sure you want to clear the Hall of Fame?')) {
@@ -54,6 +46,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentScore }) => {
                                 <th>Nation</th>
                                 <th>Legacy Score</th>
                                 <th>Year Reached</th>
+                                <th>Mission</th>
                                 <th>Fate</th>
                             </tr>
                         </thead>
@@ -72,6 +65,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentScore }) => {
                                         </td>
                                         <td className="score-column">{entry.score}</td>
                                         <td>{entry.year}</td>
+                                        <td>{entry.mission ?? '—'}</td>
                                         <td style={{ fontSize: '0.9em', color: '#aaa' }}>{entry.reason}</td>
                                     </tr>
                                 );

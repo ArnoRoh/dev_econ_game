@@ -1,5 +1,6 @@
 import React from 'react';
 import type { CountryStats } from '../engine/types';
+import { calculatePopulationGrowthRate } from '../engine/gameLogic';
 import './Dashboard.css';
 import './Tooltip.css';
 
@@ -25,7 +26,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ stats, year }) => {
                     label="Population"
                     value={`${stats.population.toFixed(1)}M`}
                     tooltip="Total citizens. Labor force scales with this."
-                    subValue={`+${(2.0 + (stats.stability > 60 ? 0.5 : 0) - (stats.educationLevel * 0.04)).toFixed(2)}% / yr`}
+                    subValue={`+${(stats.popGrowthRate ?? calculatePopulationGrowthRate(stats)).toFixed(2)}% / yr`}
                 />
                 <StatCard label="Stability" value={stats.stability} isPercentage tooltip="Political order. Low stability risks coups and reduces growth." />
                 <StatCard label="Elite Support" value={stats.eliteSatisfaction} isPercentage tooltip="Approval of the wealthy/powerful. < 10% risks immediate overthrow." />
