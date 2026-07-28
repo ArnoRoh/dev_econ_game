@@ -189,3 +189,39 @@
     color: #e57373;
     border: 1px solid #e57373;
 }
+
+.effect-neutral {
+    color: #aaa;
+    background-color: rgba(255, 255, 255, 0.06);
+    border: 1px solid #666;
+}
+
+@media (max-width: 560px) {
+    .modal-overlay {
+        padding: 10px;
+    }
+
+    .modal-content {
+        padding: 22px 16px;
+    }
+
+    .modal-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .view-stats-button {
+        margin-left: 0;
+    }
+
+    .modal-minimized-controls {
+        right: 10px;
+        bottom: 10px;
+    }
+
+    .restore-button {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+}

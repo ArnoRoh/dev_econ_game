@@ -1,5 +1,6 @@
 import React from 'react';
 import type { GameEvent, EventOption } from '../engine/types';
+import { effectTone, formatEffect } from '../effectFormatting';
 import './EventModal.css';
 
 interface EventModalProps {
@@ -9,6 +10,7 @@ interface EventModalProps {
 
 export const EventModal: React.FC<EventModalProps> = ({ event, onOptionSelect }) => {
     const [isMinimized, setIsMinimized] = React.useState(false);
+    const [imageUnavailable, setImageUnavailable] = React.useState(false);
 
     if (isMinimized) {
         return (
@@ -37,9 +39,14 @@ export const EventModal: React.FC<EventModalProps> = ({ event, onOptionSelect })
                     </button>
                 </div>
 
-                {event.image && (
+                {event.image && !imageUnavailable && (
                     <div className="event-image-container" style={{ margin: '15px 0', textAlign: 'center' }}>
-                        <img src={event.image} alt={event.title} style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '8px', border: '1px solid #444' }} />
+                        <img
+                            src={event.image}
+                            alt={event.title}
+                            onError={() => setImageUnavailable(true)}
+                            style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '8px', border: '1px solid #444' }}
+                        />
                     </div>
                 )}
 
@@ -68,8 +75,8 @@ export const EventModal: React.FC<EventModalProps> = ({ event, onOptionSelect })
                             <div className="option-text">{option.text}</div>
                             <div className="option-effects">
                                 {Object.entries(option.effects).map(([key, value]) => (
-                                    <span key={key} className={value > 0 ? 'effect-pos' : 'effect-neg'}>
-                                        {key.toUpperCase()}: {value > 0 ? '+' : ''}{value}
+                                    <span key={key} className={`effect-${effectTone(key, value) === 'positive' ? 'pos' : effectTone(key, value) === 'negative' ? 'neg' : 'neutral'}`}>
+                                        {formatEffect(key, value)}
                                     </span>
                                 ))}
                             </div>

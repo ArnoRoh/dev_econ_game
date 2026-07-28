@@ -34,6 +34,119 @@ body {
   padding: 20px;
 }
 
+.founding-screen {
+  position: relative;
+  justify-content: flex-start;
+  background:
+    linear-gradient(90deg, rgba(10, 13, 13, 0.94) 0%, rgba(10, 13, 13, 0.86) 48%, rgba(10, 13, 13, 0.55) 100%),
+    url('/assets/republic-hero.png') center / cover fixed;
+}
+
+.founding-content {
+  width: min(960px, 100%);
+  margin: auto auto auto 4vw;
+  padding: 48px 0;
+  text-align: center;
+}
+
+.continue-button {
+  margin-bottom: 12px;
+  padding: 9px 16px;
+  color: #d9c77e;
+  background: rgba(17, 20, 19, 0.75);
+  border: 1px solid rgba(212, 175, 55, 0.55);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.continue-button:hover {
+  color: #171817;
+  background: #d4af37;
+}
+
+.founding-screen .selection-container {
+  padding: 22px;
+  background: rgba(15, 18, 18, 0.86);
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  border-radius: 10px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+}
+
+.mission-selection {
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid #3b3d3c;
+}
+
+.selection-label {
+  display: block;
+  margin-bottom: 12px;
+  color: #d7c68c;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.mission-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.mission-selection-card {
+  display: flex;
+  min-height: 150px;
+  padding: 14px;
+  flex-direction: column;
+  color: #aaa;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid #3a3d3b;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.mission-selection-card:hover,
+.mission-selection-card.selected {
+  transform: translateY(-2px);
+  border-color: #d4af37;
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.mission-selection-card strong {
+  color: #e6d9ae;
+  font-family: var(--font-serif);
+  font-size: 1rem;
+}
+
+.mission-selection-card span {
+  margin: 9px 0;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.mission-selection-card small {
+  margin-top: auto;
+  color: #7f9785;
+  font-size: 0.65rem;
+}
+
+.score-breakdown {
+  margin-top: 5px;
+  color: #888;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .game-screen {
   max-width: 1200px;
   margin: 0 auto;
@@ -121,6 +234,83 @@ body {
   justify-content: center;
   flex-wrap: wrap;
   margin-bottom: 25px;
+}
+
+.state-resources {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+}
+
+.header-bar .artifacts-bar {
+  margin-bottom: 0;
+}
+
+.treasury-display {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 1px 8px;
+  padding-right: 18px;
+  border-right: 1px solid #353535;
+  text-align: right;
+}
+
+.treasury-display span {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  align-self: center;
+  color: #777;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.treasury-display strong {
+  color: #e1d29d;
+  font-size: 0.9rem;
+}
+
+.treasury-display small {
+  font-size: 0.6rem;
+}
+
+.treasury-display small.positive { color: #81c784; }
+.treasury-display small.negative { color: #e57373; }
+
+@media (max-width: 760px) {
+  .founding-content {
+    margin: auto;
+  }
+
+  .mission-selection-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .header-bar {
+    align-items: flex-start !important;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .header-bar .artifacts-bar {
+    width: 100%;
+    justify-content: flex-start;
+    margin-bottom: 0;
+  }
+
+  .state-resources {
+    width: 100%;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .treasury-display {
+    padding-right: 0;
+    border-right: 0;
+    text-align: left;
+  }
 }
 
 .artifact-tag {

@@ -1,0 +1,84 @@
+.mission-panel {
+    background: linear-gradient(135deg, rgba(20, 39, 33, 0.96), rgba(18, 22, 25, 0.96));
+    border: 1px solid rgba(129, 199, 132, 0.35);
+    border-radius: 10px;
+    padding: 18px;
+    margin: 18px 0;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.22);
+}
+
+.mission-panel-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.mission-panel-heading h3 {
+    margin: 4px 0 0;
+    color: #e8e0c5;
+    font-family: var(--font-serif);
+}
+
+.eyebrow {
+    color: #81c784;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.mission-total {
+    color: #81c784;
+    font-size: 1.35rem;
+    font-weight: 800;
+}
+
+.mission-progress-track {
+    height: 7px;
+    overflow: hidden;
+    margin: 14px 0;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+}
+
+.mission-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4f8f62, #d4af37);
+    border-radius: inherit;
+    transition: width 0.4s ease;
+}
+
+.mission-goals {
+    display: grid;
+    gap: 8px;
+}
+
+.mission-goal {
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
+    align-items: center;
+    gap: 8px;
+    color: #aeb5b0;
+    font-size: 0.82rem;
+}
+
+.mission-goal strong {
+    color: #d8d8d2;
+    font-variant-numeric: tabular-nums;
+}
+
+.mission-goal.complete,
+.mission-goal.complete strong {
+    color: #81c784;
+}
+
+@media (max-width: 600px) {
+    .mission-goal {
+        grid-template-columns: 20px 1fr;
+    }
+
+    .mission-goal strong {
+        grid-column: 2;
+    }
+}
