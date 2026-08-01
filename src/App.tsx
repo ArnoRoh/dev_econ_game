@@ -9,6 +9,8 @@ import {
 } from './engine/agendaLogic';
 import { newspaperForTurn, resolveDueConsequences, resolveDuePromises } from './engine/consequenceLogic';
 import { driftFactions } from './engine/factionLogic';
+import { INVESTMENT_STEP, investInProvince, provinceRevenue, summariseProvinces, tickProvinces } from './engine/provinceLogic';
+import { ProvinceMap } from './components/ProvinceMap';
 import { answerKnowledgeCheck, headlineMetric, recordConceptExposure, scorePrediction, selectKnowledgeCheck, spendAdvisorInsight, summariseLearning } from './engine/learningLogic';
 import { buildEndingContext, endingCitations, resolveEnding } from './engine/endingLogic';
 import type {
@@ -82,6 +84,9 @@ function App() {
   const [statsOpen, setStatsOpen] = useState(false);
   const [statsTab, setStatsTab] = useState<'nation' | 'region' | 'trends'>('nation');
   const [galleryOpen, setGalleryOpen] = useState(false);
+  /** Which stage the player is looking at during the cabinet phase. */
+  const [stageView, setStageView] = useState<'cabinet' | 'republic'>('cabinet');
+  const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
   const [freshAchievements, setFreshAchievements] = useState<AchievementDef[]>([]);
   /** Years being crossed, shown as a brief interstitial. */
   const [yearTurn, setYearTurn] = useState<{ from: number; to: number } | null>(null);
@@ -206,6 +211,18 @@ function App() {
 
     state = advanceTurn(state, DEVELOPMENT_PROJECTS, DIPLOMATIC_PARTNERS);
     state = driftFactions(state);
+    state = tickProvinces(state);
+
+    // The provinces pay into the treasury, and a slice comes back as the
+    // development budget the player allocates across them next year. Routing it
+    // through a separate budget keeps province building from competing directly
+    // with the cabinet's cash, which would make every year a false choice.
+    const fromProvinces = provinceRevenue(state.provinces ?? [], state.country);
+    state = {
+      ...state,
+      treasury: state.treasury + fromProvinces,
+      provinceBudget: Math.round(fromProvinces * 0.6) + 20,
+    };
 
     // Everything scheduled by earlier decisions lands here, before the player
     // is asked for anything new.
@@ -235,6 +252,12 @@ function App() {
     setTurnPhase(headlines.length > 0 ? 'newspaper' : 'agenda');
     setYearTurn({ from: crossedInto - 1, to: crossedInto });
   }, [handleGameOver]);
+
+  const handleInvest = (provinceId: string) => {
+    if (!gameState) return;
+    const next = investInProvince(gameState, provinceId, INVESTMENT_STEP);
+    if (next !== gameState) setGameState(next);
+  };
 
   const handleOpenProposal = (proposalId: string) => {
     setOpenProposalId(proposalId);
@@ -591,6 +614,8 @@ function App() {
   const diplomacyDue = state.year >= 1965 && (state.year - 1965) % 10 === 0 && state.lastDiplomacyYear !== state.year;
   const milestoneDue = projectDue || diplomacyDue;
 
+  const provinceStanding = summariseProvinces(state.provinces ?? []);
+
   const agenda = (state.agendaProposalIds ?? [])
     .map(id => PROPOSALS_BY_ID.get(id))
     .filter((proposal): proposal is PolicyProposal => Boolean(proposal));
@@ -625,6 +650,13 @@ function App() {
             <span className="shell-meter-label">Insight</span>
             <StatCounter value={state.advisorInsight ?? 0} />
           </span>
+          <span
+            className="shell-meter"
+            title="Spread between the best and worst developed province. A widening gap is what turns regional grievance into a secession problem."
+          >
+            <span className="shell-meter-label">Regional gap</span>
+            <StatCounter value={provinceStanding.developmentGap} lowerIsBetter />
+          </span>
         </div>
 
         <nav className="shell-nav">
@@ -651,7 +683,42 @@ function App() {
             />
           )}
 
-          {turnPhase === 'agenda' && !milestoneDue && state.turn <= 1 && !primerDismissed && (
+          {turnPhase === 'agenda' && !milestoneDue && (
+            <div className="stage-switch" role="tablist" aria-label="View">
+              {([
+                ['cabinet', 'Cabinet table'],
+                ['republic', 'The republic'],
+              ] as const).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={stageView === id}
+                  className={`stage-switch-tab${stageView === id ? ' is-active' : ''}`}
+                  onClick={() => setStageView(id)}
+                >
+                  {label}
+                  {id === 'republic' && (state.provinceBudget ?? 0) >= INVESTMENT_STEP && (
+                    <span className="stage-switch-dot" aria-label="Development budget unspent" />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {turnPhase === 'agenda' && !milestoneDue && stageView === 'republic' && (
+            <ProvinceMap
+              provinces={state.provinces ?? []}
+              year={state.year}
+              budget={state.provinceBudget ?? 0}
+              investmentStep={INVESTMENT_STEP}
+              selectedId={selectedProvince}
+              onSelect={setSelectedProvince}
+              onInvest={handleInvest}
+            />
+          )}
+
+          {turnPhase === 'agenda' && !milestoneDue && stageView === 'cabinet' && state.turn <= 1 && !primerDismissed && (
             <TurnPrimer
               onDismiss={() => {
                 localStorage.setItem('dev_econ_primer_seen', '1');
@@ -660,7 +727,7 @@ function App() {
             />
           )}
 
-          {turnPhase === 'agenda' && !milestoneDue && (
+          {turnPhase === 'agenda' && !milestoneDue && stageView === 'cabinet' && (
             <CabinetAgenda
               year={state.year}
               proposals={agenda}

@@ -1,5 +1,6 @@
 import type { GameState, CountryStats, EventOption, Artifact, GameEvent, DevelopmentProject, DiplomaticPartner } from './types';
 import { createInitialCharacterStates, createInitialFactionStates } from './factionLogic.ts';
+import { createProvinces } from '../data/provinces.ts';
 
 export const INITIAL_STATS: CountryStats = {
     gdp: 1000,
@@ -48,6 +49,8 @@ export function createInitialState(
         projectLevels: {},
         lastProjectYear: 1960,
         chronicle: [],
+        provinces: createProvinces(),
+        provinceBudget: 0,
         neighborRelations: Object.fromEntries(partners.map(partner => [partner.id, partner.initialRelations])),
         activePartnerId: null,
         lastDiplomacyYear: 1960,

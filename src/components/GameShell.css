@@ -205,3 +205,66 @@
         transition: none;
     }
 }
+
+/* Stage switcher: the cabinet table and the map are peers, not a panel and a
+   sub-panel — the territorial layer is half the game. */
+.stage-switch {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.stage-switch-tab {
+    position: relative;
+    min-height: 44px;
+    padding: 11px 20px;
+    background: transparent;
+    border: 1px solid #3d3d35;
+    border-radius: 7px;
+    color: #9d968a;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+}
+
+.stage-switch-tab:hover {
+    border-color: rgba(212, 175, 55, 0.55);
+    color: #e2c76b;
+}
+
+.stage-switch-tab.is-active {
+    background: rgba(212, 175, 55, 0.14);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.stage-switch-tab:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Unspent development budget is easy to forget; the dot is the nudge. */
+.stage-switch-dot {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.8);
+    animation: stage-dot 2.2s ease-in-out infinite;
+}
+
+@keyframes stage-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .stage-switch-tab { transition: none; }
+    .stage-switch-dot { animation: none; }
+}
