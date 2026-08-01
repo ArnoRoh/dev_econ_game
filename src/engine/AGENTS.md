@@ -7,7 +7,9 @@ This directory is the rules layer. Keep it independent of React, the DOM, local 
 - Functions that accept `GameState` must return a new state and must not mutate their inputs.
 - `CountryStats` is the source of truth for valid effect keys. Event and artifact effects remain `Partial<CountryStats>` deltas.
 - Clamp bounded 0-100 indicators in `clampStats`; do not clamp GDP, population, debt, or growth rates without an explicit design decision.
-- Preserve the turn order in `App.tsx`: check the current state, advance the simulation, check again, then select an event. Choices apply their immediate effects and are checked for game over immediately.
+- Preserve the turn order in `App.tsx`: resolve the agenda, check for game over, advance the simulation, drift factions, resolve due consequences and promises, check again, then open the next agenda.
+- Delayed consequences are deterministic once scheduled. Flag gates are evaluated at resolution time, not at scheduling time, so a consequence can reflect what the player did in the intervening years. A blocked consequence is dropped, never deferred.
+- Faction support and radicalisation are clamped 0-100 and mean-revert annually in `driftFactions`. Without that reversion the political model only ever decays.
 - Timeline filters are inclusive: `minYear` is the first eligible year and `maxYear` is the last eligible year.
 - Required flags are AND conditions. Artifact/event tag matches change event weight, not eligibility.
 - Development projects may only be built in five-year planning years, once per planning year, up to their configured maximum level.

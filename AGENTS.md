@@ -4,17 +4,37 @@
 
 This is a small, client-only economic policy roguelite built with React 19, TypeScript, and Vite. It can run in a browser or inside the Electron shell in `electron/`.
 
-- `src/App.tsx` owns the game flow, including setup, turns, event choices, game-over scoring, and leaderboard persistence.
+- `src/App.tsx` owns the game flow: setup, the cabinet turn loop, game-over scoring, and leaderboard persistence.
 - `src/saveGame.ts` owns the versioned local active-run save format. Bump the version or add migration logic when its stored shape becomes incompatible.
 - `src/engine/` contains the simulation types and pure state transitions.
 - `src/data/` contains authored starting conditions and policy events.
 - `src/data/missions.ts` and `src/data/projects.ts` define long-run objectives and five-year development choices.
 - `src/data/diplomacy.ts` defines neighboring states, pact terms, and annual treaty dividends shown on the regional map.
+- `src/data/arcs/` contains the authored multi-step policy arcs plus `legacyProposals.ts`, which adapts the annual-event corpus into cabinet proposals.
+- `src/data/concepts.ts`, `sources.ts`, `characters.ts`, `factions.ts`, and `knowledgeChecks.ts` carry the educational layer.
 - `src/components/` contains presentational React components and their adjacent CSS.
 - `public/assets/` contains event artwork addressed as `assets/<file>`.
 - `electron/` contains the desktop entry point. Packaged output goes to ignored `release/`.
 
 More specific `AGENTS.md` files under `src/engine/` and `src/data/` override this guidance for those areas.
+
+## The turn loop
+
+A turn runs: newspaper of landed consequences -> cabinet agenda of three or four
+proposals with two action slots -> policy dossier -> decision -> debrief ->
+optional knowledge check -> the simulated year.
+
+- Exact numeric effects must never appear before a decision. The dossier shows
+  qualitative advisor forecasts; numbers are revealed in the debrief and archive.
+- Forecasts are authored, never generated from the effects at runtime. They are
+  audited against what actually happened, so some are authored to be wrong.
+- Selecting a proposal is free; confirming an option is what spends an action.
+- Anything left on the table when the session closes resolves through its
+  `ignoreOutcome`, and the sponsoring faction records the slight.
+- Arc steps outrank generic standing business in `generateAgenda`, and a later
+  arc step cannot reach the table before its predecessor resolves.
+- Standing business is `repeatable` and returns after `RECURRENCE_GAP_TURNS`.
+  Without recurrence the agenda runs empty well before 2030.
 
 ## Working conventions
 
@@ -34,9 +54,16 @@ Run the narrowest relevant check while working, then run the complete check befo
 npm run check
 ```
 
-`npm run check` runs ESLint and the production TypeScript/Vite build. There is not yet an automated test suite, so gameplay changes should also be smoke-tested in the browser with `npm run dev`.
+`npm run check` runs ESLint, the production TypeScript/Vite build, two seeded balance simulations, and the educational content validator. There is not yet an automated test suite, so gameplay changes should also be smoke-tested in the browser with `npm run dev`.
 
-The check also runs seeded balance simulations. Preserve the intentional gap between survival-aware and random play; update the accepted bands only with an explicit balance rationale.
+Two balance simulations run:
+
+- `npm run balance` exercises the legacy one-event-per-year path.
+- `npm run balance:agenda` exercises the cabinet loop the game actually plays,
+  and fails the check if deliberate play cannot complete 2030, if careless play
+  outlasts deliberate play, or if collapse becomes too forgiving.
+
+Preserve the intentional gap between deliberate and careless play; update the accepted bands only with an explicit balance rationale.
 
 For Electron development, start `npm run dev` first, then run `npm run electron:dev` in a second terminal. Use `npm run dist` only when validating the installer/package flow because it writes a full desktop build to `release/`.
 
@@ -45,7 +72,8 @@ For Electron development, start `npm run dev` first, then run `npm run electron:
 - When changing balance, explain the intended player-facing tradeoff in the change summary.
 - Keep the five-year project cadence aligned between `buildProject` and the project-due check in `App.tsx`.
 - Keep the diplomacy cadence aligned between `signDiplomaticPact` and the diplomacy-due check in `App.tsx`: 1965, then every ten years.
-- Preserve unresolved `currentEvent` and `lastOutcome` when changing autosave behavior; reloading must not let a player skip a dilemma.
+- Preserve the unresolved agenda and turn phase when changing autosave behavior; reloading must not let a player skip a decision or re-take a spent action.
+- Bump `SAVE_VERSION` in `src/saveGame.ts` whenever the stored shape changes.
 - When adding a stat, update the type, initial value, clamping rules if applicable, simulation behavior, dashboard display, and relevant content together.
 - When adding an event image, verify the file exists in `public/assets/` with the exact case used by the event record.
 - Keep changes focused. Avoid combining large content expansions, balance rewrites, and UI refactors in one change unless they are inseparable.

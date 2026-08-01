@@ -12,6 +12,16 @@ This directory contains authored, player-facing content. Keep mechanics in `src/
 - Tags should reuse the existing vocabulary where possible because matching artifact tags triples selection weight.
 - Image paths are relative public paths such as `assets/finance.png`. Add the corresponding file under `public/assets/` and check exact filename casing.
 
+## Policy arcs
+
+- An arc is an ordered list of `PolicyProposal` sharing one `arcId`, with `arcStep` starting at 1 and increasing by one. The engine will not surface a step before its predecessor resolves.
+- Every option needs authored `forecasts` from at least two advisors who genuinely disagree. Do not derive a forecast from the numeric effects; some forecasts should be authored to turn out wrong.
+- `rationale` and `immediateNarrative` carry the pre- and post-decision voice. Neither may quote a numeric effect.
+- Teach conditionality. State the institutional preconditions under which the policy works, and never assert that a policy is simply good or bad.
+- `createsPromise` records a public commitment. Its `completionFlag` must be a flag some later option in the same arc can actually set, or the promise is unkeepable by construction.
+- Every proposal needs an `ignoreOutcome`. The cost of ignoring should be political — faction support and a grievance — rather than a direct stat penalty, because the player is forced to ignore something almost every year.
+- `conceptIds` and `sourceIds` must exist in `concepts.ts` and `sources.ts`; the content validator enforces this.
+
 ## Artifacts
 
 - Keep the point-buy budget in `src/App.tsx` in mind when setting `pointCost`.
