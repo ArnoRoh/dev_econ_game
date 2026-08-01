@@ -74,6 +74,14 @@ export const LAND_REFORM_ARC = [
                     },
                 ],
                 setFlags: ['land_tenure_recognized'],
+                createsPromise: {
+                    id: 'register_the_claims',
+                    description: 'Turn provisional tenant claims into registered title',
+                    factionId: 'provincial',
+                    deadlineTurns: 8,
+                    // Any real settlement discharges this. Deferring does not.
+                    completionFlag: 'land_reform_enacted',
+                },
             },
             {
                 id: 'commission_land_survey',
@@ -292,6 +300,13 @@ export const LAND_REFORM_ARC = [
                 ],
                 conceptIds: ['land_tenure'],
                 sourceIds: LAND_TENURE_SOURCES,
+                createsPromise: {
+                    id: 'support_the_new_holders',
+                    description: 'Give the new smallholders the credit and extension they were promised',
+                    factionId: 'labor',
+                    deadlineTurns: 10,
+                    completionFlag: 'smallholder_credit_guaranteed',
+                },
                 delayedConsequences: [
                     {
                         id: 'confiscatory_transition_harvest',

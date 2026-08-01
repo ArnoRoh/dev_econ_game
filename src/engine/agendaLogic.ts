@@ -1,6 +1,7 @@
 import { ALL_POLICY_PROPOSALS } from '../data/arcs/index.ts';
 import { applyCharacterMemory, applyFactionEffects } from './factionLogic.ts';
 import { applyOption } from './gameLogic.ts';
+import { makePromise } from './consequenceLogic.ts';
 import type {
     EducationalPolicyOption,
     GameState,
@@ -108,9 +109,27 @@ export function generateAgenda(
     // which keeps the agenda full across a campaign far longer than the arcs.
     const authored = ranked.filter(entry => !entry.proposal.isGeneric).slice(0, targetSize);
     const generic = ranked.filter(entry => entry.proposal.isGeneric);
-    const filled = [...authored, ...generic].slice(0, targetSize);
 
-    return filled.map(({ proposal }) => proposal.id);
+    // A cabinet table should sound like several people, not one minister with a
+    // long list. Fill remaining slots preferring sponsors not yet represented,
+    // falling back to raw rank once every voice is on the agenda.
+    const chosen = [...authored];
+    const sponsors = new Set(chosen.map(entry => entry.proposal.sponsorId));
+
+    for (const entry of generic) {
+        if (chosen.length >= targetSize) break;
+        if (sponsors.has(entry.proposal.sponsorId)) continue;
+        chosen.push(entry);
+        sponsors.add(entry.proposal.sponsorId);
+    }
+
+    for (const entry of generic) {
+        if (chosen.length >= targetSize) break;
+        if (chosen.includes(entry)) continue;
+        chosen.push(entry);
+    }
+
+    return chosen.slice(0, targetSize).map(({ proposal }) => proposal.id);
 }
 
 export function startAgendaTurn(
@@ -188,6 +207,19 @@ export function confirmProposal(
         treasury: Math.max(0, nextState.treasury + (option.treasuryEffect ?? 0)),
         actionsRemaining: Math.max(0, (state.actionsRemaining ?? 0) - 1),
     };
+
+    // A promise is recorded the moment it is made, and judged years later.
+    if (option.createsPromise) {
+        const promise = option.createsPromise;
+        nextState = makePromise(nextState, {
+            id: `${decisionId}-${promise.id}`,
+            madeTurn: state.turn,
+            factionId: promise.factionId,
+            description: promise.description,
+            deadlineTurn: state.turn + Math.max(1, promise.deadlineTurns),
+            completionFlag: promise.completionFlag,
+        });
+    }
 
     const record: PolicyDecisionRecord = {
         id: decisionId,

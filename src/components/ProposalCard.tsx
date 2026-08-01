@@ -5,6 +5,8 @@ import { FACTIONS_BY_ID } from '../data/factions';
 interface ProposalCardProps {
     proposal: PolicyProposal;
     characterState?: CharacterState;
+    /** Running tally of how often this sponsor's forecasts have proved right. */
+    record?: { right: number; judged: number };
     /** Marks the next live step of an arc the player has already started. */
     isArcContinuation: boolean;
     disabled: boolean;
@@ -26,6 +28,7 @@ const initialsOf = (name: string): string =>
 export function ProposalCard({
     proposal,
     characterState,
+    record,
     isArcContinuation,
     disabled,
     onOpen,
@@ -59,6 +62,12 @@ export function ProposalCard({
                     <span className="proposal-trust-label">trust {Math.round(trust)}</span>
                 </span>
             </header>
+
+            {record && record.judged >= 2 && (
+                <p className="proposal-record">
+                    Forecasts right {record.right} of {record.judged}
+                </p>
+            )}
 
             <h3 className="proposal-title">{proposal.title}</h3>
             <p className="proposal-brief">{proposal.brief}</p>

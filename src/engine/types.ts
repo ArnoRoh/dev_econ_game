@@ -125,6 +125,17 @@ export interface DelayedConsequenceSpec {
     conceptIds: ConceptId[];
 }
 
+/** A commitment an option makes on the government's behalf. */
+export interface PromiseSpec {
+    id: string;
+    description: string;
+    factionId: FactionId;
+    /** Years the government has to deliver before the promise is judged. */
+    deadlineTurns: number;
+    /** Flag that, if set by the deadline, counts as delivery. */
+    completionFlag: string;
+}
+
 export interface EducationalPolicyOption {
     id: string;
     text: string;
@@ -138,6 +149,8 @@ export interface EducationalPolicyOption {
     sourceIds: string[];
     delayedConsequences: DelayedConsequenceSpec[];
     setFlags?: string[];
+    /** Choosing this option publicly commits the government to something. */
+    createsPromise?: PromiseSpec;
 }
 
 export interface PolicyProposal {

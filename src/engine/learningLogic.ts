@@ -1,5 +1,5 @@
 import { KNOWLEDGE_CHECKS } from '../data/knowledgeChecks.ts';
-import type { ConceptId, ConceptProgress, GameState, KnowledgeCheck } from './types';
+import type { CharacterId, ConceptId, ConceptProgress, ForecastAudit, GameState, KnowledgeCheck } from './types';
 
 /**
  * Learning progress is tracked, never enforced. A knowledge check can only ever
@@ -86,6 +86,24 @@ export function answerKnowledgeCheck(
 export function spendAdvisorInsight(state: GameState): GameState {
     if ((state.advisorInsight ?? 0) <= 0) return state;
     return { ...state, advisorInsight: (state.advisorInsight ?? 0) - 1 };
+}
+
+/**
+ * How often an advisor's authored forecasts have actually come true.
+ *
+ * This is the mechanic that turns advisors into characters rather than tooltips:
+ * over a campaign the player learns whose confidence is worth anything, which is
+ * a transferable habit as much as a game skill.
+ */
+export function advisorRecord(
+    audits: ForecastAudit[],
+    advisorId: CharacterId,
+): { right: number; judged: number } {
+    const judged = audits.filter(audit => audit.advisorId === advisorId && audit.verdict);
+    return {
+        right: judged.filter(audit => audit.verdict === 'right').length,
+        judged: judged.length,
+    };
 }
 
 export interface LearningSummary {

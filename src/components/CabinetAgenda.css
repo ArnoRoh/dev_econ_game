@@ -249,3 +249,49 @@
     font-style: italic;
     color: #9d968a;
 }
+
+.cabinet-empty {
+    padding: 22px;
+    margin: 0 0 18px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed #3d3d35;
+    border-radius: 8px;
+    font-size: 0.92rem;
+    color: #9d968a;
+    text-align: center;
+}
+
+/* Keyboard affordance: number the cards so the shortcut is discoverable. */
+.cabinet-grid {
+    counter-reset: proposal;
+}
+
+.proposal-card::before {
+    counter-increment: proposal;
+    content: counter(proposal);
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border: 1px solid #4a4a42;
+    border-radius: 4px;
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: #7d766a;
+}
+
+.proposal-card {
+    position: relative;
+}
+
+.proposal-record {
+    margin: -6px 0 10px;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #8d8578;
+}

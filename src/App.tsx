@@ -300,6 +300,51 @@ function App() {
     if (gameState) runYear(gameState);
   };
 
+  /**
+   * Keyboard control for the whole turn loop. Enter or Space always advances
+   * the phase the player is in; Escape backs out of a dossier; number keys open
+   * the corresponding proposal. Typing in a field is never intercepted.
+   */
+  useEffect(() => {
+    if (!gameState || gameState.gameOver) return;
+
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+
+      if (event.key === 'Escape') {
+        if (ledgerOpen) { setLedgerOpen(false); event.preventDefault(); return; }
+        if (turnPhase === 'dossier') {
+          setOpenProposalId(null);
+          setTurnPhase('agenda');
+          event.preventDefault();
+        }
+        return;
+      }
+
+      if (event.key !== 'Enter' && event.key !== ' ') {
+        const index = Number(event.key);
+        if (turnPhase === 'agenda' && index >= 1 && index <= 9) {
+          const id = (gameState.agendaProposalIds ?? [])[index - 1];
+          if (id && (gameState.actionsRemaining ?? 0) > 0) {
+            handleOpenProposal(id);
+            event.preventDefault();
+          }
+        }
+        return;
+      }
+
+      // Enter/Space: the single forward move for this phase.
+      if (turnPhase === 'newspaper') { setTurnPhase('agenda'); event.preventDefault(); }
+      else if (turnPhase === 'agenda') { handleEndSession(); event.preventDefault(); }
+      else if (turnPhase === 'debrief') { handleDebriefContinue(); event.preventDefault(); }
+    };
+
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+
   const handleBuildProject = (project: DevelopmentProject) => {
     if (!gameState) return;
     const currentLevel = gameState.projectLevels[project.id] ?? 0;
@@ -602,6 +647,7 @@ function App() {
               actionsRemaining={state.actionsRemaining ?? 0}
               characters={state.characters}
               decisions={state.policyDecisions ?? []}
+              audits={state.forecastAudits ?? []}
               onOpen={handleOpenProposal}
               onEndSession={handleEndSession}
             />

@@ -1,4 +1,5 @@
-import type { CharacterId, CharacterState, PolicyDecisionRecord, PolicyProposal } from '../engine/types';
+import type { CharacterId, CharacterState, ForecastAudit, PolicyDecisionRecord, PolicyProposal } from '../engine/types';
+import { advisorRecord } from '../engine/learningLogic';
 import { ProposalCard } from './ProposalCard';
 import './CabinetAgenda.css';
 
@@ -8,6 +9,7 @@ interface CabinetAgendaProps {
     actionsRemaining: number;
     characters?: Record<CharacterId, CharacterState>;
     decisions: PolicyDecisionRecord[];
+    audits: ForecastAudit[];
     onOpen: (proposalId: string) => void;
     onEndSession: () => void;
 }
@@ -23,9 +25,11 @@ export function CabinetAgenda({
     actionsRemaining,
     characters,
     decisions,
+    audits,
     onOpen,
     onEndSession,
 }: CabinetAgendaProps) {
+    const recordFor = (advisorId: CharacterId) => advisorRecord(audits, advisorId);
     const openedArcs = new Set(
         decisions
             .map(decision => proposals.find(proposal => proposal.id === decision.proposalId)?.arcId)
@@ -56,12 +60,20 @@ export function CabinetAgenda({
                 </div>
             </header>
 
+            {proposals.length === 0 && (
+                <p className="cabinet-empty">
+                    Nothing has reached the cabinet table this year. The ministries are working through
+                    what you have already set in motion.
+                </p>
+            )}
+
             <div className="cabinet-grid">
                 {proposals.map(proposal => (
                     <ProposalCard
                         key={proposal.id}
                         proposal={proposal}
                         characterState={characters?.[proposal.sponsorId]}
+                        record={recordFor(proposal.sponsorId)}
                         isArcContinuation={openedArcs.has(proposal.arcId) && !decidedArcIds.has(proposal.id)}
                         disabled={actionsRemaining <= 0}
                         onOpen={onOpen}
