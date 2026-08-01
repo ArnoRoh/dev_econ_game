@@ -1,7 +1,7 @@
 import type { TurnDebriefEntry } from '../engine/types';
 import { CHARACTERS_BY_ID } from '../data/characters';
 import { FACTIONS_BY_ID } from '../data/factions';
-import { formatEffectList } from '../effectFormatting';
+import { formatEffect, formatEffectList } from '../effectFormatting';
 import './TurnDebrief.css';
 
 interface TurnDebriefProps {
@@ -80,6 +80,36 @@ export function TurnDebrief({ year, entries, ignoredTitles, onContinue }: TurnDe
                                         );
                                     })}
                                 </ul>
+                            </div>
+                        )}
+
+                        {entry.prediction && (
+                            <div className="debrief-block">
+                                <h4 className="debrief-block-title">Your call</h4>
+                                <p
+                                    className={`debrief-prediction ${
+                                        entry.predictionCorrect ? 'is-right' : 'is-wrong'
+                                    }`}
+                                >
+                                    <span aria-hidden="true">
+                                        {entry.predictionCorrect ? '✓' : '✗'}
+                                    </span>{' '}
+                                    You expected{' '}
+                                    {entry.prediction === 'up'
+                                        ? 'an improvement'
+                                        : entry.prediction === 'down'
+                                          ? 'a worsening'
+                                          : 'little change'}
+                                    {entry.predictionMetric && (
+                                        <>
+                                            {' '}in{' '}
+                                            <strong>
+                                                {formatEffect(entry.predictionMetric, 0).split(':')[0]}
+                                            </strong>
+                                        </>
+                                    )}
+                                    . {entry.predictionCorrect ? 'That is what happened.' : 'It went the other way.'}
+                                </p>
                             </div>
                         )}
 

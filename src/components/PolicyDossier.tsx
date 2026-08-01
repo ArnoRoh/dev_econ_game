@@ -9,15 +9,32 @@ import type {
 import { CHARACTERS_BY_ID } from '../data/characters';
 import { FACTIONS_BY_ID } from '../data/factions';
 import { ECONOMIC_CONCEPTS } from '../data/concepts';
+import { headlineMetric } from '../engine/learningLogic';
 import { SOURCES } from '../data/sources';
 import './PolicyDossier.css';
+
+export type PredictionChoice = 'up' | 'down' | 'mixed';
+
+const METRIC_LABEL: Record<string, string> = {
+    gdp: 'national output',
+    gdpGrowthRate: 'the growth rate',
+    population: 'the population',
+    stability: 'political stability',
+    eliteSatisfaction: 'elite support',
+    militaryPower: 'the army\u2019s standing',
+    educationLevel: 'education',
+    famineRisk: 'food security',
+    internationalRelations: 'foreign relations',
+    genderEquality: 'gender equality',
+    externalDebt: 'the debt burden',
+};
 
 interface PolicyDossierProps {
     proposal: PolicyProposal;
     characters?: Record<CharacterId, CharacterState>;
     advisorInsight: number;
     onSpendInsight: () => void;
-    onConfirm: (option: EducationalPolicyOption) => void;
+    onConfirm: (option: EducationalPolicyOption, prediction: PredictionChoice | null) => void;
     onReject: () => void;
     onBack: () => void;
 }
@@ -55,6 +72,7 @@ export function PolicyDossier({
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [openSection, setOpenSection] = useState<string | null>('mechanism');
     const [insightUsed, setInsightUsed] = useState(false);
+    const [prediction, setPrediction] = useState<PredictionChoice | null>(null);
 
     const sponsor = CHARACTERS_BY_ID[proposal.sponsorId];
     const concepts = ECONOMIC_CONCEPTS.filter(concept => proposal.conceptIds.includes(concept.id));
@@ -215,7 +233,10 @@ export function PolicyDossier({
                                 type="button"
                                 className="dossier-option-head"
                                 aria-pressed={isSelected}
-                                onClick={() => setSelectedId(isSelected ? null : option.id)}
+                                onClick={() => {
+                                    setSelectedId(isSelected ? null : option.id);
+                                    setPrediction(null);
+                                }}
                             >
                                 <span className="dossier-option-text">{option.text}</span>
                                 <span className="dossier-option-hint">
@@ -271,10 +292,57 @@ export function PolicyDossier({
                                         })}
                                     </ul>
 
+                                    {(() => {
+                                        const metric = headlineMetric(option.effects);
+                                        if (!metric) return null;
+                                        const label = METRIC_LABEL[metric] ?? metric;
+                                        return (
+                                            <div className="dossier-predict">
+                                                <h4 className="dossier-minor-heading">
+                                                    Before you commit — what do you expect this to do to{' '}
+                                                    {label}?
+                                                </h4>
+                                                <div
+                                                    className="dossier-predict-options"
+                                                    role="group"
+                                                    aria-label={`Your prediction for ${label}`}
+                                                >
+                                                    {(
+                                                        [
+                                                            ['up', '▲ Improve'],
+                                                            ['mixed', '◆ Little change'],
+                                                            ['down', '▼ Worsen'],
+                                                        ] as [PredictionChoice, string][]
+                                                    ).map(([value, text]) => (
+                                                        <button
+                                                            key={value}
+                                                            type="button"
+                                                            className={`dossier-predict-button${
+                                                                prediction === value ? ' is-picked' : ''
+                                                            }`}
+                                                            aria-pressed={prediction === value}
+                                                            onClick={() =>
+                                                                setPrediction(
+                                                                    prediction === value ? null : value,
+                                                                )
+                                                            }
+                                                        >
+                                                            {text}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <p className="dossier-predict-note">
+                                                    Optional, and never penalised. Your call is checked against
+                                                    the debrief.
+                                                </p>
+                                            </div>
+                                        );
+                                    })()}
+
                                     <button
                                         type="button"
                                         className="primary-button dossier-commit"
-                                        onClick={() => onConfirm(option)}
+                                        onClick={() => onConfirm(option, prediction)}
                                     >
                                         Commit to this — spends one action
                                     </button>

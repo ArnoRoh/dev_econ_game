@@ -401,3 +401,50 @@
         padding: 18px 16px 22px;
     }
 }
+
+.dossier-predict {
+    padding: 14px;
+    margin-bottom: 14px;
+    background: rgba(212, 175, 55, 0.05);
+    border: 1px dashed rgba(212, 175, 55, 0.35);
+    border-radius: 7px;
+}
+
+.dossier-predict-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.dossier-predict-button {
+    flex: 1 1 auto;
+    min-height: 44px;
+    padding: 10px 14px;
+    background: transparent;
+    border: 1px solid #4a4a42;
+    border-radius: 6px;
+    color: #b8b0a0;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+}
+
+.dossier-predict-button:hover {
+    border-color: rgba(212, 175, 55, 0.6);
+    color: #e2c76b;
+}
+
+.dossier-predict-button.is-picked {
+    background: rgba(212, 175, 55, 0.16);
+    border-color: var(--color-primary);
+    color: #e2c76b;
+}
+
+.dossier-predict-note {
+    margin: 9px 0 0;
+    font-size: 0.72rem;
+    font-style: italic;
+    color: #7d766a;
+}

@@ -9,7 +9,7 @@ import {
 } from './engine/agendaLogic';
 import { newspaperForTurn, resolveDueConsequences, resolveDuePromises } from './engine/consequenceLogic';
 import { driftFactions } from './engine/factionLogic';
-import { answerKnowledgeCheck, recordConceptExposure, selectKnowledgeCheck, spendAdvisorInsight, summariseLearning } from './engine/learningLogic';
+import { answerKnowledgeCheck, headlineMetric, recordConceptExposure, scorePrediction, selectKnowledgeCheck, spendAdvisorInsight, summariseLearning } from './engine/learningLogic';
 import { buildEndingContext, endingCitations, resolveEnding } from './engine/endingLogic';
 import type {
   GameState,
@@ -43,6 +43,7 @@ import { TrendPanel } from './components/TrendPanel';
 import { Newspaper } from './components/Newspaper';
 import { CabinetAgenda } from './components/CabinetAgenda';
 import { PolicyDossier } from './components/PolicyDossier';
+import type { PredictionChoice } from './components/PolicyDossier';
 import { TurnDebrief } from './components/TurnDebrief';
 import { FactionRail } from './components/FactionRail';
 import { KnowledgeCheckModal } from './components/KnowledgeCheckModal';
@@ -215,8 +216,21 @@ function App() {
     setTurnPhase('dossier');
   };
 
-  const handleConfirmOption = (proposal: PolicyProposal, option: EducationalPolicyOption) => {
+  const handleConfirmOption = (
+    proposal: PolicyProposal,
+    option: EducationalPolicyOption,
+    prediction: PredictionChoice | null,
+  ) => {
     if (!gameState) return;
+
+    // Score the player's call against the option's own headline effect. Famine
+    // risk and debt are inverted: a fall in either is an improvement.
+    const metric = headlineMetric(option.effects);
+    const lowerIsBetter = metric === 'famineRisk' || metric === 'externalDebt';
+    const predictionCorrect =
+      prediction && metric
+        ? scorePrediction(prediction, option.effects[metric] ?? 0, lowerIsBetter)
+        : undefined;
 
     let next = confirmProposal(gameState, proposal, option);
     next = recordConceptExposure(next, option.conceptIds);
@@ -253,8 +267,18 @@ function App() {
         factionEffects: option.factionEffects,
         conceptIds: option.conceptIds,
         watchFor: option.delayedConsequences.map(consequence => consequence.headline),
+        ...(prediction ? { prediction, predictionMetric: metric ?? undefined, predictionCorrect } : {}),
       },
     ]);
+
+    if (predictionCorrect) {
+      const progress = { ...(next.conceptProgress ?? {}) };
+      for (const id of option.conceptIds) {
+        const current = progress[id];
+        if (current) progress[id] = { ...current, correctPredictions: current.correctPredictions + 1 };
+      }
+      next = { ...next, conceptProgress: progress };
+    }
 
     setGameState(next);
     setOpenProposalId(null);
@@ -672,7 +696,7 @@ function App() {
               characters={state.characters}
               advisorInsight={state.advisorInsight ?? 0}
               onSpendInsight={() => setGameState(spendAdvisorInsight(state))}
-              onConfirm={option => handleConfirmOption(openProposal, option)}
+              onConfirm={(option, prediction) => handleConfirmOption(openProposal, option, prediction)}
               onReject={() => handleRejectProposal(openProposal)}
               onBack={() => { setOpenProposalId(null); setTurnPhase('agenda'); }}
             />

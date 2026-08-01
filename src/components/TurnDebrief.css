@@ -185,3 +185,23 @@
     display: block;
     margin: 22px auto 0;
 }
+
+.debrief-prediction {
+    margin: 0;
+    padding: 10px 13px;
+    border-radius: 6px;
+    font-size: 0.86rem;
+    line-height: 1.55;
+}
+
+.debrief-prediction.is-right {
+    background: rgba(129, 199, 132, 0.1);
+    border-left: 3px solid var(--color-success);
+    color: #c3ddc4;
+}
+
+.debrief-prediction.is-wrong {
+    background: rgba(229, 115, 115, 0.1);
+    border-left: 3px solid var(--color-danger);
+    color: #dfc0c0;
+}

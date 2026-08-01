@@ -392,6 +392,10 @@ export interface TurnDebriefEntry {
     conceptIds: ConceptId[];
     /** What to watch for in later years. */
     watchFor: string[];
+    /** The player's pre-decision call, and whether it held up. */
+    prediction?: 'up' | 'down' | 'mixed';
+    predictionMetric?: keyof CountryStats;
+    predictionCorrect?: boolean;
 }
 
 export interface GameState {
