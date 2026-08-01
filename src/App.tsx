@@ -49,6 +49,7 @@ import { FactionRail } from './components/FactionRail';
 import { KnowledgeCheckModal } from './components/KnowledgeCheckModal';
 import { PolicyLedger } from './components/PolicyLedger';
 import { ChapterReport } from './components/ChapterReport';
+import { SetupScreen } from './components/SetupScreen';
 import { TurnPrimer } from './components/TurnPrimer';
 
 import './components/Tooltip.css';
@@ -488,84 +489,20 @@ function App() {
 
   if (!gameState && !isNaming) {
     return (
-      <div className="menu-screen founding-screen">
-        <div className="founding-content">
-        {hasActiveSave && (
-          <button className="continue-button" onClick={continueSavedGame}>
-            Continue Saved Republic
-          </button>
-        )}
-        <h1 className="title">Post-Colonial Republic</h1>
-        <p className="subtitle">Constitutional Convention</p>
-
-        <div className="selection-container" style={{ textAlign: 'left', maxWidth: '800px', margin: '0 auto' }}>
-          <div className="points-display" style={{
-            color: pointsRemaining < 0 ? '#e57373' : '#81c784',
-            fontSize: '1.2rem',
-            marginBottom: '20px',
-            textAlign: 'center',
-            border: '1px solid #444',
-            padding: '10px'
-          }}>
-            Constitution Points: {pointsRemaining} / {POINTS_BUDGET}
-          </div>
-
-          <div className="artifacts-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '15px', maxHeight: '500px', overflowY: 'auto' }}>
-            {ARTIFACTS.map(a => {
-              const isSelected = !!selectedArtifacts.find(sa => sa.id === a.id);
-              return (
-                <div key={a.id}
-                  onClick={() => toggleArtifact(a)}
-                  style={{
-                    border: isSelected ? '1px solid #d4af37' : '1px solid #333',
-                    backgroundColor: isSelected ? 'rgba(212, 175, 55, 0.1)' : '#222',
-                    padding: '15px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    position: 'relative'
-                  }}>
-                  <div style={{ fontWeight: 'bold', color: isSelected ? '#d4af37' : '#ccc' }}>{a.name}</div>
-                  <div style={{ fontSize: '0.8rem', color: '#888', margin: '5px 0' }}>{a.description}</div>
-                  <div style={{
-                    position: 'absolute', top: '5px', right: '5px',
-                    fontSize: '0.7em', fontWeight: 'bold',
-                    color: (a.pointCost || 0) > 0 ? '#e57373' : '#81c784'
-                  }}>
-                    Cost: {a.pointCost}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="mission-selection">
-            <span className="selection-label">Choose a national mission</span>
-            <div className="mission-selection-grid">
-              {NATIONAL_MISSIONS.map(mission => (
-                <button
-                  className={`mission-selection-card ${selectedMissionId === mission.id ? 'selected' : ''}`}
-                  key={mission.id}
-                  onClick={() => setSelectedMissionId(mission.id)}
-                >
-                  <strong>{mission.name}</strong>
-                  <span>{mission.description}</span>
-                  <small>{mission.goals.map(goal => goal.label).join(' · ')}</small>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <button
-          className="primary-button"
-          onClick={startNaming}
-          disabled={!isValidSelection || selectedArtifacts.length === 0 || !selectedMissionId}
-          style={{ marginTop: '30px' }}
-        >
-          Ratify Constitution
-        </button>
-        </div>
-      </div>
+      <SetupScreen
+        artifacts={ARTIFACTS}
+        selectedArtifacts={selectedArtifacts}
+        onToggleArtifact={toggleArtifact}
+        missions={NATIONAL_MISSIONS}
+        selectedMissionId={selectedMissionId}
+        onSelectMission={setSelectedMissionId}
+        pointsRemaining={pointsRemaining}
+        pointsBudget={POINTS_BUDGET}
+        canRatify={isValidSelection && selectedArtifacts.length > 0 && !!selectedMissionId}
+        onRatify={startNaming}
+        hasActiveSave={hasActiveSave}
+        onContinue={continueSavedGame}
+      />
     );
   }
 

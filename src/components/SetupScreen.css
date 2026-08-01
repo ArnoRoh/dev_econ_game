@@ -1,0 +1,300 @@
+.setup {
+    position: relative;
+    min-height: 100vh;
+    background:
+        radial-gradient(120% 90% at 20% 0%, rgba(212, 175, 55, 0.08) 0%, transparent 60%),
+        url('/assets/republic-hero.png') center / cover no-repeat fixed,
+        #12140f;
+}
+
+/* The hero photograph carries the mood but must not fight the text over it. */
+.setup-veil {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        180deg,
+        rgba(10, 12, 9, 0.82) 0%,
+        rgba(10, 12, 9, 0.9) 42%,
+        rgba(10, 12, 9, 0.97) 100%
+    );
+}
+
+.setup-inner {
+    position: relative;
+    width: min(1080px, 100%);
+    margin: 0 auto;
+    padding: 48px 24px 64px;
+}
+
+.setup-resume {
+    display: block;
+    margin: 0 auto 28px;
+    min-height: 44px;
+    padding: 10px 20px;
+    background: rgba(17, 20, 19, 0.75);
+    border: 1px solid rgba(212, 175, 55, 0.55);
+    border-radius: 999px;
+    color: #d9c77e;
+    font-family: inherit;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.setup-resume:hover {
+    background: rgba(212, 175, 55, 0.18);
+}
+
+.setup-header {
+    max-width: 720px;
+    margin-bottom: 44px;
+}
+
+.setup-kicker {
+    margin: 0 0 10px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+}
+
+.setup-title {
+    margin: 0 0 14px;
+    font-family: var(--font-serif);
+    font-size: clamp(2.2rem, 7vw, 3.6rem);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    color: #f4eddc;
+}
+
+.setup-lede {
+    margin: 0;
+    font-size: clamp(0.98rem, 2.2vw, 1.12rem);
+    line-height: 1.7;
+    color: #b9b1a1;
+}
+
+.setup-section {
+    margin-bottom: 40px;
+}
+
+.setup-section-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: baseline;
+    justify-content: space-between;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.28);
+}
+
+.setup-section-title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 1.35rem;
+    color: #ece5d4;
+}
+
+.setup-budget {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 0;
+}
+
+.setup-budget-value {
+    font-family: var(--font-serif);
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--color-success);
+    transition: color 200ms ease;
+}
+
+.setup-budget.is-over .setup-budget-value {
+    color: var(--color-danger);
+}
+
+.setup-budget-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #857d70;
+}
+
+.setup-hint {
+    margin: 12px 0 18px;
+    font-size: 0.86rem;
+    font-style: italic;
+    color: #8d8578;
+}
+
+.setup-grid,
+.setup-missions {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.setup-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr));
+}
+
+.setup-missions {
+    grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+}
+
+.setup-card,
+.setup-mission {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    height: 100%;
+    min-height: 44px;
+    padding: 16px 16px 14px;
+    background: linear-gradient(180deg, rgba(40, 42, 38, 0.72) 0%, rgba(26, 28, 25, 0.72) 100%);
+    border: 1px solid #3a3a34;
+    border-radius: 9px;
+    color: inherit;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.setup-card:hover,
+.setup-mission:hover {
+    transform: translateY(-2px);
+    border-color: rgba(212, 175, 55, 0.5);
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.4);
+}
+
+.setup-card.is-selected,
+.setup-mission.is-selected {
+    border-color: var(--color-primary);
+    background: linear-gradient(180deg, rgba(212, 175, 55, 0.14) 0%, rgba(212, 175, 55, 0.05) 100%);
+    box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.35) inset;
+}
+
+.setup-card:focus-visible,
+.setup-mission:focus-visible,
+.setup-resume:focus-visible,
+.setup-ratify:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.setup-cost {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 2px 8px;
+    border: 1px solid rgba(229, 115, 115, 0.45);
+    border-radius: 999px;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: var(--color-danger);
+}
+
+/* A handicap gives points back, so it reads as a credit rather than a price. */
+.setup-cost.is-credit {
+    border-color: rgba(129, 199, 132, 0.45);
+    color: var(--color-success);
+}
+
+.setup-card-name {
+    padding-right: 52px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #ded6c4;
+    overflow-wrap: anywhere;
+}
+
+.setup-card.is-selected .setup-card-name,
+.setup-mission.is-selected .setup-mission-name {
+    color: var(--color-primary);
+}
+
+.setup-card-desc,
+.setup-mission-desc {
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: #9d968a;
+}
+
+.setup-card-tags {
+    margin-top: 2px;
+    font-size: 0.64rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6f6a5f;
+}
+
+.setup-mission-name {
+    font-family: var(--font-serif);
+    font-size: 1.06rem;
+    color: #ece5d4;
+}
+
+.setup-mission-goals {
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px solid #33332c;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #857d70;
+}
+
+.setup-footer {
+    margin-top: 36px;
+    text-align: center;
+}
+
+.setup-ratify {
+    min-height: 48px;
+    padding: 14px 34px;
+    font-size: 0.9rem;
+}
+
+.setup-ratify:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.setup-blocked {
+    margin: 12px 0 0;
+    font-size: 0.82rem;
+    font-style: italic;
+    color: #a8837f;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .setup-card,
+    .setup-mission {
+        transition: none;
+    }
+
+    .setup-card:hover,
+    .setup-mission:hover {
+        transform: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .setup {
+        /* Fixed attachment is expensive and janky on mobile compositors. */
+        background-attachment: scroll;
+    }
+
+    .setup-inner {
+        padding: 32px 16px 48px;
+    }
+}
