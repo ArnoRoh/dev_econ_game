@@ -70,7 +70,7 @@ export function PolicyDossier({
     onBack,
 }: PolicyDossierProps) {
     const [selectedId, setSelectedId] = useState<string | null>(null);
-    const [openSection, setOpenSection] = useState<string | null>('mechanism');
+    const [openSection, setOpenSection] = useState<string | null>(null);
     const [insightUsed, setInsightUsed] = useState(false);
     const [prediction, setPrediction] = useState<PredictionChoice | null>(null);
 
@@ -105,18 +105,23 @@ export function PolicyDossier({
                 <p className="dossier-stakeholders">{proposal.stakeholderSummary}</p>
             </div>
 
-            {concepts.map(concept => (
+            {concepts.map((concept, index) => {
+                const sectionId = `mechanism-${concept.id}`;
+                // Only the first mechanism is open by default; a proposal can carry
+                // three concepts, and opening them all buries the decision itself.
+                const isOpen = openSection === sectionId || (openSection === null && index === 0);
+                return (
                 <div key={concept.id} className="dossier-accordion">
                     <button
                         type="button"
                         className="dossier-accordion-head"
-                        aria-expanded={openSection === 'mechanism'}
-                        onClick={() => toggle('mechanism')}
+                        aria-expanded={isOpen}
+                        onClick={() => toggle(sectionId)}
                     >
                         <span>The mechanism · {concept.title}</span>
-                        <span aria-hidden="true">{openSection === 'mechanism' ? '−' : '+'}</span>
+                        <span aria-hidden="true">{isOpen ? '−' : '+'}</span>
                     </button>
-                    {openSection === 'mechanism' && (
+                    {isOpen && (
                         <div className="dossier-accordion-body">
                             <p className="dossier-concept-summary">{concept.oneSentenceSummary}</p>
                             <ol className="dossier-chain">
@@ -147,7 +152,8 @@ export function PolicyDossier({
                         </div>
                     )}
                 </div>
-            ))}
+                );
+            })}
 
             {proposal.backgroundTheory && (
                 <div className="dossier-accordion">
