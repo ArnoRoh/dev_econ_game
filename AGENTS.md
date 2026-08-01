@@ -54,7 +54,7 @@ Run the narrowest relevant check while working, then run the complete check befo
 npm run check
 ```
 
-`npm run check` runs ESLint, the production TypeScript/Vite build, two seeded balance simulations, and the educational content validator. There is not yet an automated test suite, so gameplay changes should also be smoke-tested in the browser with `npm run dev`.
+`npm run check` runs ESLint, the production TypeScript/Vite build, two seeded balance simulations, and two content validators. There is not yet an automated test suite, so gameplay changes should also be smoke-tested in the browser with `npm run dev`.
 
 Two balance simulations run:
 
@@ -62,6 +62,14 @@ Two balance simulations run:
 - `npm run balance:agenda` exercises the cabinet loop the game actually plays,
   and fails the check if deliberate play cannot complete 2030, if careless play
   outlasts deliberate play, or if collapse becomes too forgiving.
+
+Two content validators run:
+
+- `npm run validate:content` checks `concepts.ts` and `sources.ts`.
+- `npm run validate:arcs` checks the proposals themselves: unique ids, that every
+  referenced concept, source, sponsor and faction exists, that arc steps form an
+  unbroken sequence, that nothing depends on a flag no option sets, and that no
+  promise is unkeepable by construction.
 
 Preserve the intentional gap between deliberate and careless play; update the accepted bands only with an explicit balance rationale.
 

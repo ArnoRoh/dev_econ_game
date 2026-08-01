@@ -15,9 +15,6 @@ export const AGENDA_ACTIONS_PER_TURN = 2;
 /** Years before a recurring matter may return to the agenda. */
 export const RECURRENCE_GAP_TURNS = 14;
 
-/** Migration switch: the old annual-event route remains available during rollout. */
-export const legacyAnnualEvents = false;
-
 const getAgendaIds = (state: GameState): string[] => state.agendaProposalIds ?? [];
 const getDecisions = (state: GameState): PolicyDecisionRecord[] => state.policyDecisions ?? [];
 
