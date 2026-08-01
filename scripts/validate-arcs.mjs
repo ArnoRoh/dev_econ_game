@@ -15,6 +15,14 @@ import { ECONOMIC_CONCEPTS } from '../src/data/concepts.ts';
 import { SOURCES } from '../src/data/sources.ts';
 import { CHARACTERS } from '../src/data/characters.ts';
 import { FACTIONS } from '../src/data/factions.ts';
+import { ACHIEVEMENTS } from '../src/data/achievements.ts';
+import { KNOWLEDGE_CHECKS } from '../src/data/knowledgeChecks.ts';
+
+/** Flags set by the engine and crisis content rather than by an arc option. */
+const ENGINE_FLAGS = new Set([
+    'imf_program', 'non_aligned', 'authoritarian_turn', 'democratic',
+    'peaceful_transfer', 'stolen_election', 'defaulted', 'restructured',
+]);
 
 const conceptIds = new Set(ECONOMIC_CONCEPTS.map(c => c.id));
 const sourceIds = new Set(SOURCES.map(s => s.id));
@@ -126,6 +134,31 @@ for (const [name, arc] of Object.entries(POLICY_ARCS)) {
 
     const arcIds = new Set(arc.map(proposal => proposal.arcId));
     if (arcIds.size !== 1) note(`arc ${name}: mixes arcIds ${[...arcIds].join(', ')}`);
+}
+
+// Achievements gate on flags too. One that nothing sets is unearnable, which
+// is invisible in play and impossible to notice by testing.
+for (const achievement of ACHIEVEMENTS) {
+    const source = achievement.earned.toString();
+    for (const match of source.matchAll(/flags\.([a-zA-Z_0-9]+)/g)) {
+        if (!settableFlags.has(match[1]) && !ENGINE_FLAGS.has(match[1])) {
+            note(`achievement ${achievement.id}: gates on flag "${match[1]}" that nothing sets`);
+        }
+    }
+}
+
+// A threshold above the number of checks that exist is silently unearnable.
+for (const achievement of ACHIEVEMENTS) {
+    const source = achievement.earned.toString();
+    if (!/answeredChecks|correctKnowledgeChecks/.test(source)) continue;
+    for (const match of source.matchAll(/>=\s*(\d+)/g)) {
+        if (Number(match[1]) > KNOWLEDGE_CHECKS.length) {
+            note(
+                `achievement ${achievement.id}: needs ${match[1]} knowledge checks but only ` +
+                    `${KNOWLEDGE_CHECKS.length} exist`,
+            );
+        }
+    }
 }
 
 const authored = ALL_POLICY_PROPOSALS.filter(p => !p.isGeneric);

@@ -51,6 +51,10 @@ import { PolicyLedger } from './components/PolicyLedger';
 import { ChapterReport } from './components/ChapterReport';
 import { SetupScreen } from './components/SetupScreen';
 import { TitleScreen } from './components/TitleScreen';
+import { AchievementToast } from './components/AchievementToast';
+import { AchievementGallery } from './components/AchievementGallery';
+import { checkAchievements } from './engine/achievementLogic';
+import type { AchievementDef } from './data/achievements';
 import { YearTransition } from './components/YearTransition';
 import { StatCounter } from './components/StatCounter';
 import { TurnPrimer } from './components/TurnPrimer';
@@ -77,6 +81,8 @@ function App() {
   const [ledgerOpen, setLedgerOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
   const [statsTab, setStatsTab] = useState<'nation' | 'region' | 'trends'>('nation');
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [freshAchievements, setFreshAchievements] = useState<AchievementDef[]>([]);
   /** Years being crossed, shown as a brief interstitial. */
   const [yearTurn, setYearTurn] = useState<{ from: number; to: number } | null>(null);
   const [primerDismissed, setPrimerDismissed] = useState(
@@ -211,6 +217,12 @@ function App() {
       handleGameOver(state);
       return;
     }
+
+    // Evaluated once the year has fully resolved, so a milestone reached by a
+    // delayed consequence is credited in the year it actually landed.
+    const scored = checkAchievements(state);
+    state = scored.state;
+    if (scored.earned.length > 0) setFreshAchievements(scored.earned);
 
     state = startAgendaTurn(state, ALL_POLICY_PROPOSALS);
 
@@ -501,13 +513,16 @@ function App() {
 
   if (!gameState && !isNaming && atTitle) {
     return (
+      <>
       <TitleScreen
         hasActiveSave={hasActiveSave}
         onContinue={() => { setAtTitle(false); continueSavedGame(); }}
         onNewGame={() => setAtTitle(false)}
-        onOpenAchievements={() => { setAtTitle(false); setLedgerOpen(true); }}
+        onOpenAchievements={() => setGalleryOpen(true)}
         version={APP_VERSION}
       />
+      {galleryOpen && <AchievementGallery state={gameState} onClose={() => setGalleryOpen(false)} />}
+      </>
     );
   }
 
@@ -618,6 +633,9 @@ function App() {
           </button>
           <button type="button" onClick={() => setLedgerOpen(true)}>
             Archive ({(state.policyDecisions ?? []).length})
+          </button>
+          <button type="button" onClick={() => setGalleryOpen(true)}>
+            Records ({(state.achievements ?? []).length})
           </button>
         </nav>
       </header>
@@ -730,6 +748,14 @@ function App() {
           )}
         </section>
       )}
+
+      {galleryOpen && <AchievementGallery state={state} onClose={() => setGalleryOpen(false)} />}
+
+      <AchievementToast
+        key={freshAchievements[0]?.id ?? 'none'}
+        achievements={freshAchievements}
+        onDismiss={() => setFreshAchievements([])}
+      />
 
       {yearTurn && (
         <YearTransition

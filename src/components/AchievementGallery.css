@@ -1,0 +1,138 @@
+.gallery {
+    width: min(680px, 100%);
+    max-height: 88vh;
+    overflow-y: auto;
+    padding: 24px 26px 28px;
+    background: linear-gradient(180deg, #23261f 0%, #171914 100%);
+    border: 1px solid #3d3d35;
+    border-radius: 12px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+.gallery-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.gallery-title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 1.4rem;
+    color: var(--color-primary);
+}
+
+.gallery-count {
+    margin: 3px 0 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #857d70;
+}
+
+.gallery-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    background: none;
+    border: none;
+    color: #9d968a;
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.gallery-close:hover {
+    color: var(--color-primary);
+}
+
+.gallery-close:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.gallery-bar {
+    height: 5px;
+    margin-bottom: 20px;
+    border-radius: 3px;
+    background: #2b2b25;
+    overflow: hidden;
+}
+
+.gallery-bar-fill {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #6f6330, var(--color-primary));
+    transition: width 600ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.gallery-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.gallery-item {
+    display: flex;
+    gap: 12px;
+    padding: 11px 0;
+    border-top: 1px solid #2a2a24;
+    opacity: 0.55;
+}
+
+.gallery-item.is-earned {
+    opacity: 1;
+}
+
+.gallery-mark {
+    flex-shrink: 0;
+    width: 20px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-align: center;
+    color: #5f5a4f;
+}
+
+.gallery-item.is-earned .gallery-mark {
+    color: var(--color-success);
+}
+
+.gallery-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.gallery-name {
+    font-size: 0.92rem;
+    color: #ded6c4;
+    overflow-wrap: anywhere;
+}
+
+.gallery-item.is-earned .gallery-name {
+    color: var(--color-primary);
+}
+
+.gallery-desc {
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: #9d968a;
+    overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gallery-bar-fill {
+        transition: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .gallery {
+        padding: 18px 16px 22px;
+    }
+}

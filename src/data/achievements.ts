@@ -94,10 +94,17 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     {
         id: 'scholar',
         name: 'Scholar',
-        description: 'Answered ten or more knowledge checks correctly.',
+        description: 'Answered seven of the nine knowledge checks correctly.',
+        // answeredChecks records attempts, not correctness, and there are only
+        // nine checks in the game — the previous threshold of ten made this
+        // unearnable. Correct answers are tallied per concept instead.
         earned: state => {
-            const answered = state.answeredChecks ?? [];
-            return answered.length >= 10;
+            const progress = Object.values(state.conceptProgress ?? {});
+            const correct = progress.reduce(
+                (sum, entry) => sum + (entry?.correctKnowledgeChecks ?? 0),
+                0,
+            );
+            return correct >= 7;
         },
     },
     {
@@ -157,14 +164,12 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     {
         id: 'sovereign_wealth',
         name: 'Sovereign Wealth',
-        description: 'Established a sovereign wealth fund and held it for more than five years.',
-        earned: state => {
-            const flags = state.flags;
-            if (!flags.sovereign_fund_established) return false;
-            const yearEstablished =
-                state.economicHistory.find(_ => flags.sovereign_fund_established)?.year ?? 2030;
-            return state.year - yearEstablished >= 5;
-        },
+        description: 'Established a sovereign wealth fund and still held it in 1985.',
+        // Nothing records the year a flag was set, so a genuine "held for five
+        // years" test is not available. Anchored to a date instead, which is
+        // measurable and means the same thing in practice: the fund survived
+        // the decade in which the temptation to raid it is greatest.
+        earned: state => Boolean(state.flags.sovereign_fund_established) && state.year >= 1985,
     },
     {
         id: 'industrial_power',
@@ -183,7 +188,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     {
         id: 'debt_dodger',
         name: 'Debt Dodger',
-        description: 'External debt remained below $50 million throughout the run.',
+        description: 'External debt stayed below $50 million across every year still on record.',
         secret: true,
         earned: state => {
             const snapshots = state.economicHistory ?? [];

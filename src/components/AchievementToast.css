@@ -1,0 +1,110 @@
+.toasts {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 70;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+    max-width: min(360px, calc(100vw - 36px));
+    transition: opacity 400ms ease;
+}
+
+.toasts.is-leaving {
+    opacity: 0;
+}
+
+.toast {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    padding: 13px 15px;
+    background: linear-gradient(180deg, rgba(36, 38, 30, 0.98) 0%, rgba(24, 26, 20, 0.98) 100%);
+    border: 1px solid rgba(212, 175, 55, 0.5);
+    border-left: 3px solid var(--color-primary);
+    border-radius: 8px;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.55);
+    animation: toast-in 460ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateX(28px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.toast-seal {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: var(--color-primary);
+}
+
+.toast-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.toast-kicker {
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #8d8578;
+}
+
+.toast-name {
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    color: var(--color-primary);
+    overflow-wrap: anywhere;
+}
+
+.toast-desc {
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: #b8b0a0;
+    overflow-wrap: anywhere;
+}
+
+.toast-dismiss {
+    min-height: 32px;
+    padding: 6px 14px;
+    background: rgba(18, 20, 16, 0.9);
+    border: 1px solid #3d3d35;
+    border-radius: 999px;
+    color: #9d968a;
+    font-family: inherit;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.toast-dismiss:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.toast-dismiss:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .toast {
+        animation: none;
+    }
+
+    .toasts {
+        transition: none;
+    }
+}
