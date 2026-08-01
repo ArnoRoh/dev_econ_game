@@ -1,0 +1,37 @@
+.portrait {
+    display: inline-block;
+    flex-shrink: 0;
+    vertical-align: middle;
+    overflow: visible;
+}
+
+.portrait-shimmer {
+    opacity: 0;
+}
+
+.portrait--large .portrait-shimmer {
+    animation: portrait-shimmer-pulse 5.5s ease-in-out infinite;
+}
+
+@keyframes portrait-shimmer-pulse {
+    0%,
+    45% {
+        opacity: 0;
+    }
+
+    60% {
+        opacity: 0.4;
+    }
+
+    80%,
+    100% {
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .portrait--large .portrait-shimmer {
+        animation: none;
+        opacity: 0;
+    }
+}

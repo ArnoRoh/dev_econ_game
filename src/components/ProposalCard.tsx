@@ -1,6 +1,9 @@
 import type { CharacterState, PolicyProposal } from '../engine/types';
 import { CHARACTERS_BY_ID } from '../data/characters';
 import { FACTIONS_BY_ID } from '../data/factions';
+import { Portrait } from './Portrait';
+import { Emblem, emblemForTags } from './Emblem';
+import type { EmblemKind } from './Emblem';
 
 interface ProposalCardProps {
     proposal: PolicyProposal;
@@ -13,12 +16,27 @@ interface ProposalCardProps {
     onOpen: (proposalId: string) => void;
 }
 
-const initialsOf = (name: string): string =>
-    name
-        .split(' ')
-        .map(part => part[0])
-        .slice(0, 2)
-        .join('');
+/** Authored arcs carry concepts rather than tags; both resolve to a subject. */
+const CONCEPT_EMBLEM: Record<string, EmblemKind> = {
+    land_tenure: 'agriculture',
+    green_revolution: 'agriculture',
+    import_substitution: 'industry',
+    infant_industry: 'industry',
+    export_orientation: 'trade',
+    labor_standards: 'labour',
+    dutch_disease: 'finance',
+    sovereign_wealth_fund: 'finance',
+    resource_curse: 'resources',
+};
+
+const emblemFor = (proposal: PolicyProposal): EmblemKind => {
+    if (proposal.tags?.length) return emblemForTags(proposal.tags);
+    for (const concept of proposal.conceptIds) {
+        const kind = CONCEPT_EMBLEM[concept];
+        if (kind) return kind;
+    }
+    return 'generic';
+};
 
 /**
  * A proposal is always attached to a person. The card leads with who is asking
@@ -44,9 +62,7 @@ export function ProposalCard({
             )}
 
             <header className="proposal-sponsor">
-                <span className="proposal-avatar" aria-hidden="true">
-                    {initialsOf(sponsor.name)}
-                </span>
+                <Portrait characterId={proposal.sponsorId} size={42} />
                 <span className="proposal-sponsor-text">
                     <strong>{sponsor.name}</strong>
                     <span className="proposal-sponsor-title">{sponsor.title}</span>
@@ -69,7 +85,12 @@ export function ProposalCard({
                 </p>
             )}
 
-            <h3 className="proposal-title">{proposal.title}</h3>
+            <h3 className="proposal-title">
+                <span className="proposal-emblem" aria-hidden="true">
+                    <Emblem kind={emblemFor(proposal)} size={18} />
+                </span>
+                {proposal.title}
+            </h3>
             <p className="proposal-brief">{proposal.brief}</p>
 
             <button

@@ -1,0 +1,88 @@
+/* A number readout for status-bar meters (see .shell-meter in GameShell.css).
+   Sizing and base color are inherited from wherever it is placed; this file
+   only adds the tween tint, the delta chip, and the offscreen live region. */
+
+.stat-counter {
+    position: relative;
+    display: inline-flex;
+    align-items: baseline;
+    white-space: nowrap;
+}
+
+.stat-counter-value {
+    color: inherit;
+    font: inherit;
+    /* The tint is applied instantly on change (a "flash"); removing the
+       class transitions the color back, which reads as the tint fading out. */
+    transition: color 400ms ease;
+}
+
+.stat-counter-value.stat-counter-flash-good {
+    color: var(--color-success);
+}
+
+.stat-counter-value.stat-counter-flash-bad {
+    color: var(--color-danger);
+}
+
+.stat-counter-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.stat-counter-chip {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 6px);
+    font-size: 0.7em;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    pointer-events: none;
+    white-space: nowrap;
+    animation: stat-counter-chip-drift 1100ms ease-out forwards;
+}
+
+.stat-counter-chip-good {
+    color: var(--color-success);
+}
+
+.stat-counter-chip-bad {
+    color: var(--color-danger);
+}
+
+@keyframes stat-counter-chip-drift {
+    from {
+        opacity: 1;
+        transform: translate(0, -50%);
+    }
+
+    to {
+        opacity: 0;
+        transform: translate(0, calc(-50% - 14px));
+    }
+}
+
+/* Behaviour 5: the chip may still appear briefly, but it must not move. The
+   animation name is kept identical so the JS side (which removes the chip
+   from state via onAnimationEnd) does not need to know which variant ran. */
+@media (prefers-reduced-motion: reduce) {
+    @keyframes stat-counter-chip-drift {
+        0%,
+        80% {
+            opacity: 1;
+            transform: translate(0, -50%);
+        }
+
+        100% {
+            opacity: 0;
+            transform: translate(0, -50%);
+        }
+    }
+}

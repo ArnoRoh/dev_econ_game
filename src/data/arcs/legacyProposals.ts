@@ -228,6 +228,7 @@ const toProposal = (event: GameEvent): PolicyProposal => {
         maxYear: event.maxYear,
         requiredFlags: event.reqFlags,
         isGeneric: true,
+        tags: event.tags,
         // Structural disputes recur; the agenda engine enforces a long gap.
         repeatable: true,
         backgroundTheory: event.theory,

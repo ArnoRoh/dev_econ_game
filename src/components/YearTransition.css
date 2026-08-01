@@ -1,0 +1,122 @@
+.year-turn {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    background: radial-gradient(80% 60% at 50% 50%, rgba(24, 26, 22, 0.97) 0%, rgba(10, 11, 9, 0.99) 100%);
+    animation: year-turn-in 220ms ease-out;
+}
+
+.year-turn.is-leaving {
+    animation: year-turn-out 220ms ease-in forwards;
+}
+
+@keyframes year-turn-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes year-turn-out {
+    to {
+        opacity: 0;
+    }
+}
+
+.year-turn-rule {
+    width: min(340px, 60vw);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.7), transparent);
+    animation: rule-spread 700ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+@keyframes rule-spread {
+    from {
+        transform: scaleX(0.2);
+        opacity: 0;
+    }
+    to {
+        transform: scaleX(1);
+        opacity: 1;
+    }
+}
+
+.year-turn-years {
+    position: relative;
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: clamp(3rem, 14vw, 6rem);
+    line-height: 1;
+    color: var(--color-primary);
+}
+
+/* The outgoing year lifts away behind the incoming one. */
+.year-turn-from {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: #5c5647;
+    animation: year-leave 900ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes year-leave {
+    0% {
+        opacity: 1;
+        transform: none;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-26px);
+    }
+}
+
+.year-turn-to {
+    display: block;
+    animation: year-arrive 900ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+@keyframes year-arrive {
+    0% {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+    45% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.year-turn-caption {
+    margin: 0;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: #7d766a;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .year-turn,
+    .year-turn.is-leaving,
+    .year-turn-rule,
+    .year-turn-from,
+    .year-turn-to {
+        animation: none;
+    }
+
+    /* No cross-fade to read, so only show the year being entered. */
+    .year-turn-from {
+        display: none;
+    }
+}

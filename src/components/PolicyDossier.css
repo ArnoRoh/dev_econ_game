@@ -448,3 +448,14 @@
     font-style: italic;
     color: #7d766a;
 }
+
+.dossier-sponsor-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.dossier-sponsor-row .dossier-sponsor {
+    margin: 0;
+}

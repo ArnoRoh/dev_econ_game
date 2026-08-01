@@ -10,6 +10,7 @@ import { CHARACTERS_BY_ID } from '../data/characters';
 import { FACTIONS_BY_ID } from '../data/factions';
 import { ECONOMIC_CONCEPTS } from '../data/concepts';
 import { headlineMetric } from '../engine/learningLogic';
+import { Portrait } from './Portrait';
 import { SOURCES } from '../data/sources';
 import './PolicyDossier.css';
 
@@ -93,9 +94,12 @@ export function PolicyDossier({
             </button>
 
             <header className="dossier-header">
-                <p className="dossier-sponsor">
-                    Raised by <strong>{sponsor.name}</strong>, {sponsor.title}
-                </p>
+                <div className="dossier-sponsor-row">
+                    <Portrait characterId={proposal.sponsorId} size={54} />
+                    <p className="dossier-sponsor">
+                        Raised by <strong>{sponsor.name}</strong>, {sponsor.title}
+                    </p>
+                </div>
                 <h2 className="dossier-title">{proposal.title}</h2>
                 <p className="dossier-brief">{proposal.brief}</p>
             </header>
@@ -271,6 +275,10 @@ export function PolicyDossier({
                                                     key={`${forecast.advisorId}-${forecast.summary}`}
                                                     className={`dossier-forecast dir-${forecast.predictedDirection}`}
                                                 >
+                                                    <Portrait
+                                                        characterId={forecast.advisorId}
+                                                        size={30}
+                                                    />
                                                     <span className="dossier-forecast-dir" aria-hidden="true">
                                                         {DIRECTION_GLYPH[forecast.predictedDirection]}
                                                     </span>

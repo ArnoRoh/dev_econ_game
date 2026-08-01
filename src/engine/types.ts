@@ -184,6 +184,8 @@ export interface PolicyProposal {
     legacySource?: string;
     /** May appear again in later years. Most proposals resolve permanently. */
     repeatable?: boolean;
+    /** Subject tags, used to pick an emblem. */
+    tags?: string[];
 }
 
 export interface ScheduledConsequence {

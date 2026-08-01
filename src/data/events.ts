@@ -602,7 +602,7 @@ export const EVENTS: GameEvent[] = [
     // ==========================================
     {
         id: 'nationalization_drive',
-        title: 'Commanding Heights (1960s)',
+        title: 'Commanding Heights',
         description: 'Post-independence fervor is high. Radicals demand we seize foreign-owned banks and mines to reclaim our sovereignty.',
         theory: 'In the 1950s/60s, "State Capitalism" was the dominant model (influenced by the Soviet Union). Leaders believed the state should control the "Commanding Heights" of the economy to direct surplus into development rather than foreign dividends.\n\nWhile politically popular, these State-Owned Enterprises (SOEs) often became inefficient patronage networks, lacking the discipline of competition (The Soft Budget Constraint).',
         source: 'Daniel Yergin',
@@ -632,7 +632,7 @@ export const EVENTS: GameEvent[] = [
     },
     {
         id: 'cold_war_proxy',
-        title: 'Cold War Alignment (1970s)',
+        title: 'Cold War Alignment',
         description: 'The Americans and Soviets are both offering massive military aid, but only if we align exclusively with their bloc.',
         theory: 'During the Cold War, development aid was often a tool of geopolitical bribery ("Clientelism"). Dictators like Mobutu (Zaire) received billions despite corruption because they were anti-Communist.\n\nThis "Strategic Rent" allowed regimes to survive without being accountable to their own tax-paying citizens. When the Cold War ended, this support vanished overnight.',
         source: 'Dambisa Moyo (Dead Aid)',
@@ -692,7 +692,7 @@ export const EVENTS: GameEvent[] = [
     },
     {
         id: 'hyperinflation_1980s',
-        title: 'Hyperinflation Spirals (1980s)',
+        title: 'Hyperinflation Spirals',
         description: 'To pay our debts, the previous administration just printed money. Prices now double every month.',
         theory: 'Hyperinflation is almost always a fiscal problem (budget deficit) solved by monetary means (printing). Once expectations unanchor, money loses its function as a store of value (Velocity of Money skyrockets).\n\nEnding it requires a "Nominal Anchor"—usually replacing the currency entirely or pegging it to a hard foreign currency, which forces immediate cessation of deficit spending.',
         source: 'Sargent & Wallace',
@@ -722,7 +722,7 @@ export const EVENTS: GameEvent[] = [
     },
     {
         id: 'capital_flight',
-        title: 'Capital Flight (1980s)',
+        title: 'Capital Flight',
         description: 'Fearing instability, the wealthy are moving their assets to Swiss bank accounts and Miami condos.',
         theory: 'Capital Flight drains a developing nation of its investment pool. It is often driven by an overvalued exchange rate (people expect a devaluation, so they move money out now).\n\nIt creates a vicious cycle: as money leaves, the government must borrow more abroad to cover the gap, leading to more fear and more flight.',
         source: 'James Henry',
@@ -751,7 +751,7 @@ export const EVENTS: GameEvent[] = [
     },
     {
         id: 'privatization_1990s',
-        title: 'The Fire Sale (1990s)',
+        title: 'The Fire Sale',
         description: 'The IMF says our State Telecom and Airline are bleeding money. We must sell them to private investors.',
         theory: 'Privatization was a key pillar of the 1990s Washington Consensus. In theory, private owners are more efficient than bureaucrats.\n\nIn practice, without strong regulators, privatization often turned public monopolies into private monopolies (owned by the President\'s cronies). This "Oligarchization" (e.g., Russia) created a class of billionaires without improving services for the poor.',
         source: 'Joseph Stiglitz',
@@ -782,7 +782,7 @@ export const EVENTS: GameEvent[] = [
     },
     {
         id: 'brain_drain_visa',
-        title: 'The Brain Drain (1990s)',
+        title: 'The Brain Drain',
         description: 'Western nations have introduced "High Skill Visas". Our best doctors and engineers are lining up at the embassy.',
         theory: 'Human Capital Flight is a subsidy from the poor to the rich. A developing nation pays to educate a doctor for 20 years, only for them to move to the UK/US to work.\n\nHowever, in the long run, "Brain Gain" can occur if they return with new skills or send back Remittances. But in the short run, the health and engineering sectors collapse.',
         source: 'Jagdish Bhagwati',
@@ -810,7 +810,7 @@ export const EVENTS: GameEvent[] = [
     },
     {
         id: 'mobile_money',
-        title: 'The Digital Leapfrog (2000s)',
+        title: 'The Digital Leapfrog',
         description: 'A local telecom startup wants to let people send money via SMS text messages, bypassing the corrupt banks.',
         theory: 'Financial Inclusion via "Leapfrogging". In the West, finance went Cash -> Cheques -> Cards -> Apps. In Africa (e.g., M-Pesa in Kenya), it went Cash -> SMS.\n\nThis dramatically reduced transaction costs for the poor, allowing them to save and receive money securely without a bank account. It is one of the most successful development innovations in history.',
         source: 'Tavneet Suri & William Jack',
@@ -839,7 +839,7 @@ export const EVENTS: GameEvent[] = [
     },
     {
         id: 'belt_road_initiative',
-        title: 'New Silk Road (2010s)',
+        title: 'New Silk Road',
         description: 'A new superpower offers to build a high-speed railway and deep-water port. No questions asked about human rights, unlike the West.',
         theory: 'The Belt and Road Initiative (BRI) represents a shift in development financing away from the conditional Western model (OECD) to the Chinese infrastructure-led model.\n\nIt fills a massive infrastructure gap ($1 Trillion). However, critics warn of "Debt Trap Diplomacy" (e.g., Sri Lanka port seizure) if the projects are not economically viable enough to pay back the loans.',
         source: 'Deborah Brautigam',
@@ -868,7 +868,7 @@ export const EVENTS: GameEvent[] = [
     },
     {
         id: 'tech_hub_startup',
-        title: 'Silicon Savannah (2010s)',
+        title: 'Silicon Savannah',
         description: 'Tech startups are booming in the capital. Venture Capital is flowing in, but they need faster internet and fewer regulations.',
         theory: 'The "Service Export" model (like India). Instead of factories, the country sells code and BPO services.\n\nIt creates a wealthy urban middle class but often leaves the rural poor behind (The "Dual Economy" problem). It requires high education investment and reliable electricity.',
         source: 'World Bank Digital Economy Report',

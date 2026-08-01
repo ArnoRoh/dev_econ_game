@@ -331,3 +331,10 @@
     text-transform: uppercase;
     color: #8d8578;
 }
+
+.proposal-emblem {
+    display: inline-flex;
+    vertical-align: -3px;
+    margin-right: 7px;
+    opacity: 0.85;
+}

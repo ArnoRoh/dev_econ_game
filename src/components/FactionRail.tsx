@@ -1,6 +1,7 @@
 import type { CharacterId, CharacterState, FactionId, FactionState, PromiseRecord } from '../engine/types';
 import { FACTIONS } from '../data/factions';
 import { CHARACTERS_BY_ID } from '../data/characters';
+import { Portrait } from './Portrait';
 import './FactionRail.css';
 
 interface FactionRailProps {
@@ -70,7 +71,10 @@ export function FactionRail({ factions, characters, promises, turn }: FactionRai
                             </div>
 
                             <div className="rail-faction-meta">
-                                <span>{leader.name}</span>
+                                <span className="rail-leader">
+                                    <Portrait characterId={faction.leaderId} size={22} />
+                                    {leader.name}
+                                </span>
                                 {state.radicalization > 45 && (
                                     <span className="rail-radical">
                                         radicalised {Math.round(state.radicalization)}

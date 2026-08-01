@@ -3,6 +3,7 @@ import { applyCharacterMemory, applyFactionEffects } from './factionLogic.ts';
 import { applyOption } from './gameLogic.ts';
 import { makePromise } from './consequenceLogic.ts';
 import type {
+    CharacterId,
     EducationalPolicyOption,
     GameState,
     PolicyDecisionRecord,
@@ -104,23 +105,27 @@ export function generateAgenda(
 
     // Authored arc steps take precedence; generic business fills what is left,
     // which keeps the agenda full across a campaign far longer than the arcs.
-    const authored = ranked.filter(entry => !entry.proposal.isGeneric).slice(0, targetSize);
+    const authored = ranked.filter(entry => !entry.proposal.isGeneric);
     const generic = ranked.filter(entry => entry.proposal.isGeneric);
 
     // A cabinet table should sound like several people, not one minister with a
-    // long list. Fill remaining slots preferring sponsors not yet represented,
-    // falling back to raw rank once every voice is on the agenda.
-    const chosen = [...authored];
-    const sponsors = new Set(chosen.map(entry => entry.proposal.sponsorId));
+    // long list. Take proposals in rank order but skip a sponsor already on the
+    // agenda, then relax the rule to fill any slots that remain. Arc steps are
+    // subject to the same pass — two live steps can share a sponsor, and seeing
+    // the same face twice reads as a bug.
+    const chosen: typeof ranked = [];
+    const sponsors = new Set<CharacterId>();
 
-    for (const entry of generic) {
-        if (chosen.length >= targetSize) break;
-        if (sponsors.has(entry.proposal.sponsorId)) continue;
-        chosen.push(entry);
-        sponsors.add(entry.proposal.sponsorId);
+    for (const pass of [authored, generic]) {
+        for (const entry of pass) {
+            if (chosen.length >= targetSize) break;
+            if (sponsors.has(entry.proposal.sponsorId)) continue;
+            chosen.push(entry);
+            sponsors.add(entry.proposal.sponsorId);
+        }
     }
 
-    for (const entry of generic) {
+    for (const entry of [...authored, ...generic]) {
         if (chosen.length >= targetSize) break;
         if (chosen.includes(entry)) continue;
         chosen.push(entry);

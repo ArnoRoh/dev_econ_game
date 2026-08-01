@@ -50,6 +50,8 @@ import { KnowledgeCheckModal } from './components/KnowledgeCheckModal';
 import { PolicyLedger } from './components/PolicyLedger';
 import { ChapterReport } from './components/ChapterReport';
 import { SetupScreen } from './components/SetupScreen';
+import { YearTransition } from './components/YearTransition';
+import { StatCounter } from './components/StatCounter';
 import { TurnPrimer } from './components/TurnPrimer';
 
 import './components/Tooltip.css';
@@ -71,6 +73,9 @@ function App() {
   const [pendingCheck, setPendingCheck] = useState<KnowledgeCheck | null>(null);
   const [ledgerOpen, setLedgerOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
+  const [statsTab, setStatsTab] = useState<'nation' | 'region' | 'trends'>('nation');
+  /** Years being crossed, shown as a brief interstitial. */
+  const [yearTurn, setYearTurn] = useState<{ from: number; to: number } | null>(null);
   const [primerDismissed, setPrimerDismissed] = useState(
     () => localStorage.getItem('dev_econ_primer_seen') === '1',
   );
@@ -204,12 +209,14 @@ function App() {
 
     state = startAgendaTurn(state, ALL_POLICY_PROPOSALS);
 
+    const crossedInto = state.year;
     setGameState(state);
     setDebriefEntries([]);
     setIgnoredTitles([]);
 
     const headlines = newspaperForTurn(state, state.turn);
     setTurnPhase(headlines.length > 0 ? 'newspaper' : 'agenda');
+    setYearTurn({ from: crossedInto - 1, to: crossedInto });
   }, [handleGameOver]);
 
   const handleOpenProposal = (proposalId: string) => {
@@ -569,18 +576,22 @@ function App() {
         <div className="shell-meters">
           <span className="shell-meter">
             <span className="shell-meter-label">Treasury</span>
-            <strong>${Math.round(state.treasury).toLocaleString()}M</strong>
+            <StatCounter value={state.treasury} format="currency" />
             <small className={state.lastFiscalBalance >= 0 ? 'positive' : 'negative'}>
               {state.lastFiscalBalance >= 0 ? '+' : ''}${Math.round(state.lastFiscalBalance)}M/yr
             </small>
           </span>
           <span className="shell-meter">
             <span className="shell-meter-label">Stability</span>
-            <strong>{Math.round(state.country.stability)}%</strong>
+            <StatCounter value={state.country.stability} format="percent" />
+          </span>
+          <span className="shell-meter">
+            <span className="shell-meter-label">Debt</span>
+            <StatCounter value={state.country.externalDebt} format="currency" lowerIsBetter />
           </span>
           <span className="shell-meter">
             <span className="shell-meter-label">Insight</span>
-            <strong>{state.advisorInsight ?? 0}</strong>
+            <StatCounter value={state.advisorInsight ?? 0} />
           </span>
         </div>
 
@@ -659,13 +670,56 @@ function App() {
 
       {statsOpen && (
         <section className="shell-stats" aria-label="Statistics office">
-          <NationOverview stats={state.country} projects={DEVELOPMENT_PROJECTS} levels={state.projectLevels} />
-          <RegionalMap state={state} partners={DIPLOMATIC_PARTNERS} />
-          <MissionPanel mission={activeMission} stats={state.country} />
-          <CabinetPanel state={state} />
-          <Dashboard stats={state.country} year={state.year} />
-          <TrendPanel history={state.economicHistory} />
+          <div className="stats-tabs" role="tablist" aria-label="Statistics office sections">
+            {([
+              ['nation', 'The Nation'],
+              ['region', 'Region & Mission'],
+              ['trends', 'Trends'],
+            ] as const).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                id={`stats-tab-${id}`}
+                aria-selected={statsTab === id}
+                aria-controls={`stats-panel-${id}`}
+                className={`stats-tab${statsTab === id ? ' is-active' : ''}`}
+                onClick={() => setStatsTab(id)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {statsTab === 'nation' && (
+            <div role="tabpanel" id="stats-panel-nation" aria-labelledby="stats-tab-nation">
+              <NationOverview stats={state.country} projects={DEVELOPMENT_PROJECTS} levels={state.projectLevels} />
+              <Dashboard stats={state.country} year={state.year} />
+              <CabinetPanel state={state} />
+            </div>
+          )}
+
+          {statsTab === 'region' && (
+            <div role="tabpanel" id="stats-panel-region" aria-labelledby="stats-tab-region">
+              <RegionalMap state={state} partners={DIPLOMATIC_PARTNERS} />
+              <MissionPanel mission={activeMission} stats={state.country} />
+            </div>
+          )}
+
+          {statsTab === 'trends' && (
+            <div role="tabpanel" id="stats-panel-trends" aria-labelledby="stats-tab-trends">
+              <TrendPanel history={state.economicHistory} />
+            </div>
+          )}
         </section>
+      )}
+
+      {yearTurn && (
+        <YearTransition
+          fromYear={yearTurn.from}
+          toYear={yearTurn.to}
+          onDone={() => setYearTurn(null)}
+        />
       )}
 
       {pendingCheck && (

@@ -185,3 +185,10 @@
     color: #857d70;
     overflow-wrap: anywhere;
 }
+
+.rail-leader {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}

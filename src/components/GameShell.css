@@ -66,8 +66,10 @@
     color: #7d766a;
 }
 
-.shell-meter strong {
+.shell-meter strong,
+.shell-meter .stat-counter {
     font-size: 0.94rem;
+    font-weight: 700;
     color: #ece5d4;
 }
 
@@ -152,5 +154,54 @@
 
     .shell-meters {
         gap: 12px;
+    }
+}
+
+/* Secondary views are tabbed rather than stacked; the dashboard is reference
+   material, and dumping six panels in one column buries all of them. */
+.stats-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #2f2f29;
+}
+
+.stats-tab {
+    min-height: 44px;
+    padding: 10px 18px;
+    background: transparent;
+    border: 1px solid #3d3d35;
+    border-radius: 999px;
+    color: #9d968a;
+    font-family: inherit;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+}
+
+.stats-tab:hover {
+    border-color: rgba(212, 175, 55, 0.55);
+    color: #e2c76b;
+}
+
+.stats-tab.is-active {
+    background: rgba(212, 175, 55, 0.14);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.stats-tab:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .stats-tab {
+        transition: none;
     }
 }
