@@ -21,6 +21,13 @@ import {
     startAgendaTurn,
 } from '../src/engine/agendaLogic.ts';
 import { driftFactions } from '../src/engine/factionLogic.ts';
+import {
+    applyProvincialPressure,
+    buildProgramme,
+    provinceRevenue,
+    tickProvinces,
+} from '../src/engine/provinceLogic.ts';
+import { PROGRAMMES, isProgrammeAvailable } from '../src/data/programmes.ts';
 import { resolveDueConsequences, resolveDuePromises } from '../src/engine/consequenceLogic.ts';
 import { ALL_POLICY_PROPOSALS } from '../src/data/arcs/index.ts';
 import { ARTIFACTS } from '../src/data/artifacts.ts';
@@ -66,6 +73,63 @@ const optionScore = (option, state) => {
         factionPull * 1.6
     );
 };
+
+/**
+ * How each cabinet spends the provincial development budget. This matters to the
+ * balance bands because restive provinces and a widening regional gap now drag on
+ * national stability, so a cabinet that ignores the map is not playing the same
+ * game as one that reads it.
+ */
+const PROVINCE_POLICY = {
+    // Attend to whoever is furthest behind, and prefer programmes that also calm.
+    deliberate: (state, random) => {
+        const provinces = state.provinces ?? [];
+        if (provinces.length === 0) return state;
+        const target = provinces.reduce((worst, province) => (
+            province.development < worst.development ? province : worst
+        ));
+        const preference = ['irrigation', 'schools', 'roads'];
+        const programme = preference
+            .map(id => PROGRAMMES.find(p => p.id === id))
+            .find(p => p && isProgrammeAvailable(p, target))
+            ?? PROGRAMMES[Math.floor(random() * PROGRAMMES.length)];
+        return buildProgramme(state, target.id, programme.id, programme.cost);
+    },
+    // Spend it wherever, on whatever is available.
+    careless: (state, random) => {
+        const provinces = state.provinces ?? [];
+        if (provinces.length === 0) return state;
+        const target = provinces[Math.floor(random() * provinces.length)];
+        const options = PROGRAMMES.filter(p => isProgrammeAvailable(p, target));
+        if (options.length === 0) return state;
+        const programme = options[Math.floor(random() * options.length)];
+        return buildProgramme(state, target.id, programme.id, programme.cost);
+    },
+    // The pathological case: never look at the map at all.
+    firstListed: state => state,
+};
+
+/** Run the whole territorial year: build, tick, collect revenue, feel the pressure. */
+function runProvinceYear(state, strategyName, random) {
+    let next = state;
+
+    let guard = 0;
+    while ((next.provinceBudget ?? 0) >= 10 && guard++ < 20) {
+        const spent = PROVINCE_POLICY[strategyName](next, random);
+        if (spent === next) break; // policy declined to spend; stop looping
+        next = spent;
+    }
+
+    next = tickProvinces(next);
+    next = applyProvincialPressure(next);
+
+    const revenue = provinceRevenue(next.provinces ?? [], next.country);
+    return {
+        ...next,
+        treasury: next.treasury + revenue,
+        provinceBudget: Math.round(revenue * 0.6) + 20,
+    };
+}
 
 const STRATEGIES = {
     deliberate: (proposals, state) => {
@@ -126,6 +190,7 @@ function runOnce(strategyName, seed) {
 
         state = advanceTurn(state, DEVELOPMENT_PROJECTS, DIPLOMATIC_PARTNERS);
         state = driftFactions(state);
+        state = runProvinceYear(state, strategyName, random);
         state = resolveDueConsequences(state);
         state = resolveDuePromises(state);
 

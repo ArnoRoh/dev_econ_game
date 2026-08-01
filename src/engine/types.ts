@@ -191,6 +191,13 @@ export interface PolicyProposal {
 export type Terrain = 'delta' | 'highland' | 'river' | 'savannah' | 'coast' | 'forest' | 'border';
 
 /**
+ * What an allocation of the development budget can be spent on. The union lives
+ * here rather than in `src/data` so the engine can reason about programmes
+ * without importing authored content.
+ */
+export type ProgrammeId = 'roads' | 'schools' | 'extraction' | 'irrigation';
+
+/**
  * A province of the republic. This is the territorial layer the player builds:
  * investment raises development, neglect raises unrest, and the gap between the
  * best and worst province is what turns a country into a secession problem.
@@ -221,6 +228,12 @@ export interface Province {
     invested: number;
     /** Year the province last received investment, for UI feedback. */
     lastInvestedYear?: number;
+    /**
+     * How many times each development programme has been built here. Absent on
+     * provinces from before programmes existed, which reads as none built and
+     * leaves their simulation identical to what it was.
+     */
+    works?: Partial<Record<ProgrammeId, number>>;
 }
 
 /** National roll-up of the territorial layer. */

@@ -1,7 +1,69 @@
-import type { CountryStats, GameState, Province, ProvinceSummary, Terrain } from './types';
+import type { CountryStats, GameState, ProgrammeId, Province, ProvinceSummary, Terrain } from './types';
 
 /** The unit the province-investment UI spends per click, in $M. */
 export const INVESTMENT_STEP = 10;
+
+// -- Programmes --
+//
+// One allocation buys one programme. What separates them is not how much they
+// cost but what the money turns into, so each converts its $M into a different
+// mix of infrastructure stock, permanent local capacity, cash, and resentment.
+//
+// `stock` is how much of the spend behaves like the generic investment stock
+// below -- roads are almost all stock, schools almost none.
+const PROGRAMME_STOCK_SHARE: Record<ProgrammeId, number> = {
+    roads: 1.15,
+    schools: 0.2,
+    extraction: 0.45,
+    irrigation: 0.95,
+};
+
+// Repeat builds of the same programme in the same province run into the same
+// wall real programmes do: the second clinic serves the people the first one
+// missed, the tenth is staffing a district that already has clinics. Everything
+// below is therefore square-root in the number built and hard-capped -- without
+// that, one programme repeated forever beats every mixed strategy, which is the
+// opposite of the choice this system exists to pose.
+const diminishing = (built: number, perBuild: number, cap: number): number =>
+    Math.min(cap, perBuild * Math.sqrt(Math.max(0, built)));
+
+// Each school raises how much development this province gets out of every later
+// allocation -- nothing on its own, a multiplier on everything else.
+const SCHOOL_PACE_BONUS = 0.11;
+const SCHOOL_PACE_CAP = 0.45;
+// ...and a school is felt locally every year it stays open, not once.
+const SCHOOL_UNREST_RELIEF = 0.3;
+const SCHOOL_RELIEF_CAP = 1.1;
+
+// A licensed concession pays a signature bonus at once and a royalty every year
+// after, both scaled by how rich the seams still are.
+const EXTRACTION_SIGNING_BONUS = 18;
+const EXTRACTION_ANNUAL_ROYALTY = 0.04;
+// A province has only so many seams worth chartering. Without a ceiling the
+// royalties compound against a growing GDP and the concession becomes an
+// infinite-money press that makes every other decision in the game irrelevant.
+const MAX_LICENCES_PER_PROVINCE = 3;
+// The seams also run down. This is the whole lesson of the resource curse in one
+// line: the cash is temporary, the resentment is not, and the endowment that paid
+// for it does not come back.
+const MINERAL_DEPLETION_PER_LICENCE = 0.5;
+// And it deepens the curse while it lasts: the wealth is visibly leaving, which
+// is the part of extraction the treasury line never shows.
+const EXTRACTION_UNREST_ON_SIGNING = 6;
+const EXTRACTION_CURSE_MULTIPLIER = 0.55;
+
+// Watered land is the one programme that reliably buys development and calm at
+// the same time -- which is why it is gated on there being farmland to water.
+const IRRIGATION_UNREST_RELIEF = 0.32;
+const IRRIGATION_RELIEF_CAP = 1;
+
+const worksBuilt = (province: Province, id: ProgrammeId): number => province.works?.[id] ?? 0;
+
+/** Whether another licence can be chartered here. The UI reads this too. */
+export const canLicenceMore = (province: Province): boolean =>
+    worksBuilt(province, 'extraction') < MAX_LICENCES_PER_PROVINCE;
+
+export const LICENCE_CAP = MAX_LICENCES_PER_PROVINCE;
 
 // -- Development --
 //
@@ -89,6 +151,56 @@ export function investInProvince(state: GameState, provinceId: string, amount: n
 }
 
 /**
+ * Spend one allocation on a named programme in one province.
+ *
+ * Refuses -- returning the same state reference, so callers can detect a no-op --
+ * if the budget cannot cover the cost or the province id is unknown. It does not
+ * re-check the endowment gate: that is the UI's job, and an already-licensed mine
+ * whose seams have since been written down should not become unbuildable.
+ */
+export function buildProgramme(
+    state: GameState,
+    provinceId: string,
+    programmeId: ProgrammeId,
+    cost: number,
+): GameState {
+    const provinces = state.provinces;
+    const budget = state.provinceBudget ?? 0;
+
+    if (!provinces || cost <= 0 || budget < cost) return state;
+
+    const index = provinces.findIndex(province => province.id === provinceId);
+    if (index === -1) return state;
+
+    const target = provinces[index];
+    const built = worksBuilt(target, programmeId);
+
+    if (programmeId === 'extraction' && !canLicenceMore(target)) return state;
+
+    // Extraction is the only programme that pays on signature rather than only
+    // through the annual tick, and the only one that costs unrest up front.
+    const richness = target.minerals / 100;
+    const signingBonus = programmeId === 'extraction' ? EXTRACTION_SIGNING_BONUS * richness : 0;
+    const signingUnrest = programmeId === 'extraction' ? EXTRACTION_UNREST_ON_SIGNING : 0;
+
+    const nextProvinces = provinces.slice();
+    nextProvinces[index] = {
+        ...target,
+        invested: target.invested + cost * PROGRAMME_STOCK_SHARE[programmeId],
+        lastInvestedYear: state.year,
+        unrest: clampIndex(target.unrest + signingUnrest),
+        works: { ...target.works, [programmeId]: built + 1 },
+    };
+
+    return {
+        ...state,
+        provinces: nextProvinces,
+        provinceBudget: budget - cost,
+        treasury: state.treasury + signingBonus,
+    };
+}
+
+/**
  * Advance every province by one simulated year. Development responds to the
  * province's own investment stock, terrain, and national education; unrest
  * responds to how the province sits relative to its peers, to national
@@ -106,7 +218,10 @@ export function tickProvinces(state: GameState): GameState {
     const meanDevelopment = provinces.reduce((sum, province) => sum + province.development, 0) / provinces.length;
 
     const nextProvinces = provinces.map(province => {
-        const pace = TERRAIN_DEVELOPMENT_PACE[province.terrain];
+        // Schools do not build anything themselves; they raise the rate at which
+        // this province converts everything else into measured development.
+        const pace = TERRAIN_DEVELOPMENT_PACE[province.terrain]
+            + diminishing(worksBuilt(province, 'schools'), SCHOOL_PACE_BONUS, SCHOOL_PACE_CAP);
 
         const investmentContribution = DEVELOPMENT_INVESTMENT_RATE * Math.sqrt(Math.max(0, province.invested)) * pace;
         const educationContribution = EDUCATION_DEVELOPMENT_COEFFICIENT * educationLevel;
@@ -119,9 +234,12 @@ export function tickProvinces(state: GameState): GameState {
 
         const nationalWeaknessPressure = Math.max(0, STABILITY_UNREST_THRESHOLD - stability) * STABILITY_UNREST_COEFFICIENT;
 
+        // Licensing the seams does not create the curse, but it sharpens it: the
+        // extraction is now visible, contracted, and demonstrably someone else's.
         const lootableGap = Math.max(0, province.minerals - province.development);
+        const curseIntensity = 1 + worksBuilt(province, 'extraction') * EXTRACTION_CURSE_MULTIPLIER;
         const resourceCursePressure = province.minerals > RESOURCE_CURSE_MINERAL_THRESHOLD
-            ? lootableGap * RESOURCE_CURSE_UNREST_COEFFICIENT
+            ? lootableGap * RESOURCE_CURSE_UNREST_COEFFICIENT * curseIntensity
             : 0;
 
         const terrainMultiplier = province.terrain === 'border' ? BORDER_UNREST_MULTIPLIER : 1;
@@ -135,12 +253,77 @@ export function tickProvinces(state: GameState): GameState {
             ? (stability - STABILITY_RELIEF_THRESHOLD) * STABILITY_UNREST_RELIEF_COEFFICIENT
             : 0;
 
-        const unrest = clampIndex(province.unrest + pressure - investmentRelief - stabilityRelief);
+        // Standing local relief, unlike investmentRelief, does not lapse: a clinic
+        // that is still open is still felt.
+        const programmeRelief = diminishing(worksBuilt(province, 'schools'), SCHOOL_UNREST_RELIEF, SCHOOL_RELIEF_CAP)
+            + diminishing(worksBuilt(province, 'irrigation'), IRRIGATION_UNREST_RELIEF, IRRIGATION_RELIEF_CAP);
 
-        return { ...province, development, unrest };
+        const unrest = clampIndex(
+            province.unrest + pressure - investmentRelief - stabilityRelief - programmeRelief,
+        );
+
+        // Chartered seams run down as they are worked, so the royalty stream and
+        // the curse pressure both decay toward an exhausted province.
+        const minerals = clampIndex(
+            province.minerals - worksBuilt(province, 'extraction') * MINERAL_DEPLETION_PER_LICENCE,
+        );
+
+        return { ...province, development, unrest, minerals };
     });
 
     return { ...state, provinces: nextProvinces };
+}
+
+// -- Provincial pressure on the centre --
+//
+// Without this the territorial layer is decorative: a player could let every
+// province rot and the republic would never notice, and licensing every seam in
+// the country would be free money. The dashboard already tells the player a
+// widening regional gap "turns regional grievance into a secession problem" --
+// this is the function that makes that sentence true.
+//
+// Weighted by population, because a restive tenth of the country is a policing
+// problem and a restive half is the end of the government.
+const RESTIVE_STABILITY_DRAG = 9;
+// A gap this wide is normal in a developing economy and costs nothing; past it,
+// the comparison itself becomes the grievance.
+const GAP_TOLERANCE = 25;
+const GAP_STABILITY_DRAG = 0.05;
+// A country whose provinces are all quiet governs more easily than one holding
+// itself together, and should feel like it.
+const CALM_UNREST_CEILING = 25;
+const CALM_STABILITY_BONUS = 0.9;
+
+/**
+ * Apply the provinces' condition back onto the national picture. Call once a
+ * year, after `tickProvinces`. Returns the same state reference when there are
+ * no provinces, so pre-territorial saves are unaffected.
+ */
+export function applyProvincialPressure(state: GameState): GameState {
+    const provinces = state.provinces;
+    if (!provinces || provinces.length === 0) return state;
+
+    const summary = summariseProvinces(provinces);
+    const restiveShare = provinces
+        .filter(province => province.unrest > 60)
+        .reduce((sum, province) => sum + province.popShare, 0);
+
+    const restiveDrag = restiveShare * RESTIVE_STABILITY_DRAG;
+    const gapDrag = Math.max(0, summary.developmentGap - GAP_TOLERANCE) * GAP_STABILITY_DRAG;
+    const calmBonus = restiveShare === 0 && summary.meanUnrest < CALM_UNREST_CEILING
+        ? CALM_STABILITY_BONUS
+        : 0;
+
+    const delta = calmBonus - restiveDrag - gapDrag;
+    if (delta === 0) return state;
+
+    return {
+        ...state,
+        country: {
+            ...state.country,
+            stability: clampIndex(state.country.stability + delta),
+        },
+    };
 }
 
 // Extra annual treasury raised from the provinces, on top of advanceTurn's
@@ -155,7 +338,15 @@ const PROVINCE_REVENUE_RATE = 0.11;
 export function provinceRevenue(provinces: Province[], stats: CountryStats): number {
     return provinces.reduce((total, province) => {
         const taxableShare = stats.gdp * province.popShare * (province.development / 100);
-        return total + taxableShare * PROVINCE_REVENUE_RATE;
+        // Royalties are the point of a concession: they arrive whether or not the
+        // district ever develops enough to be worth taxing, which is exactly what
+        // makes extraction tempting and exactly what makes it a trap.
+        const royalties = worksBuilt(province, 'extraction')
+            * EXTRACTION_ANNUAL_ROYALTY
+            * stats.gdp
+            * (province.minerals / 100)
+            * province.popShare;
+        return total + taxableShare * PROVINCE_REVENUE_RATE + royalties;
     }, 0);
 }
 
