@@ -131,6 +131,19 @@ export function ProvinceMap({
     return (
         <section className="province-map-panel">
             <div className="province-map-wrap">
+                {/* Stated above the map rather than only beside the invest button: a
+                    disabled button with no visible budget reads as a broken control,
+                    and the player has no way to learn the money is annual. */}
+                <header className="province-map-head">
+                    <span className="province-map-head-label">Development budget</span>
+                    <strong className="province-map-head-value">{formatCurrency(budget)}</strong>
+                    <span className="province-map-head-note">
+                        {canInvest
+                            ? `${Math.floor(budget / investmentStep)} allocation${Math.floor(budget / investmentStep) === 1 ? '' : 's'} left this year`
+                            : 'Spent — provincial revenue funds the next allocation in the new year'}
+                    </span>
+                </header>
+
                 <svg
                     className="province-map-svg"
                     viewBox="0 0 100 100"
@@ -339,6 +352,14 @@ export function ProvinceMap({
                         >
                             Invest ({formatCurrency(investmentStep)})
                         </button>
+
+                        {!canInvest && (
+                            <p className="province-detail-hint">
+                                This year&rsquo;s development budget is spent. The provinces pay into
+                                the treasury as they grow, and a share returns as next year&rsquo;s
+                                allocation.
+                            </p>
+                        )}
                     </>
                 ) : (
                     <p className="province-detail-empty">Select a province on the map to review its development, unrest, and endowments.</p>

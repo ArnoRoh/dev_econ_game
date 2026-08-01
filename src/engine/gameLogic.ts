@@ -50,7 +50,10 @@ export function createInitialState(
         lastProjectYear: 1960,
         chronicle: [],
         provinces: createProvinces(),
-        provinceBudget: 0,
+        // A founding allocation, matching the floor every later year receives. Without
+        // it the first year opens with a map the player cannot act on and no stated
+        // reason why, which reads as a broken control rather than an empty purse.
+        provinceBudget: 20,
         neighborRelations: Object.fromEntries(partners.map(partner => [partner.id, partner.initialRelations])),
         activePartnerId: null,
         lastDiplomacyYear: 1960,

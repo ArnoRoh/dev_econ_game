@@ -15,6 +15,36 @@
     border-radius: 10px;
 }
 
+.province-map-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #33322a;
+}
+
+.province-map-head-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #857d70;
+}
+
+.province-map-head-value {
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+    color: var(--color-primary);
+}
+
+.province-map-head-note {
+    flex: 1 1 100%;
+    font-size: 0.7rem;
+    color: #857d70;
+}
+
 .province-map-svg {
     display: block;
     width: 100%;
@@ -375,6 +405,13 @@
 .province-invest-button:focus-visible {
     outline: 3px solid var(--color-primary);
     outline-offset: 2px;
+}
+
+.province-detail-hint {
+    margin: 10px 0 0;
+    font-size: 0.74rem;
+    line-height: 1.5;
+    color: #857d70;
 }
 
 .province-detail-empty {
