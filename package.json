@@ -8,14 +8,15 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "check": "npm run lint && npm run build && npm run balance -- 250 && npm run validate:content",
+    "check": "npm run lint && npm run build && npm run balance -- 250 && npm run balance:agenda -- 60 && npm run validate:content",
     "balance": "node --experimental-strip-types scripts/simulate-balance.mjs",
     "validate:content": "node --experimental-strip-types scripts/validate-educational-content.mjs",
     "preview": "vite preview",
     "electron:dev": "electron .",
     "dist": "npm run build && electron-builder",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "balance:agenda": "node --experimental-strip-types scripts/simulate-agenda.mjs"
   },
   "build": {
     "appId": "com.devecon.game",

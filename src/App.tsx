@@ -1,35 +1,73 @@
-import { useEffect, useState } from 'react';
-import { createInitialState, advanceTurn, applyOption, buildProject, checkGameOver, deferDevelopmentPlan, issueDevelopmentBonds, selectWeightedEvent, signDiplomaticPact } from './engine/gameLogic';
+import { useCallback, useEffect, useState } from 'react';
+import { createInitialState, advanceTurn, buildProject, checkGameOver, deferDevelopmentPlan, issueDevelopmentBonds, remainNonAligned, signDiplomaticPact } from './engine/gameLogic';
 import { calculateLegacyScore } from './engine/missionLogic';
-import type { GameState, EventOption, GameEvent, Artifact, DevelopmentProject, DiplomaticPartner } from './engine/types';
+import {
+  confirmProposal,
+  ignoreRemainingProposals,
+  rejectProposal,
+  startAgendaTurn,
+} from './engine/agendaLogic';
+import { newspaperForTurn, resolveDueConsequences, resolveDuePromises } from './engine/consequenceLogic';
+import { driftFactions } from './engine/factionLogic';
+import { answerKnowledgeCheck, recordConceptExposure, selectKnowledgeCheck, spendAdvisorInsight, summariseLearning } from './engine/learningLogic';
+import { buildEndingContext, endingCitations, resolveEnding } from './engine/endingLogic';
+import type {
+  GameState,
+  Artifact,
+  DevelopmentProject,
+  DiplomaticPartner,
+  EducationalPolicyOption,
+  KnowledgeCheck,
+  PolicyProposal,
+  TurnDebriefEntry,
+  TurnPhase,
+} from './engine/types';
 import { ARTIFACTS } from './data/artifacts';
-import { EVENTS } from './data/events';
+import { ALL_POLICY_PROPOSALS } from './data/arcs';
+import { ECONOMIC_CONCEPTS } from './data/concepts';
 import { NATIONAL_MISSIONS } from './data/missions';
 import { DEVELOPMENT_PROJECTS } from './data/projects';
 import { DIPLOMATIC_PARTNERS } from './data/diplomacy';
 import { Dashboard } from './components/Dashboard';
-import { EventModal } from './components/EventModal';
 import { IntroModal } from './components/IntroModal';
 import { Leaderboard } from './components/Leaderboard';
 import type { LeaderboardEntry } from './components/Leaderboard';
 import { MissionPanel } from './components/MissionPanel';
 import { NationOverview } from './components/NationOverview';
-import { OutcomeBanner } from './components/OutcomeBanner';
-import type { DecisionOutcome } from './components/OutcomeBanner';
 import { ProjectModal } from './components/ProjectModal';
 import { CabinetPanel } from './components/CabinetPanel';
 import { clearSavedRun, hasSavedRun, loadRun, saveRun } from './saveGame';
 import { RegionalMap } from './components/RegionalMap';
 import { DiplomacyModal } from './components/DiplomacyModal';
 import { TrendPanel } from './components/TrendPanel';
+import { Newspaper } from './components/Newspaper';
+import { CabinetAgenda } from './components/CabinetAgenda';
+import { PolicyDossier } from './components/PolicyDossier';
+import { TurnDebrief } from './components/TurnDebrief';
+import { FactionRail } from './components/FactionRail';
+import { KnowledgeCheckModal } from './components/KnowledgeCheckModal';
+import { PolicyLedger } from './components/PolicyLedger';
+import { ChapterReport } from './components/ChapterReport';
 
 import './components/Tooltip.css';
+import './components/GameShell.css';
+
+const PROPOSALS_BY_ID = new Map<string, PolicyProposal>(
+  ALL_POLICY_PROPOSALS.map(proposal => [proposal.id, proposal]),
+);
 
 function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);
-  const [currentEvent, setCurrentEvent] = useState<GameEvent | null>(null);
-  const [lastOutcome, setLastOutcome] = useState<DecisionOutcome | null>(null);
   const [hasActiveSave, setHasActiveSave] = useState(() => hasSavedRun());
+
+  // --- cabinet turn loop -----------------------------------------------------
+  const [turnPhase, setTurnPhase] = useState<TurnPhase>('agenda');
+  const [openProposalId, setOpenProposalId] = useState<string | null>(null);
+  const [debriefEntries, setDebriefEntries] = useState<TurnDebriefEntry[]>([]);
+  const [ignoredTitles, setIgnoredTitles] = useState<string[]>([]);
+  const [pendingCheck, setPendingCheck] = useState<KnowledgeCheck | null>(null);
+  const [ledgerOpen, setLedgerOpen] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
 
   // v1.3 Point Buy System
   const [selectedArtifacts, setSelectedArtifacts] = useState<Artifact[]>([]);
@@ -65,8 +103,8 @@ function App() {
 
   useEffect(() => {
     if (!gameState || gameState.gameOver) return;
-    saveRun({ gameState, currentEvent, lastOutcome });
-  }, [gameState, currentEvent, lastOutcome]);
+    saveRun({ gameState, currentEvent: null, lastOutcome: null, turnPhase });
+  }, [gameState, turnPhase]);
 
   const startNaming = () => {
     if (!isValidSelection || selectedArtifacts.length === 0 || !selectedMissionId) return;
@@ -76,9 +114,10 @@ function App() {
   const finalizeGameStart = (name: string) => {
     if (!selectedMissionId) return;
     const initial = createInitialState(selectedArtifacts, name, selectedMissionId, DIPLOMATIC_PARTNERS);
-    setGameState(initial);
-    setCurrentEvent(null);
-    setLastOutcome(null);
+    setGameState(startAgendaTurn(initial, ALL_POLICY_PROPOSALS));
+    setTurnPhase('agenda');
+    setDebriefEntries([]);
+    setIgnoredTitles([]);
     setHasActiveSave(true);
     setIsNaming(false);
   }
@@ -91,83 +130,21 @@ function App() {
       return;
     }
 
-    setGameState(saved.gameState);
-    setCurrentEvent(saved.currentEvent);
-    setLastOutcome(saved.lastOutcome);
+    // A save from before the cabinet loop has no agenda; open one so the
+    // restored run lands on a playable screen rather than an empty table.
+    const restored = (saved.gameState.agendaProposalIds ?? []).length > 0
+      ? saved.gameState
+      : startAgendaTurn(saved.gameState, ALL_POLICY_PROPOSALS);
+
+    setGameState(restored);
+    setTurnPhase(saved.turnPhase === 'dossier' ? 'agenda' : (saved.turnPhase ?? 'agenda'));
+    setOpenProposalId(null);
+    setDebriefEntries([]);
+    setIgnoredTitles([]);
     setIsNaming(false);
   };
 
-  const handleNextTurn = () => {
-    if (!gameState) return;
-    setLastOutcome(null);
-
-    // Check for game over first (though usually checked after actions)
-    let state = checkGameOver(gameState);
-    if (state.gameOver) {
-      handleGameOver(state);
-      return;
-    }
-
-    // Advance
-    state = advanceTurn(state, DEVELOPMENT_PROJECTS, DIPLOMATIC_PARTNERS);
-
-    // Check again after advancing (e.g. Famine)
-    state = checkGameOver(state);
-
-    if (state.gameOver) {
-      handleGameOver(state);
-      return;
-    }
-
-    // v1.4: Annual Policy Decision (100% Chance)
-    // Weighted by current artifacts
-    const event = selectWeightedEvent(EVENTS, state);
-    if (event) {
-      state = {
-        ...state,
-        recentEventIds: [...state.recentEventIds, event.id].slice(-10),
-      };
-    }
-
-    setGameState(state);
-    setCurrentEvent(event);
-  };
-
-  const handleOptionSelect = (option: EventOption) => {
-    if (!gameState || !currentEvent) return;
-    setLastOutcome({
-      eventTitle: currentEvent.title,
-      optionText: option.text,
-      explanation: option.explanation,
-      effects: option.effects,
-    });
-    let nextState = applyOption(gameState, option);
-    nextState = {
-      ...nextState,
-      chronicle: [
-        ...nextState.chronicle,
-        {
-          id: `${nextState.year}-${currentEvent.id}-${nextState.chronicle.length}`,
-          year: nextState.year,
-          category: 'policy',
-          title: currentEvent.title,
-          decision: option.text,
-          effects: option.effects,
-        },
-      ],
-    };
-    setCurrentEvent(null);
-
-    // Check game over immediately after choice
-    nextState = checkGameOver(nextState);
-    if (nextState.gameOver) {
-      handleGameOver(nextState);
-    } else {
-      setGameState(nextState);
-    }
-  };
-
-  const handleGameOver = (finalState: GameState) => {
+  const handleGameOver = useCallback((finalState: GameState) => {
     clearSavedRun();
     setHasActiveSave(false);
     setGameState(finalState);
@@ -195,6 +172,132 @@ function App() {
     entries = entries.slice(0, 20);
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  }, []);
+
+  /** Advance the world by one year and open the next cabinet session. */
+  const runYear = useCallback((fromState: GameState) => {
+    let state = checkGameOver(fromState);
+    if (state.gameOver) {
+      handleGameOver(state);
+      return;
+    }
+
+    state = advanceTurn(state, DEVELOPMENT_PROJECTS, DIPLOMATIC_PARTNERS);
+    state = driftFactions(state);
+
+    // Everything scheduled by earlier decisions lands here, before the player
+    // is asked for anything new.
+    state = resolveDueConsequences(state);
+    state = resolveDuePromises(state);
+
+    state = checkGameOver(state);
+    if (state.gameOver) {
+      handleGameOver(state);
+      return;
+    }
+
+    state = startAgendaTurn(state, ALL_POLICY_PROPOSALS);
+
+    setGameState(state);
+    setDebriefEntries([]);
+    setIgnoredTitles([]);
+
+    const headlines = newspaperForTurn(state, state.turn);
+    setTurnPhase(headlines.length > 0 ? 'newspaper' : 'agenda');
+  }, [handleGameOver]);
+
+  const handleOpenProposal = (proposalId: string) => {
+    setOpenProposalId(proposalId);
+    setTurnPhase('dossier');
+  };
+
+  const handleConfirmOption = (proposal: PolicyProposal, option: EducationalPolicyOption) => {
+    if (!gameState) return;
+
+    let next = confirmProposal(gameState, proposal, option);
+    next = recordConceptExposure(next, option.conceptIds);
+
+    // Park the authored forecasts so the archive can score them later.
+    const decision = (next.policyDecisions ?? [])[(next.policyDecisions ?? []).length - 1];
+    if (decision) {
+      next = {
+        ...next,
+        forecastAudits: [
+          ...(next.forecastAudits ?? []),
+          ...option.forecasts.map(forecast => ({
+            decisionId: decision.id,
+            advisorId: forecast.advisorId,
+            summary: forecast.summary,
+            predictedDirection: forecast.predictedDirection,
+            confidence: forecast.confidence,
+            affectedMetric: forecast.affectedMetric,
+          })),
+        ],
+      };
+    }
+
+    setDebriefEntries(entries => [
+      ...entries,
+      {
+        decisionId: decision?.id ?? proposal.id,
+        proposalTitle: proposal.title,
+        optionText: option.text,
+        sponsorId: proposal.sponsorId,
+        narrative: option.immediateNarrative,
+        effects: option.effects,
+        treasuryEffect: option.treasuryEffect,
+        factionEffects: option.factionEffects,
+        conceptIds: option.conceptIds,
+        watchFor: option.delayedConsequences.map(consequence => consequence.headline),
+      },
+    ]);
+
+    setGameState(next);
+    setOpenProposalId(null);
+    setTurnPhase('agenda');
+  };
+
+  const handleRejectProposal = (proposal: PolicyProposal) => {
+    if (!gameState) return;
+    setGameState(rejectProposal(gameState, proposal));
+    setOpenProposalId(null);
+    setTurnPhase('agenda');
+  };
+
+  const handleEndSession = () => {
+    if (!gameState) return;
+
+    const remaining = (gameState.agendaProposalIds ?? [])
+      .map(id => PROPOSALS_BY_ID.get(id)?.title)
+      .filter((title): title is string => Boolean(title));
+
+    setIgnoredTitles(remaining);
+    setGameState(ignoreRemainingProposals(gameState, ALL_POLICY_PROPOSALS));
+    setTurnPhase('debrief');
+  };
+
+  const handleDebriefContinue = () => {
+    if (!gameState) return;
+
+    const check = selectKnowledgeCheck(gameState);
+    if (check) {
+      setPendingCheck(check);
+      setTurnPhase('knowledge');
+      return;
+    }
+
+    runYear(gameState);
+  };
+
+  const handleAnswerCheck = (answerId: string) => {
+    if (!gameState || !pendingCheck) return;
+    const { state } = answerKnowledgeCheck(gameState, pendingCheck, answerId);
+    setGameState(state);
+  };
+
+  const handleCloseCheck = () => {
+    setPendingCheck(null);
+    if (gameState) runYear(gameState);
   };
 
   const handleBuildProject = (project: DevelopmentProject) => {
@@ -216,7 +319,6 @@ function App() {
       ],
     });
     if (nextState.gameOver) {
-      setCurrentEvent(null);
       handleGameOver(nextState);
     } else {
       setGameState(nextState);
@@ -242,11 +344,31 @@ function App() {
     });
 
     if (nextState.gameOver) {
-      setCurrentEvent(null);
       handleGameOver(nextState);
     } else {
       setGameState(nextState);
     }
+  };
+
+  const handleDeclineDiplomacy = () => {
+    if (!gameState) return;
+    const nextState = remainNonAligned(gameState);
+    if (nextState === gameState) return;
+
+    setGameState({
+      ...nextState,
+      chronicle: [
+        ...nextState.chronicle,
+        {
+          id: `${nextState.year}-diplomacy-nonaligned`,
+          year: nextState.year,
+          category: 'diplomacy',
+          title: 'Regional Summit',
+          decision: 'Remained non-aligned',
+          effects: { internationalRelations: -4, stability: 2 },
+        },
+      ],
+    });
   };
 
   const handleIssueBonds = () => {
@@ -382,97 +504,175 @@ function App() {
   if (gameState && gameState.gameOver) {
     const mission = NATIONAL_MISSIONS.find(item => item.id === gameState.missionId) ?? NATIONAL_MISSIONS[0];
     const score = calculateLegacyScore(gameState, mission);
-    const completedTerm = gameState.gameOverReason?.startsWith('Term Limit Reached') ?? false;
+    const ending = resolveEnding(buildEndingContext(gameState));
+    const learning = summariseLearning(gameState, ECONOMIC_CONCEPTS.length);
 
     return (
       <div className="menu-screen game-over">
-        <h1 className={`title ${completedTerm ? '' : 'error'}`}>
-          {completedTerm ? 'The Republic Endures' : 'Regime Collapse'}
-        </h1>
-        <h2 className="reason">{gameState.gameOverReason}</h2>
-        <p className="summary">You governed {gameState.countryName} for {gameState.year - 1960} years (1960 - {gameState.year}).</p>
-
-        <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', margin: '30px 0', textAlign: 'left' }}>
-          <div><strong>Final GDP:</strong> ${Math.round(gameState.country.gdp).toLocaleString()}M</div>
-          <div><strong>Final Pop:</strong> {gameState.country.population.toFixed(1)}M</div>
-          <div><strong>Stability:</strong> {Math.round(gameState.country.stability)}%</div>
-          <div><strong>Debt:</strong> ${Math.round(gameState.country.externalDebt).toLocaleString()}M</div>
-          <div><strong>Treasury:</strong> ${Math.round(gameState.treasury).toLocaleString()}M</div>
-          <div><strong>Fiscal Balance:</strong> {gameState.lastFiscalBalance >= 0 ? '+' : '-'}${Math.abs(Math.round(gameState.lastFiscalBalance)).toLocaleString()}M/yr</div>
-        </div>
-
-        <div className="final-score" style={{ fontSize: '2rem', color: '#d4af37', borderTop: '1px solid #444', paddingTop: '20px' }}>
-          Legacy Score: {score.total}
-          <div className="score-breakdown">State {score.base} + Mission {score.missionBonus}</div>
-        </div>
+        <ChapterReport
+          state={gameState}
+          ending={ending}
+          citations={endingCitations(gameState)}
+          learning={learning}
+          legacyScore={score.total}
+          onOpenLedger={() => setLedgerOpen(true)}
+          onRestart={() => { setGameState(null); setLedgerOpen(false); }}
+        />
 
         <MissionPanel mission={mission} stats={gameState.country} />
-
         <Leaderboard />
 
-        <button className="primary-button" onClick={() => setGameState(null)} style={{ marginTop: '30px' }}>Return to History</button>
+        {ledgerOpen && (
+          <PolicyLedger
+            decisions={gameState.policyDecisions ?? []}
+            newspaper={gameState.newspaper ?? []}
+            promises={gameState.promises ?? []}
+            audits={gameState.forecastAudits ?? []}
+            onClose={() => setLedgerOpen(false)}
+          />
+        )}
       </div>
     );
   }
 
-  // Removed old intro check logic since we do it before game start now
+  const state = gameState!;
+  const activeMission = NATIONAL_MISSIONS.find(item => item.id === state.missionId) ?? NATIONAL_MISSIONS[0];
+  const hasAvailableProject = DEVELOPMENT_PROJECTS.some(project => (state.projectLevels[project.id] ?? 0) < project.maxLevel);
+  const projectDue = state.year % 5 === 0 && state.lastProjectYear !== state.year && hasAvailableProject;
+  const diplomacyDue = state.year >= 1965 && (state.year - 1965) % 10 === 0 && state.lastDiplomacyYear !== state.year;
+  const milestoneDue = projectDue || diplomacyDue;
 
-  const activeMission = NATIONAL_MISSIONS.find(item => item.id === gameState?.missionId) ?? NATIONAL_MISSIONS[0];
-  const hasAvailableProject = DEVELOPMENT_PROJECTS.some(project => (gameState?.projectLevels[project.id] ?? 0) < project.maxLevel);
-  const projectDue = !!gameState && gameState.year % 5 === 0 && gameState.lastProjectYear !== gameState.year && hasAvailableProject;
-  const diplomacyDue = !!gameState && gameState.year >= 1965 && (gameState.year - 1965) % 10 === 0 && gameState.lastDiplomacyYear !== gameState.year;
+  const agenda = (state.agendaProposalIds ?? [])
+    .map(id => PROPOSALS_BY_ID.get(id))
+    .filter((proposal): proposal is PolicyProposal => Boolean(proposal));
+  const openProposal = openProposalId ? PROPOSALS_BY_ID.get(openProposalId) ?? null : null;
+  const headlines = newspaperForTurn(state, state.turn);
 
   return (
-    <div className="game-screen">
-      <div className="header-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px', background: '#111', borderBottom: '1px solid #333' }}>
-        <div className="country-name" style={{ color: '#d4af37', fontWeight: 'bold', fontSize: '1.2rem' }}>{gameState?.countryName}</div>
-        <div className="state-resources">
-          <div className="treasury-display">
-            <span>Treasury</span>
-            <strong>${Math.round(gameState!.treasury).toLocaleString()}M</strong>
-            <small className={gameState!.lastFiscalBalance >= 0 ? 'positive' : 'negative'}>
-              {gameState!.lastFiscalBalance >= 0 ? '+' : ''}${Math.round(gameState!.lastFiscalBalance)}M / yr
-            </small>
-          </div>
-          <div className="artifacts-bar">
-            {gameState?.artifacts.map(a => (
-              <span key={a.id} className="artifact-tag" data-tooltip={a.description}>{a.name}</span>
-            ))}
-          </div>
+    <div className="game-screen shell">
+      <header className="shell-bar">
+        <div className="shell-identity">
+          <span className="shell-country">{state.countryName}</span>
+          <span className="shell-year">{state.year}</span>
         </div>
+
+        <div className="shell-meters">
+          <span className="shell-meter">
+            <span className="shell-meter-label">Treasury</span>
+            <strong>${Math.round(state.treasury).toLocaleString()}M</strong>
+            <small className={state.lastFiscalBalance >= 0 ? 'positive' : 'negative'}>
+              {state.lastFiscalBalance >= 0 ? '+' : ''}${Math.round(state.lastFiscalBalance)}M/yr
+            </small>
+          </span>
+          <span className="shell-meter">
+            <span className="shell-meter-label">Stability</span>
+            <strong>{Math.round(state.country.stability)}%</strong>
+          </span>
+          <span className="shell-meter">
+            <span className="shell-meter-label">Insight</span>
+            <strong>{state.advisorInsight ?? 0}</strong>
+          </span>
+        </div>
+
+        <nav className="shell-nav">
+          <button type="button" onClick={() => setStatsOpen(open => !open)}>
+            {statsOpen ? 'Hide' : 'Statistics Office'}
+          </button>
+          <button type="button" onClick={() => setLedgerOpen(true)}>
+            Archive ({(state.policyDecisions ?? []).length})
+          </button>
+        </nav>
+      </header>
+
+      <div className="shell-body">
+        <main className="shell-stage">
+          {turnPhase === 'newspaper' && (
+            <Newspaper
+              countryName={state.countryName}
+              year={state.year}
+              items={headlines}
+              onContinue={() => setTurnPhase('agenda')}
+            />
+          )}
+
+          {turnPhase === 'agenda' && !milestoneDue && (
+            <CabinetAgenda
+              year={state.year}
+              proposals={agenda}
+              actionsRemaining={state.actionsRemaining ?? 0}
+              characters={state.characters}
+              decisions={state.policyDecisions ?? []}
+              onOpen={handleOpenProposal}
+              onEndSession={handleEndSession}
+            />
+          )}
+
+          {turnPhase === 'dossier' && openProposal && (
+            <PolicyDossier
+              proposal={openProposal}
+              characters={state.characters}
+              advisorInsight={state.advisorInsight ?? 0}
+              onSpendInsight={() => setGameState(spendAdvisorInsight(state))}
+              onConfirm={option => handleConfirmOption(openProposal, option)}
+              onReject={() => handleRejectProposal(openProposal)}
+              onBack={() => { setOpenProposalId(null); setTurnPhase('agenda'); }}
+            />
+          )}
+
+          {turnPhase === 'debrief' && (
+            <TurnDebrief
+              year={state.year}
+              entries={debriefEntries}
+              ignoredTitles={ignoredTitles}
+              onContinue={handleDebriefContinue}
+            />
+          )}
+        </main>
+
+        <FactionRail
+          factions={state.factions}
+          characters={state.characters}
+          promises={state.promises ?? []}
+          turn={state.turn}
+        />
       </div>
 
-      {lastOutcome && <OutcomeBanner outcome={lastOutcome} />}
+      {statsOpen && (
+        <section className="shell-stats" aria-label="Statistics office">
+          <NationOverview stats={state.country} projects={DEVELOPMENT_PROJECTS} levels={state.projectLevels} />
+          <RegionalMap state={state} partners={DIPLOMATIC_PARTNERS} />
+          <MissionPanel mission={activeMission} stats={state.country} />
+          <CabinetPanel state={state} />
+          <Dashboard stats={state.country} year={state.year} />
+          <TrendPanel history={state.economicHistory} />
+        </section>
+      )}
 
-      <NationOverview stats={gameState!.country} projects={DEVELOPMENT_PROJECTS} levels={gameState!.projectLevels} />
+      {pendingCheck && (
+        <KnowledgeCheckModal
+          check={pendingCheck}
+          onAnswer={handleAnswerCheck}
+          onClose={handleCloseCheck}
+        />
+      )}
 
-      <RegionalMap state={gameState!} partners={DIPLOMATIC_PARTNERS} />
-
-      <MissionPanel mission={activeMission} stats={gameState!.country} />
-
-      <CabinetPanel state={gameState!} />
-
-      <Dashboard stats={gameState!.country} year={gameState!.year} />
-
-      <TrendPanel history={gameState!.economicHistory} />
-
-      <div className="controls">
-        <button className="primary-button next-turn" onClick={handleNextTurn} disabled={!!currentEvent}>
-          Advance Fiscal Year
-        </button>
-      </div>
-
-      {currentEvent && !projectDue && !diplomacyDue && (
-        <EventModal event={currentEvent} onOptionSelect={handleOptionSelect} />
+      {ledgerOpen && (
+        <PolicyLedger
+          decisions={state.policyDecisions ?? []}
+          newspaper={state.newspaper ?? []}
+          promises={state.promises ?? []}
+          audits={state.forecastAudits ?? []}
+          onClose={() => setLedgerOpen(false)}
+        />
       )}
 
       {projectDue && !diplomacyDue && (
         <ProjectModal
           projects={DEVELOPMENT_PROJECTS}
-          levels={gameState!.projectLevels}
-          year={gameState!.year}
-          treasury={gameState!.treasury}
-          canIssueBonds={gameState!.lastBondYear !== gameState!.year}
+          levels={state.projectLevels}
+          year={state.year}
+          treasury={state.treasury}
+          canIssueBonds={state.lastBondYear !== state.year}
           onBuild={handleBuildProject}
           onIssueBonds={handleIssueBonds}
           onDefer={handleDeferPlan}
@@ -482,10 +682,11 @@ function App() {
       {diplomacyDue && (
         <DiplomacyModal
           partners={DIPLOMATIC_PARTNERS}
-          relations={gameState!.neighborRelations}
-          activePartnerId={gameState!.activePartnerId}
-          year={gameState!.year}
+          relations={state.neighborRelations}
+          activePartnerId={state.activePartnerId}
+          year={state.year}
           onSign={handleSignPact}
+          onDecline={handleDeclineDiplomacy}
         />
       )}
     </div>

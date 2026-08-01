@@ -1,0 +1,125 @@
+.knowledge-modal {
+    width: min(620px, 100%);
+    padding: 28px;
+    background: linear-gradient(180deg, #23261f 0%, #1a1c17 100%);
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    border-radius: 12px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.knowledge-kicker {
+    margin: 0 0 10px;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+}
+
+.knowledge-prompt {
+    margin: 0 0 20px;
+    font-family: var(--font-serif);
+    font-size: 1.16rem;
+    line-height: 1.5;
+    color: #f0e9d8;
+}
+
+.knowledge-answers {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.knowledge-answers li {
+    margin-bottom: 9px;
+}
+
+.knowledge-answer {
+    width: 100%;
+    padding: 13px 15px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid #3d3d35;
+    border-radius: 7px;
+    color: #ddd5c3;
+    font-family: inherit;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 150ms ease, background 150ms ease;
+}
+
+.knowledge-answer:hover:not(:disabled) {
+    border-color: rgba(212, 175, 55, 0.6);
+    background: rgba(212, 175, 55, 0.08);
+}
+
+.knowledge-answer:disabled {
+    cursor: default;
+}
+
+.knowledge-answer.is-correct {
+    border-color: var(--color-success);
+    background: rgba(129, 199, 132, 0.12);
+    color: #cfe8d0;
+}
+
+.knowledge-answer.is-wrong {
+    border-color: var(--color-danger);
+    background: rgba(229, 115, 115, 0.12);
+    color: #e8cfcf;
+}
+
+.knowledge-answer.is-dimmed {
+    opacity: 0.45;
+}
+
+.knowledge-tick {
+    color: var(--color-success);
+    font-weight: 700;
+}
+
+.knowledge-result {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid #33332c;
+}
+
+.knowledge-verdict {
+    margin: 0 0 10px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-danger);
+}
+
+.knowledge-result.is-correct .knowledge-verdict {
+    color: var(--color-success);
+}
+
+.knowledge-explanation {
+    margin: 0 0 18px;
+    font-size: 0.92rem;
+    line-height: 1.65;
+    color: #c2baa9;
+}
+
+.knowledge-skip {
+    display: block;
+    margin: 18px auto 0;
+    padding: 0;
+    background: none;
+    border: none;
+    color: #7d766a;
+    font-family: inherit;
+    font-size: 0.78rem;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.knowledge-skip:hover {
+    color: #a29a8b;
+}

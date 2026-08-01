@@ -145,3 +145,34 @@
         padding: 22px 14px;
     }
 }
+
+.diplomacy-decline {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    margin-top: 18px;
+    padding: 14px 16px;
+    background: transparent;
+    border: 1px dashed #4a4a42;
+    border-radius: 8px;
+    color: #b8b0a0;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 160ms ease, color 160ms ease;
+}
+
+.diplomacy-decline:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.diplomacy-decline small {
+    font-weight: 400;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: #857d70;
+}

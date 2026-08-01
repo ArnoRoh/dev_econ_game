@@ -1,13 +1,16 @@
-import type { DecisionOutcome, GameEvent, GameState } from './engine/types';
+import type { DecisionOutcome, GameEvent, GameState, TurnPhase } from './engine/types';
 
 const ACTIVE_RUN_KEY = 'dev_econ_active_run';
-const SAVE_VERSION = 3;
+// v4 adds the cabinet turn phase; v3 saves have no agenda and are not resumable.
+const SAVE_VERSION = 4;
 
 export interface SavedRun {
     version: typeof SAVE_VERSION;
     gameState: GameState;
     currentEvent: GameEvent | null;
     lastOutcome: DecisionOutcome | null;
+    /** Which stage of the cabinet turn the player was on. */
+    turnPhase?: TurnPhase;
 }
 
 export const hasSavedRun = () => localStorage.getItem(ACTIVE_RUN_KEY) !== null;

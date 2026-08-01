@@ -28,3 +28,38 @@ export const formatEffect = (key: string, value: number) => {
     const label = STAT_LABELS[key as keyof CountryStats] ?? key.replace(/([A-Z])/g, ' $1');
     return `${label}: ${value > 0 ? '+' : ''}${value}`;
 };
+
+export interface FormattedEffect {
+    label: string;
+    /** True when the change is good for the country, not merely a rise. */
+    positive: boolean;
+}
+
+/**
+ * Render a stat delta bundle for display after a decision has been taken.
+ * Direction is expressed relative to the country's interest, so a fall in
+ * famine risk reads as an improvement rather than as a decrease.
+ */
+export const formatEffectList = (
+    effects: Partial<CountryStats>,
+    treasuryEffect?: number,
+): FormattedEffect[] => {
+    const rows: FormattedEffect[] = [];
+
+    (Object.entries(effects) as [keyof CountryStats, number][]).forEach(([key, value]) => {
+        if (typeof value !== 'number' || value === 0) return;
+        rows.push({
+            label: formatEffect(key, value),
+            positive: effectTone(key, value) === 'positive',
+        });
+    });
+
+    if (treasuryEffect) {
+        rows.push({
+            label: `Treasury: ${treasuryEffect > 0 ? '+' : '-'}$${Math.abs(treasuryEffect)}M`,
+            positive: treasuryEffect > 0,
+        });
+    }
+
+    return rows;
+};

@@ -1,0 +1,156 @@
+/* Shell chrome for the cabinet loop: a thin status bar, a wide decision stage
+   and a persistent political rail. The dashboard is deliberately not here — it
+   lives behind the Statistics Office toggle. */
+
+.game-screen.shell {
+    min-height: 100vh;
+    padding: 0 0 40px;
+}
+
+.shell-bar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 22px;
+    background: rgba(12, 14, 12, 0.94);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid #2f2f29;
+}
+
+.shell-identity {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.shell-country {
+    font-family: var(--font-serif);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.shell-year {
+    padding: 2px 9px;
+    border: 1px solid #3d3d35;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #b8b0a0;
+}
+
+.shell-meters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+}
+
+.shell-meter {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    line-height: 1.2;
+}
+
+.shell-meter-label {
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #7d766a;
+}
+
+.shell-meter strong {
+    font-size: 0.94rem;
+    color: #ece5d4;
+}
+
+.shell-meter small {
+    font-size: 0.66rem;
+}
+
+.shell-meter small.positive {
+    color: var(--color-success);
+}
+
+.shell-meter small.negative {
+    color: var(--color-danger);
+}
+
+.shell-nav {
+    display: flex;
+    gap: 8px;
+}
+
+.shell-nav button {
+    padding: 7px 13px;
+    background: transparent;
+    border: 1px solid #3d3d35;
+    border-radius: 6px;
+    color: #b8b0a0;
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: border-color 150ms ease, color 150ms ease;
+}
+
+.shell-nav button:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.shell-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 288px;
+    gap: 24px;
+    align-items: start;
+    padding: 26px 22px 0;
+    max-width: 1440px;
+    margin: 0 auto;
+}
+
+.shell-stage {
+    min-width: 0;
+}
+
+.shell-stats {
+    max-width: 1440px;
+    margin: 30px auto 0;
+    padding: 24px 22px 0;
+    border-top: 1px solid #2f2f29;
+}
+
+@media (max-width: 1080px) {
+    .shell-body {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    /* The rail becomes a footer block rather than a sidebar on narrow screens. */
+    .faction-rail {
+        order: 2;
+    }
+}
+
+@media (max-width: 640px) {
+    .shell-bar {
+        padding: 10px 14px;
+    }
+
+    .shell-body,
+    .shell-stats {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .shell-meters {
+        gap: 12px;
+    }
+}

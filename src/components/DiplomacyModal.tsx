@@ -8,13 +8,14 @@ interface DiplomacyModalProps {
     activePartnerId: string | null;
     year: number;
     onSign: (partner: DiplomaticPartner) => void;
+    onDecline: () => void;
 }
 
 const effectText = (effects: DiplomaticPartner['pactEffects']) => Object.entries(effects)
     .map(([key, value]) => formatEffect(key, value))
     .join(' · ');
 
-export const DiplomacyModal = ({ partners, relations, activePartnerId, year, onSign }: DiplomacyModalProps) => (
+export const DiplomacyModal = ({ partners, relations, activePartnerId, year, onSign, onDecline }: DiplomacyModalProps) => (
     <div className="modal-overlay diplomacy-overlay">
         <div className="diplomacy-modal">
             <span className="diplomacy-kicker">Regional summit · {year}</span>
@@ -45,6 +46,13 @@ export const DiplomacyModal = ({ partners, relations, activePartnerId, year, onS
                     );
                 })}
             </div>
+            <button type="button" className="diplomacy-decline" onClick={onDecline}>
+                Remain non-aligned
+                <small>
+                    Take aid from both blocs and orders from neither. No treaty dividend, a little
+                    goodwill lost everywhere, and a free hand for the next decade.
+                </small>
+            </button>
         </div>
     </div>
 );

@@ -267,6 +267,39 @@ export function signDiplomaticPact(state: GameState, partner: DiplomaticPartner)
     };
 }
 
+/**
+ * Decline every pact on offer at a summit.
+ *
+ * Non-alignment was a real and widely-taken position, not an absence of policy:
+ * it preserved freedom of action and forfeited the treaty dividends, and it
+ * cost you something with every bloc that wanted a commitment.
+ */
+export function remainNonAligned(state: GameState): GameState {
+    const isSummitYear = state.year >= 1965 && (state.year - 1965) % 10 === 0;
+    if (!isSummitYear || state.lastDiplomacyYear === state.year) return state;
+
+    const neighborRelations = Object.fromEntries(
+        Object.entries(state.neighborRelations).map(([partnerId, relations]) => [
+            partnerId,
+            Math.max(0, Math.min(100, relations - 3)),
+        ]),
+    );
+
+    return {
+        ...state,
+        country: clampStats({
+            ...state.country,
+            // Independence of action reads as unreliability to everyone courting you.
+            internationalRelations: state.country.internationalRelations - 4,
+            stability: state.country.stability + 2,
+        }),
+        neighborRelations,
+        activePartnerId: null,
+        lastDiplomacyYear: state.year,
+        flags: { ...state.flags, non_aligned: true },
+    };
+}
+
 export function calculatePopulationGrowthRate(stats: CountryStats): number {
     const genderPopPenalty = stats.genderEquality > 50 ? 0.06 * (stats.genderEquality - 50) : 0;
     const educationPenalty = stats.educationLevel * 0.05;
@@ -340,7 +373,7 @@ export const checkGameOver = (state: GameState): GameState => {
     return state;
 }
 
-function clampStats(stats: CountryStats): CountryStats {
+export function clampStats(stats: CountryStats): CountryStats {
     const clamped = { ...stats };
     clamped.gdp = Math.max(1, clamped.gdp);
     clamped.population = Math.max(0.1, clamped.population);

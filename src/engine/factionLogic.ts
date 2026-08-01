@@ -115,6 +115,52 @@ export function applyFactionEffects(state: GameState, effects: FactionEffect[]):
     return { ...state, factions: nextFactions };
 }
 
+/**
+ * Annual relationship drift.
+ *
+ * Without this the political model only ever decays: every ignored proposal and
+ * every hard choice subtracts, and nothing restores. Real coalitions re-form —
+ * grievances fade if the country is calm and nothing new is added to them.
+ * A visibly failing state reverses the effect and radicalises instead.
+ */
+export function driftFactions(state: GameState): GameState {
+    const factions = state.factions;
+    if (!factions) return state;
+
+    const { stability } = state.country;
+    const calm = stability >= 45;
+    const failing = stability < 30;
+
+    const next = Object.fromEntries(
+        Object.entries(factions).map(([id, faction]) => {
+            // Support decays toward the midpoint rather than toward zero.
+            const pull = calm ? 1.0 : 0.4;
+            const gap = 50 - faction.support;
+            const support = faction.support + Math.sign(gap) * Math.min(pull, Math.abs(gap));
+
+            const radicalization = failing
+                ? faction.radicalization + 1.5
+                : Math.max(0, faction.radicalization - (calm ? 1.5 : 0.5));
+
+            return [
+                id,
+                {
+                    ...faction,
+                    support: clampFactionValue(support),
+                    radicalization: clampFactionValue(radicalization),
+                    // Old grievances stop being cited once the relationship recovers.
+                    grievances:
+                        calm && faction.grievances.length > 3
+                            ? faction.grievances.slice(-3)
+                            : faction.grievances,
+                },
+            ];
+        }),
+    ) as Record<FactionId, FactionState>;
+
+    return { ...state, factions: next };
+}
+
 export function applyCharacterMemory(state: GameState, characterId: CharacterId, memory: string): GameState {
     const characters = state.characters ?? createInitialCharacterStates();
     const character = characters[characterId] ?? {

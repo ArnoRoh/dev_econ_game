@@ -156,6 +156,21 @@ export interface PolicyProposal {
     maxYear?: number;
     requiredFlags?: string[];
     blockedByFlags?: string[];
+    /**
+     * Generic proposals fill an agenda when no authored arc step is live. Arc
+     * steps always outrank them in selection.
+     */
+    isGeneric?: boolean;
+    /**
+     * Long-form economics note used when a proposal has no mapped concept. This
+     * carries the original event corpus's theory text into the dossier.
+     */
+    backgroundTheory?: string;
+    wikiLink?: string;
+    /** Legacy citation string, kept when there is no structured source. */
+    legacySource?: string;
+    /** May appear again in later years. Most proposals resolve permanently. */
+    repeatable?: boolean;
 }
 
 export interface ScheduledConsequence {
@@ -305,6 +320,67 @@ export interface GameEvent {
     maxYear?: number; // v1.9: Event stops triggering after this year
 }
 
+/**
+ * A consequence that has landed. The newspaper is how the player discovers that
+ * a choice made four years ago has finally arrived, which is the whole point of
+ * the delayed-consequence system.
+ */
+export interface NewspaperItem {
+    id: string;
+    turn: number;
+    year: number;
+    headline: string;
+    narrative: string;
+    effects: Partial<CountryStats>;
+    treasuryEffect?: number;
+    conceptIds: ConceptId[];
+    /** The decision this traces back to, so the ledger can link both ways. */
+    sourceDecisionId: string;
+    sourceTitle?: string;
+    /** How the originating decision was taken. */
+    origin: 'chosen' | 'ignored' | 'rejected' | 'promise';
+    tone: 'good' | 'bad' | 'mixed';
+}
+
+/**
+ * A forecast recorded at decision time, checked against reality when the
+ * delayed consequence lands. This drives the "were my advisors right?" loop.
+ */
+export interface ForecastAudit {
+    decisionId: string;
+    advisorId: CharacterId;
+    summary: string;
+    predictedDirection: QualitativeForecast['predictedDirection'];
+    confidence: QualitativeForecast['confidence'];
+    affectedMetric?: keyof CountryStats | 'treasury';
+    /** Filled in once the outcome is observable. */
+    observedDelta?: number;
+    verdict?: 'right' | 'wrong' | 'partial';
+}
+
+/** The phases a single turn moves through. */
+export type TurnPhase =
+    | 'newspaper'
+    | 'agenda'
+    | 'dossier'
+    | 'debrief'
+    | 'knowledge'
+    | 'milestone';
+
+export interface TurnDebriefEntry {
+    decisionId: string;
+    proposalTitle: string;
+    optionText: string;
+    sponsorId: CharacterId;
+    narrative: string;
+    effects: Partial<CountryStats>;
+    treasuryEffect?: number;
+    factionEffects: FactionEffect[];
+    conceptIds: ConceptId[];
+    /** What to watch for in later years. */
+    watchFor: string[];
+}
+
 export interface GameState {
     country: CountryStats;
     year: number;
@@ -336,4 +412,14 @@ export interface GameState {
     conceptProgress?: Partial<Record<ConceptId, ConceptProgress>>;
     advisorInsight?: number;
     chapter?: 'independence' | 'complete';
+    /** Consequences that have landed, newest first. */
+    newspaper?: NewspaperItem[];
+    /** Forecasts awaiting an observable outcome. */
+    forecastAudits?: ForecastAudit[];
+    /** Decisions taken this turn, cleared when the turn advances. */
+    turnDebrief?: TurnDebriefEntry[];
+    /** Knowledge checks already answered, by id. */
+    answeredChecks?: string[];
+    /** Ending resolved at the close of the run. */
+    endingId?: string;
 }

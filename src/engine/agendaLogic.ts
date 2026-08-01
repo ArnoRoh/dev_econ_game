@@ -11,6 +11,9 @@ import type {
 
 export const AGENDA_ACTIONS_PER_TURN = 2;
 
+/** Years before a recurring matter may return to the agenda. */
+export const RECURRENCE_GAP_TURNS = 14;
+
 /** Migration switch: the old annual-event route remains available during rollout. */
 export const legacyAnnualEvents = false;
 
@@ -23,6 +26,24 @@ const isEligible = (proposal: PolicyProposal, state: GameState): boolean => {
 
     if (proposal.requiredFlags?.some(flag => !state.flags[flag])) return false;
     if (proposal.blockedByFlags?.some(flag => state.flags[flag])) return false;
+
+    // A matter that has already been settled does not return unless authored to.
+    // Standing business is authored to: the same structural dispute genuinely
+    // does come back around, and without recurrence the cabinet table runs empty
+    // roughly two thirds of the way through a seventy-year campaign.
+    const priorDecisions = getDecisions(state).filter(decision => decision.proposalId === proposal.id);
+    if (priorDecisions.length > 0) {
+        if (!proposal.repeatable) return false;
+
+        const lastTurn = Math.max(...priorDecisions.map(decision => decision.turn));
+        if (state.turn - lastTurn < RECURRENCE_GAP_TURNS) return false;
+    }
+
+    // An arc tells a story in order: a later step cannot reach the table before
+    // the step it depends on has been resolved.
+    if (!proposal.isGeneric && proposal.arcStep > activeArcStep(proposal, state)) {
+        return false;
+    }
 
     return true;
 };
@@ -76,17 +97,20 @@ export function generateAgenda(
     const pool = fresh.length >= 3 ? fresh : eligible;
     const targetSize = pool.length <= 3 ? pool.length : 3 + (random() >= 0.5 ? 1 : 0);
 
-    return pool
-        .map(proposal => ({
-            proposal,
-            tieBreak: random(),
-        }))
+    const ranked = pool
+        .map(proposal => ({ proposal, tieBreak: random() }))
         .sort((left, right) => {
             const priorityDifference = priorityFor(right.proposal, state) - priorityFor(left.proposal, state);
             return priorityDifference || left.tieBreak - right.tieBreak;
-        })
-        .slice(0, targetSize)
-        .map(({ proposal }) => proposal.id);
+        });
+
+    // Authored arc steps take precedence; generic business fills what is left,
+    // which keeps the agenda full across a campaign far longer than the arcs.
+    const authored = ranked.filter(entry => !entry.proposal.isGeneric).slice(0, targetSize);
+    const generic = ranked.filter(entry => entry.proposal.isGeneric);
+    const filled = [...authored, ...generic].slice(0, targetSize);
+
+    return filled.map(({ proposal }) => proposal.id);
 }
 
 export function startAgendaTurn(
