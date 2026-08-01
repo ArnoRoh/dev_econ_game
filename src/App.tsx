@@ -60,9 +60,16 @@ import type { AchievementDef } from './data/achievements';
 import { YearTransition } from './components/YearTransition';
 import { StatCounter } from './components/StatCounter';
 import { TurnPrimer } from './components/TurnPrimer';
+import { SettingsPanel } from './components/SettingsPanel';
+import { initAudio, playCue } from './audio';
+import { initReduceMotionPreference } from './settings';
 
 import './components/Tooltip.css';
 import './components/GameShell.css';
+
+// Applied once, before the first render, so a returning player's motion
+// preference never flashes in via an effect.
+initReduceMotionPreference();
 
 const APP_VERSION = '2.0.0';
 
@@ -84,6 +91,7 @@ function App() {
   const [statsOpen, setStatsOpen] = useState(false);
   const [statsTab, setStatsTab] = useState<'nation' | 'region' | 'trends'>('nation');
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   /** Which stage the player is looking at during the cabinet phase. */
   const [stageView, setStageView] = useState<'cabinet' | 'republic'>('cabinet');
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
@@ -239,7 +247,10 @@ function App() {
     // delayed consequence is credited in the year it actually landed.
     const scored = checkAchievements(state);
     state = scored.state;
-    if (scored.earned.length > 0) setFreshAchievements(scored.earned);
+    if (scored.earned.length > 0) {
+      setFreshAchievements(scored.earned);
+      playCue('chime');
+    }
 
     state = startAgendaTurn(state, ALL_POLICY_PROPOSALS);
 
@@ -247,8 +258,10 @@ function App() {
     setGameState(state);
     setDebriefEntries([]);
     setIgnoredTitles([]);
+    playCue('year');
 
     const headlines = newspaperForTurn(state, state.turn);
+    if (headlines.length > 0) playCue('page');
     setTurnPhase(headlines.length > 0 ? 'newspaper' : 'agenda');
     setYearTurn({ from: crossedInto - 1, to: crossedInto });
   }, [handleGameOver]);
@@ -256,10 +269,14 @@ function App() {
   const handleInvest = (provinceId: string) => {
     if (!gameState) return;
     const next = investInProvince(gameState, provinceId, INVESTMENT_STEP);
-    if (next !== gameState) setGameState(next);
+    if (next !== gameState) {
+      playCue('invest');
+      setGameState(next);
+    }
   };
 
   const handleOpenProposal = (proposalId: string) => {
+    playCue('select');
     setOpenProposalId(proposalId);
     setTurnPhase('dossier');
   };
@@ -270,6 +287,8 @@ function App() {
     prediction: PredictionChoice | null,
   ) => {
     if (!gameState) return;
+    // The moment an action is actually spent — deliberately weighty.
+    playCue('confirm');
 
     // Score the player's call against the option's own headline effect. Famine
     // risk and debt are inverted: a fall in either is an improvement.
@@ -539,8 +558,8 @@ function App() {
       <>
       <TitleScreen
         hasActiveSave={hasActiveSave}
-        onContinue={() => { setAtTitle(false); continueSavedGame(); }}
-        onNewGame={() => setAtTitle(false)}
+        onContinue={() => { initAudio(); setAtTitle(false); continueSavedGame(); }}
+        onNewGame={() => { initAudio(); setAtTitle(false); }}
         onOpenAchievements={() => setGalleryOpen(true)}
         version={APP_VERSION}
       />
@@ -668,6 +687,9 @@ function App() {
           </button>
           <button type="button" onClick={() => setGalleryOpen(true)}>
             Records ({(state.achievements ?? []).length})
+          </button>
+          <button type="button" onClick={() => setSettingsOpen(true)} aria-label="Settings">
+            ⚙ Settings
           </button>
         </nav>
       </header>
@@ -817,6 +839,8 @@ function App() {
       )}
 
       {galleryOpen && <AchievementGallery state={state} onClose={() => setGalleryOpen(false)} />}
+
+      {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
 
       <AchievementToast
         key={freshAchievements[0]?.id ?? 'none'}
