@@ -48,6 +48,7 @@ import { FactionRail } from './components/FactionRail';
 import { KnowledgeCheckModal } from './components/KnowledgeCheckModal';
 import { PolicyLedger } from './components/PolicyLedger';
 import { ChapterReport } from './components/ChapterReport';
+import { TurnPrimer } from './components/TurnPrimer';
 
 import './components/Tooltip.css';
 import './components/GameShell.css';
@@ -68,6 +69,9 @@ function App() {
   const [pendingCheck, setPendingCheck] = useState<KnowledgeCheck | null>(null);
   const [ledgerOpen, setLedgerOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
+  const [primerDismissed, setPrimerDismissed] = useState(
+    () => localStorage.getItem('dev_econ_primer_seen') === '1',
+  );
 
   // v1.3 Point Buy System
   const [selectedArtifacts, setSelectedArtifacts] = useState<Artifact[]>([]);
@@ -637,6 +641,15 @@ function App() {
               year={state.year}
               items={headlines}
               onContinue={() => setTurnPhase('agenda')}
+            />
+          )}
+
+          {turnPhase === 'agenda' && !milestoneDue && state.turn <= 1 && !primerDismissed && (
+            <TurnPrimer
+              onDismiss={() => {
+                localStorage.setItem('dev_econ_primer_seen', '1');
+                setPrimerDismissed(true);
+              }}
             />
           )}
 

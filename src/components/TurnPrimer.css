@@ -1,0 +1,76 @@
+.primer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 18px 20px;
+    margin-bottom: 22px;
+    background: rgba(212, 175, 55, 0.06);
+    border: 1px solid rgba(212, 175, 55, 0.32);
+    border-radius: 10px;
+}
+
+.primer-body {
+    flex: 1 1 420px;
+    min-width: 0;
+}
+
+.primer-title {
+    margin: 0 0 10px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+}
+
+.primer-list {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 0.86rem;
+    line-height: 1.6;
+    color: #c2baa9;
+}
+
+.primer-list li {
+    margin-bottom: 7px;
+    overflow-wrap: anywhere;
+}
+
+.primer-list strong {
+    color: #ece5d4;
+}
+
+.primer-keys {
+    margin: 12px 0 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: #857d70;
+}
+
+.primer-dismiss {
+    flex-shrink: 0;
+    min-height: 44px;
+    padding: 11px 20px;
+    background: rgba(212, 175, 55, 0.14);
+    border: 1px solid rgba(212, 175, 55, 0.5);
+    border-radius: 6px;
+    color: #e2c76b;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.primer-dismiss:hover {
+    background: rgba(212, 175, 55, 0.26);
+}
+
+@media (max-width: 640px) {
+    .primer-dismiss {
+        width: 100%;
+    }
+}

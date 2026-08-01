@@ -1,5 +1,5 @@
 import { KNOWLEDGE_CHECKS } from '../data/knowledgeChecks.ts';
-import type { CharacterId, ConceptId, ConceptProgress, ForecastAudit, GameState, KnowledgeCheck } from './types';
+import type { CharacterId, ConceptId, ConceptProgress, CountryStats, ForecastAudit, GameState, KnowledgeCheck } from './types';
 
 /**
  * Learning progress is tracked, never enforced. A knowledge check can only ever
@@ -104,6 +104,56 @@ export function advisorRecord(
         right: judged.filter(audit => audit.verdict === 'right').length,
         judged: judged.length,
     };
+}
+
+/**
+ * The stat an option is most likely to be judged on. Used to ask the player for
+ * a prediction before they commit, and to score it afterwards. Returns the key
+ * only — never the magnitude, which the player must not see before deciding.
+ */
+export function headlineMetric(effects: Partial<CountryStats>): keyof CountryStats | null {
+    // Growth and stability read as the headline even at small magnitudes, so
+    // they are weighted rather than compared raw against, say, a GDP delta.
+    const weight: Partial<Record<keyof CountryStats, number>> = {
+        gdpGrowthRate: 20,
+        stability: 2,
+        eliteSatisfaction: 2,
+        educationLevel: 2,
+        famineRisk: 2,
+        genderEquality: 2,
+        militaryPower: 2,
+        internationalRelations: 1.5,
+        externalDebt: 0.2,
+        gdp: 0.05,
+        population: 4,
+    };
+
+    let best: keyof CountryStats | null = null;
+    let bestScore = 0;
+
+    for (const [key, value] of Object.entries(effects) as [keyof CountryStats, number][]) {
+        if (typeof value !== 'number' || value === 0) continue;
+        const score = Math.abs(value) * (weight[key] ?? 1);
+        if (score > bestScore) {
+            bestScore = score;
+            best = key;
+        }
+    }
+
+    return best;
+}
+
+/** Was the player's up/down/mixed call borne out by the actual delta? */
+export function scorePrediction(
+    predicted: 'up' | 'down' | 'mixed',
+    delta: number,
+    lowerIsBetter: boolean,
+): boolean {
+    // Judge in the direction the country cares about, not the raw sign.
+    const effective = lowerIsBetter ? -delta : delta;
+    if (predicted === 'up') return effective > 0;
+    if (predicted === 'down') return effective < 0;
+    return Math.abs(effective) < 0.5;
 }
 
 export interface LearningSummary {
