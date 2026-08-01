@@ -17,6 +17,8 @@ import { CHARACTERS } from '../src/data/characters.ts';
 import { FACTIONS } from '../src/data/factions.ts';
 import { ACHIEVEMENTS } from '../src/data/achievements.ts';
 import { KNOWLEDGE_CHECKS } from '../src/data/knowledgeChecks.ts';
+import { PROGRAMMES } from '../src/data/programmes.ts';
+import { BASE_PROVINCES } from '../src/data/provinces.ts';
 
 /** Flags set by the engine and crisis content rather than by an arc option. */
 const ENGINE_FLAGS = new Set([
@@ -161,6 +163,36 @@ for (const achievement of ACHIEVEMENTS) {
     }
 }
 
+// Development programmes cite the same concept and source corpus the proposals do,
+// and an endowment gate no province can clear is a programme that silently never
+// appears — neither of which the type system can see.
+const seenProgrammeIds = new Set();
+
+for (const programme of PROGRAMMES) {
+    if (seenProgrammeIds.has(programme.id)) note(`duplicate programme id: ${programme.id}`);
+    seenProgrammeIds.add(programme.id);
+
+    for (const concept of programme.conceptIds ?? []) {
+        if (!conceptIds.has(concept)) note(`programme ${programme.id}: unknown conceptId ${concept}`);
+    }
+    for (const source of programme.sourceIds ?? []) {
+        if (!sourceIds.has(source)) note(`programme ${programme.id}: unknown sourceId ${source}`);
+    }
+    if (!(programme.cost > 0)) note(`programme ${programme.id}: cost must be positive`);
+    if (!programme.forecast) note(`programme ${programme.id}: missing forecast`);
+
+    const gate = programme.requires;
+    if (gate) {
+        const eligible = BASE_PROVINCES.filter(province => province[gate.field] >= gate.atLeast);
+        if (eligible.length === 0) {
+            note(
+                `programme ${programme.id}: requires ${gate.field} >= ${gate.atLeast}, which no province ` +
+                    `has at game start — it can never be offered`,
+            );
+        }
+    }
+}
+
 const authored = ALL_POLICY_PROPOSALS.filter(p => !p.isGeneric);
 const generic = ALL_POLICY_PROPOSALS.filter(p => p.isGeneric);
 
@@ -172,5 +204,6 @@ if (problems.length) {
 
 console.log(
     `Arcs valid: ${Object.keys(POLICY_ARCS).length} arcs, ${authored.length} authored proposals, ` +
-        `${generic.length} standing-business proposals, ${seenOptionIds.size} options.`,
+        `${generic.length} standing-business proposals, ${seenOptionIds.size} options, ` +
+        `${PROGRAMMES.length} development programmes.`,
 );
