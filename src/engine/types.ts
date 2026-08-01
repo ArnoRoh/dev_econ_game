@@ -188,6 +188,53 @@ export interface PolicyProposal {
     tags?: string[];
 }
 
+export type Terrain = 'delta' | 'highland' | 'river' | 'savannah' | 'coast' | 'forest' | 'border';
+
+/**
+ * A province of the republic. This is the territorial layer the player builds:
+ * investment raises development, neglect raises unrest, and the gap between the
+ * best and worst province is what turns a country into a secession problem.
+ */
+export interface Province {
+    id: string;
+    name: string;
+    blurb: string;
+    terrain: Terrain;
+    /** The community that predominates here. */
+    group: string;
+    /** Share of national population, 0-1. */
+    popShare: number;
+    /** Local development level, 0-100. */
+    development: number;
+    /** Local unrest, 0-100. */
+    unrest: number;
+    /** Endowments, 0-100. */
+    minerals: number;
+    farmland: number;
+    coastal: boolean;
+    /** SVG polygon points inside a 100x100 viewBox. */
+    shape: string;
+    /** Label anchor inside the polygon. */
+    cx: number;
+    cy: number;
+    /** Cumulative investment, $M. */
+    invested: number;
+    /** Year the province last received investment, for UI feedback. */
+    lastInvestedYear?: number;
+}
+
+/** National roll-up of the territorial layer. */
+export interface ProvinceSummary {
+    meanDevelopment: number;
+    /** Spread between best and worst province — the regional-inequality signal. */
+    developmentGap: number;
+    meanUnrest: number;
+    /** Province most in need of attention. */
+    neglectedId: string | null;
+    /** Provinces at risk of open revolt. */
+    restiveIds: string[];
+}
+
 export interface ScheduledConsequence {
     id: string;
     sourceDecisionId: string;
@@ -441,4 +488,10 @@ export interface GameState {
     answeredChecks?: string[];
     /** Ending resolved at the close of the run. */
     endingId?: string;
+    /** The territorial layer. */
+    provinces?: Province[];
+    /** Investment budget available to spend on provinces this year, $M. */
+    provinceBudget?: number;
+    /** Achievement ids already earned. */
+    achievements?: string[];
 }

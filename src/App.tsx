@@ -50,12 +50,15 @@ import { KnowledgeCheckModal } from './components/KnowledgeCheckModal';
 import { PolicyLedger } from './components/PolicyLedger';
 import { ChapterReport } from './components/ChapterReport';
 import { SetupScreen } from './components/SetupScreen';
+import { TitleScreen } from './components/TitleScreen';
 import { YearTransition } from './components/YearTransition';
 import { StatCounter } from './components/StatCounter';
 import { TurnPrimer } from './components/TurnPrimer';
 
 import './components/Tooltip.css';
 import './components/GameShell.css';
+
+const APP_VERSION = '2.0.0';
 
 const PROPOSALS_BY_ID = new Map<string, PolicyProposal>(
   ALL_POLICY_PROPOSALS.map(proposal => [proposal.id, proposal]),
@@ -111,6 +114,8 @@ function App() {
 
   // Let's implement an `isNaming` state.
   const [isNaming, setIsNaming] = useState(false);
+  /** The menu sits in front of setup so a run is never one stray click away. */
+  const [atTitle, setAtTitle] = useState(true);
 
   useEffect(() => {
     if (!gameState || gameState.gameOver) return;
@@ -494,6 +499,18 @@ function App() {
     });
   };
 
+  if (!gameState && !isNaming && atTitle) {
+    return (
+      <TitleScreen
+        hasActiveSave={hasActiveSave}
+        onContinue={() => { setAtTitle(false); continueSavedGame(); }}
+        onNewGame={() => setAtTitle(false)}
+        onOpenAchievements={() => { setAtTitle(false); setLedgerOpen(true); }}
+        version={APP_VERSION}
+      />
+    );
+  }
+
   if (!gameState && !isNaming) {
     return (
       <SetupScreen
@@ -533,7 +550,7 @@ function App() {
           learning={learning}
           legacyScore={score.total}
           onOpenLedger={() => setLedgerOpen(true)}
-          onRestart={() => { setGameState(null); setLedgerOpen(false); }}
+          onRestart={() => { setGameState(null); setLedgerOpen(false); setAtTitle(true); }}
         />
 
         <MissionPanel mission={mission} stats={gameState.country} />
