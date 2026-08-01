@@ -18,6 +18,14 @@ const moodOf = (support: number, radicalization: number): { label: string; tone:
     return { label: 'Watchful', tone: 'neutral' };
 };
 
+/** A shape per tone so mood is legible without relying on colour alone. */
+const MOOD_GLYPH: Record<string, string> = {
+    good: '▲',
+    warn: '!',
+    danger: '▼',
+    neutral: '•',
+};
+
 /**
  * Standing political pressure, always visible. Radicalisation is shown
  * separately from support because the dangerous combination is a faction that
@@ -43,7 +51,9 @@ export function FactionRail({ factions, characters, promises, turn }: FactionRai
                         <li key={faction.id} className="rail-faction">
                             <div className="rail-faction-head">
                                 <span className="rail-faction-name">{faction.shortName}</span>
-                                <span className={`rail-mood tone-${mood.tone}`}>{mood.label}</span>
+                                <span className={`rail-mood tone-${mood.tone}`}>
+                                    <span aria-hidden="true">{MOOD_GLYPH[mood.tone]}</span> {mood.label}
+                                </span>
                             </div>
 
                             <div

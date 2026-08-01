@@ -99,6 +99,9 @@ export function ChapterReport({
                         {FACTIONS.map(faction => {
                             const factionState = state.factions?.[faction.id];
                             if (!factionState) return null;
+                            // Colour alone shouldn't carry whether a faction ended up
+                            // onside — a glyph repeats the same verdict as shape.
+                            const isMajority = factionState.support >= 50;
                             return (
                                 <li key={faction.id}>
                                     <span className="report-faction-name">{faction.shortName}</span>
@@ -108,7 +111,10 @@ export function ChapterReport({
                                             style={{ width: `${factionState.support}%` }}
                                         />
                                     </span>
-                                    <span className="report-faction-value">
+                                    <span
+                                        className={`report-faction-value${isMajority ? ' is-good' : ' is-bad'}`}
+                                    >
+                                        <span aria-hidden="true">{isMajority ? '▲' : '▼'}</span>{' '}
                                         {Math.round(factionState.support)} support ·{' '}
                                         {Math.round(factionState.power)} power
                                     </span>

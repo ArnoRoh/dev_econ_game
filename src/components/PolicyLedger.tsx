@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import type { ForecastAudit, NewspaperItem, PolicyDecisionRecord, PromiseRecord } from '../engine/types';
 import { CHARACTERS_BY_ID } from '../data/characters';
 import { formatEffectList } from '../effectFormatting';
@@ -27,6 +28,18 @@ export function PolicyLedger({ decisions, newspaper, promises, audits, onClose }
     const consequencesFor = (decisionId: string) =>
         newspaper.filter(item => item.sourceDecisionId === decisionId);
 
+    // The dialog also closes on backdrop click; Escape gives keyboard users the
+    // same exit without having to tab all the way to the close button.
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                onClose();
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [onClose]);
+
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div
@@ -38,7 +51,13 @@ export function PolicyLedger({ decisions, newspaper, promises, audits, onClose }
             >
                 <header className="ledger-header">
                     <h2 className="ledger-title">Policy Archive</h2>
-                    <button type="button" className="ledger-close" onClick={onClose} aria-label="Close archive">
+                    <button
+                        type="button"
+                        className="ledger-close"
+                        onClick={onClose}
+                        aria-label="Close archive"
+                        title="Close archive (Esc)"
+                    >
                         ×
                     </button>
                 </header>
@@ -50,7 +69,7 @@ export function PolicyLedger({ decisions, newspaper, promises, audits, onClose }
                             {promises.map(promise => (
                                 <li key={promise.id} className={`is-${promise.status}`}>
                                     <span className="ledger-promise-status">{promise.status}</span>
-                                    <span>{promise.description}</span>
+                                    <span className="ledger-promise-text">{promise.description}</span>
                                 </li>
                             ))}
                         </ul>
@@ -99,6 +118,9 @@ export function PolicyLedger({ decisions, newspaper, promises, audits, onClose }
                                                         key={effect.label}
                                                         className={effect.positive ? 'is-good' : 'is-bad'}
                                                     >
+                                                        <span aria-hidden="true">
+                                                            {effect.positive ? '▲' : '▼'}
+                                                        </span>{' '}
                                                         {effect.label}
                                                     </li>
                                                 ))}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './EventModal.css'; // Reusing modal styles for consistency
+import './IntroModal.css';
 
 interface IntroModalProps {
     onStart: (name: string) => void;

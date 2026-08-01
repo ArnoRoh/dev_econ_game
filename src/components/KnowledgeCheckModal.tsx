@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { KnowledgeCheck } from '../engine/types';
 import './KnowledgeCheckModal.css';
 
@@ -18,6 +18,17 @@ export function KnowledgeCheckModal({ check, onAnswer, onClose }: KnowledgeCheck
     const [chosen, setChosen] = useState<string | null>(null);
     const answered = chosen !== null;
     const correct = chosen === check.correctAnswerId;
+
+    // Escape always dismisses, whether or not the question has been answered.
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                onClose();
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [onClose]);
 
     const choose = (answerId: string) => {
         if (answered) return;
@@ -72,7 +83,12 @@ export function KnowledgeCheckModal({ check, onAnswer, onClose }: KnowledgeCheck
                 )}
 
                 {!answered && (
-                    <button type="button" className="knowledge-skip" onClick={onClose}>
+                    <button
+                        type="button"
+                        className="knowledge-skip"
+                        onClick={onClose}
+                        title="Press Escape to skip"
+                    >
                         Skip this
                     </button>
                 )}

@@ -34,6 +34,7 @@
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: #8d8578;
+    overflow-wrap: anywhere;
 }
 
 .report-ending-name {
@@ -42,6 +43,7 @@
     font-size: clamp(1.8rem, 5vw, 2.6rem);
     line-height: 1.15;
     color: #f2ebda;
+    overflow-wrap: anywhere;
 }
 
 .tone-triumph .report-ending-name {
@@ -57,6 +59,7 @@
     font-size: 1.02rem;
     font-style: italic;
     color: #b8b0a0;
+    overflow-wrap: anywhere;
 }
 
 .report-verdict {

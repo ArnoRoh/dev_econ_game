@@ -40,7 +40,7 @@ export function CabinetAgenda({
     return (
         <section className="cabinet-agenda" aria-label={`Cabinet agenda for ${year}`}>
             <header className="cabinet-header">
-                <div>
+                <div className="cabinet-header-text">
                     <h2 className="cabinet-title">Cabinet Session · {year}</h2>
                     <p className="cabinet-subtitle">
                         {proposals.length} matters before you. You can take {actionsRemaining} of them.
