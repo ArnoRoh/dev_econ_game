@@ -3,12 +3,18 @@ const path = require('path');
 
 function createWindow() {
     const win = new BrowserWindow({
-        width: 1200,
-        height: 800,
+        width: 1280,
+        height: 840,
+        minWidth: 960,
+        minHeight: 640,
+        // The game is entirely client-side and uses no Node APIs from the
+        // renderer, so there is no reason to weaken the default sandbox.
         webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false
+            nodeIntegration: false,
+            contextIsolation: true,
+            sandbox: true
         },
+        backgroundColor: '#0c0e0a',
         autoHideMenuBar: true, // Game-like feel
         title: "Post-Colonial Republic"
     });
