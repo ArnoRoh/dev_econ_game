@@ -1,5 +1,5 @@
 import { KNOWLEDGE_CHECKS } from '../data/knowledgeChecks.ts';
-import type { CharacterId, ConceptId, ConceptProgress, CountryStats, ForecastAudit, GameState, KnowledgeCheck } from './types';
+import type { CharacterId, ConceptId, ConceptProgress, CountryStats, ForecastAudit, GameState, KnowledgeCheck, QualitativeForecast } from './types';
 
 /**
  * Learning progress is tracked, never enforced. A knowledge check can only ever
@@ -103,6 +103,101 @@ export function advisorRecord(
     return {
         right: judged.filter(audit => audit.verdict === 'right').length,
         judged: judged.length,
+    };
+}
+
+const OPTIMISTIC: ReadonlySet<QualitativeForecast['predictedDirection']> = new Set(['up', 'stronglyUp']);
+const PESSIMISTIC: ReadonlySet<QualitativeForecast['predictedDirection']> = new Set(['down', 'stronglyDown']);
+
+/** How an advisor's calls have actually turned out, across a whole run. */
+export interface AdvisorCalibration {
+    right: number;
+    partial: number;
+    wrong: number;
+    judged: number;
+    /** Share of judged calls that were right, 0-1. `null` below `MIN_CALLS_FOR_VERDICT`. */
+    hitRate: number | null;
+    /**
+     * Positive when they overpromise, negative when they cry wolf, 0 when their
+     * misses go both ways. Measured in share of judged calls, -1 to 1.
+     */
+    bias: number;
+    /** Hit rate on the calls they staked high confidence on. `null` if too few. */
+    confidentHitRate: number | null;
+    /** Hit rate on their low- and medium-confidence calls. `null` if too few. */
+    hedgedHitRate: number | null;
+    /** Metrics this advisor has been judged on, worst first. */
+    weakestMetrics: { metric: string; right: number; judged: number }[];
+}
+
+/**
+ * Below this, a record is noise and the UI should say so rather than print a
+ * percentage that will swing twenty points on the next call.
+ */
+export const MIN_CALLS_FOR_VERDICT = 4;
+
+const rate = (right: number, judged: number): number | null =>
+    judged >= MIN_CALLS_FOR_VERDICT ? right / judged : null;
+
+/**
+ * The aggregate behind `advisorRecord`.
+ *
+ * A single wrong forecast tells the player nothing — advisors are authored to be
+ * wrong sometimes, and any one call can miss honestly. What is worth learning is
+ * the pattern: that this minister's optimism is systematic, or that their
+ * high-confidence calls are no better than their hedged ones. The second is the
+ * sharper lesson, because an advisor who is only as accurate when certain as when
+ * unsure is not giving the player information at all, however authoritative they
+ * sound. Surfacing that is the point of the whole audit mechanic.
+ */
+export function advisorCalibration(
+    audits: ForecastAudit[],
+    advisorId: CharacterId,
+): AdvisorCalibration {
+    const judged = audits.filter(audit => audit.advisorId === advisorId && audit.verdict);
+
+    const right = judged.filter(audit => audit.verdict === 'right').length;
+    const partial = judged.filter(audit => audit.verdict === 'partial').length;
+    const wrong = judged.filter(audit => audit.verdict === 'wrong').length;
+
+    // Bias is measured only on misses. A correct optimistic call is not optimism,
+    // it is being right, and counting it would make an accurate advisor look
+    // biased purely for working on things that tend to improve.
+    const missed = judged.filter(audit => audit.verdict === 'wrong');
+    const overPromised = missed.filter(audit => OPTIMISTIC.has(audit.predictedDirection)).length;
+    const criedWolf = missed.filter(audit => PESSIMISTIC.has(audit.predictedDirection)).length;
+
+    const confident = judged.filter(audit => audit.confidence === 'high');
+    const hedged = judged.filter(audit => audit.confidence !== 'high');
+
+    const byMetric = new Map<string, { right: number; judged: number }>();
+    for (const audit of judged) {
+        const metric = audit.affectedMetric ?? 'unstated';
+        const entry = byMetric.get(metric) ?? { right: 0, judged: 0 };
+        entry.judged += 1;
+        if (audit.verdict === 'right') entry.right += 1;
+        byMetric.set(metric, entry);
+    }
+
+    return {
+        right,
+        partial,
+        wrong,
+        judged: judged.length,
+        hitRate: rate(right, judged.length),
+        bias: judged.length === 0 ? 0 : (overPromised - criedWolf) / judged.length,
+        confidentHitRate: rate(
+            confident.filter(audit => audit.verdict === 'right').length,
+            confident.length,
+        ),
+        hedgedHitRate: rate(
+            hedged.filter(audit => audit.verdict === 'right').length,
+            hedged.length,
+        ),
+        weakestMetrics: [...byMetric.entries()]
+            .map(([metric, tally]) => ({ metric, ...tally }))
+            .sort((a, b) => a.right / a.judged - b.right / b.judged)
+            .slice(0, 3),
     };
 }
 

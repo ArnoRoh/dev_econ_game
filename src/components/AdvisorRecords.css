@@ -1,0 +1,278 @@
+.records {
+    width: min(680px, 100%);
+    max-height: 88vh;
+    overflow-y: auto;
+    padding: 24px 26px 22px;
+    background: linear-gradient(180deg, var(--ink-500) 0%, var(--ink-700) 100%);
+    border: 1px solid var(--ink-200);
+    border-radius: 12px;
+    box-shadow: var(--lift-4);
+}
+
+.records-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.records-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--type-2xl);
+    line-height: 1.1;
+    color: var(--brass-300);
+}
+
+.records-sub {
+    margin: 5px 0 0;
+    max-width: 46ch;
+    font-size: var(--type-sm);
+    line-height: 1.5;
+    color: var(--paper-500);
+}
+
+.records-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 44px;
+    min-height: 44px;
+    background: none;
+    border: none;
+    color: var(--paper-400);
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.records-close:hover {
+    color: var(--brass-300);
+}
+
+.records-close:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.records .rule-double {
+    margin: 14px 0 4px;
+}
+
+.records-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.records-item {
+    display: flex;
+    gap: 14px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--ink-400);
+}
+
+.records-item:last-child {
+    border-bottom: none;
+}
+
+.records-face {
+    flex-shrink: 0;
+    padding-top: 2px;
+}
+
+.records-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.records-name-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+}
+
+.records-name {
+    font-family: var(--font-serif);
+    font-size: var(--type-lg);
+    color: var(--paper-200);
+    overflow-wrap: anywhere;
+}
+
+.records-role {
+    font-size: var(--type-xs);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--paper-500);
+    overflow-wrap: anywhere;
+}
+
+/* --- the record itself --- */
+
+.records-bar {
+    display: flex;
+    height: 8px;
+    margin: 10px 0 8px;
+    overflow: hidden;
+    background: var(--ink-700);
+    border-radius: 4px;
+}
+
+.records-bar i {
+    display: block;
+    height: 100%;
+    transition: width var(--dur-slow) var(--ease-out);
+}
+
+/* Each band also carries a texture, so the three are told apart by pattern as
+   well as hue — a red/green split alone is unreadable to a good share of
+   players, and this bar is the panel's whole argument. */
+.records-bar i.is-right {
+    background-color: var(--verdigris);
+}
+
+.records-bar i.is-partial {
+    background-color: var(--brass-400);
+    background-image: repeating-linear-gradient(
+        45deg,
+        rgba(0, 0, 0, 0.32) 0 2px,
+        transparent 2px 5px
+    );
+}
+
+.records-bar i.is-wrong {
+    background-color: var(--oxblood);
+    background-image: repeating-linear-gradient(
+        -45deg,
+        rgba(0, 0, 0, 0.4) 0 1px,
+        transparent 1px 4px
+    );
+}
+
+.records-tally {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    margin: 0 0 8px;
+    font-size: var(--type-xs);
+}
+
+.records-chip {
+    color: var(--paper-500);
+}
+
+/* A leading glyph so the three verdicts differ in shape, not only colour. */
+.records-chip::before {
+    margin-right: 5px;
+    font-weight: 700;
+}
+
+.records-chip.is-right {
+    color: var(--verdigris);
+}
+
+.records-chip.is-right::before {
+    content: '✓';
+}
+
+.records-chip.is-partial {
+    color: var(--brass-200);
+}
+
+.records-chip.is-partial::before {
+    content: '~';
+}
+
+.records-chip.is-wrong {
+    color: var(--color-danger);
+}
+
+.records-chip.is-wrong::before {
+    content: '✕';
+}
+
+.records-rate {
+    margin-left: auto;
+    padding: 2px 9px;
+    border: 1px solid var(--ink-200);
+    border-radius: 999px;
+    font-weight: 700;
+    color: var(--paper-300);
+}
+
+.records-rate.is-good {
+    color: var(--verdigris);
+    border-color: var(--verdigris-dim);
+}
+
+.records-rate.is-poor {
+    color: var(--color-danger);
+    border-color: var(--oxblood-dim);
+}
+
+.records-verdict {
+    margin: 0;
+    font-size: var(--type-sm);
+    line-height: 1.55;
+    color: var(--paper-300);
+    overflow-wrap: anywhere;
+}
+
+.records-metrics {
+    margin: 6px 0 0;
+    font-size: var(--type-xs);
+    line-height: 1.5;
+    color: var(--paper-500);
+    overflow-wrap: anywhere;
+}
+
+.records-metrics em {
+    color: var(--paper-400);
+    font-style: normal;
+}
+
+.records-empty {
+    margin: 18px 0;
+    font-size: var(--type-base);
+    line-height: 1.6;
+    color: var(--paper-500);
+}
+
+.records-foot {
+    margin: 16px 0 0;
+    padding-top: 14px;
+    border-top: 1px solid var(--ink-400);
+    font-size: var(--type-xs);
+    font-style: italic;
+    line-height: 1.55;
+    color: var(--paper-500);
+}
+
+@media (max-width: 560px) {
+    .records {
+        padding: 18px 16px 20px;
+    }
+
+    .records-item {
+        gap: 10px;
+    }
+
+    .records-rate {
+        margin-left: 0;
+    }
+}
+
+/* Kept last so it wins the cascade. */
+@media (prefers-reduced-motion: reduce) {
+    .records-bar i {
+        transition: none;
+    }
+}
+
+:root[data-reduce-motion="true"] .records-bar i {
+    transition: none;
+}

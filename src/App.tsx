@@ -69,6 +69,8 @@ import { YearTransition } from './components/YearTransition';
 import { StatCounter } from './components/StatCounter';
 import { TurnPrimer } from './components/TurnPrimer';
 import { SettingsPanel } from './components/SettingsPanel';
+import { AdvisorRecords } from './components/AdvisorRecords';
+import { CHARACTERS } from './data/characters';
 import { initAudio, playCue } from './audio';
 import { initReduceMotionPreference } from './settings';
 
@@ -100,6 +102,7 @@ function App() {
   const [statsTab, setStatsTab] = useState<'nation' | 'region' | 'trends'>('nation');
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [recordsOpen, setRecordsOpen] = useState(false);
   /** Which stage the player is looking at during the cabinet phase. */
   const [stageView, setStageView] = useState<'cabinet' | 'republic'>('cabinet');
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
@@ -696,6 +699,9 @@ function App() {
           <button type="button" onClick={() => setLedgerOpen(true)}>
             Archive ({(state.policyDecisions ?? []).length})
           </button>
+          <button type="button" onClick={() => setRecordsOpen(true)}>
+            Who was right
+          </button>
           <button type="button" onClick={() => setGalleryOpen(true)}>
             Records ({(state.achievements ?? []).length})
           </button>
@@ -850,6 +856,14 @@ function App() {
       )}
 
       {galleryOpen && <AchievementGallery state={state} onClose={() => setGalleryOpen(false)} />}
+
+      {recordsOpen && (
+        <AdvisorRecords
+          characters={CHARACTERS}
+          audits={state.forecastAudits ?? []}
+          onClose={() => setRecordsOpen(false)}
+        />
+      )}
 
       {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
 
