@@ -1,6 +1,8 @@
 import { useId, useState } from 'react';
 import type { JSX, KeyboardEvent } from 'react';
-import type { Province, Terrain } from '../engine/types';
+import type { ProgrammeId, Province, Terrain } from '../engine/types';
+import { PROGRAMMES, programmeBlockedReason } from '../data/programmes';
+import { LICENCE_CAP, canLicenceMore } from '../engine/provinceLogic';
 import './ProvinceMap.css';
 
 interface ProvinceMapProps {
@@ -12,7 +14,7 @@ interface ProvinceMapProps {
     investmentStep: number;
     selectedId: string | null;
     onSelect: (provinceId: string | null) => void;
-    onInvest: (provinceId: string) => void;
+    onBuild: (provinceId: string, programmeId: ProgrammeId, cost: number) => void;
 }
 
 /* --- development ramp: deep ink -> antique gold -> pale cream --- */
@@ -90,7 +92,7 @@ export function ProvinceMap({
     investmentStep,
     selectedId,
     onSelect,
-    onInvest,
+    onBuild,
 }: ProvinceMapProps): JSX.Element {
     const uid = useId();
     const hatchLowId = `pm-hatch-low-${uid}`;
@@ -344,14 +346,48 @@ export function ProvinceMap({
                             Cumulative investment <strong>{formatCurrency(selected.invested)}</strong>
                         </p>
 
-                        <button
-                            type="button"
-                            className="province-invest-button"
-                            disabled={!canInvest}
-                            onClick={() => onInvest(selected.id)}
-                        >
-                            Invest ({formatCurrency(investmentStep)})
-                        </button>
+                        <h4 className="province-programmes-title">Spend an allocation on</h4>
+                        <ul className="province-programmes">
+                            {PROGRAMMES.map(programme => {
+                                const built = selected.works?.[programme.id] ?? 0;
+                                const endowmentBlock = programmeBlockedReason(programme, selected);
+                                const licenceBlock = programme.id === 'extraction' && !canLicenceMore(selected)
+                                    ? `All ${LICENCE_CAP} concessions here are already chartered.`
+                                    : null;
+                                const blocked = endowmentBlock ?? licenceBlock;
+                                const affordable = budget >= programme.cost;
+
+                                return (
+                                    <li key={programme.id} className={`province-programme${blocked ? ' is-blocked' : ''}`}>
+                                        <button
+                                            type="button"
+                                            className="province-programme-button"
+                                            disabled={Boolean(blocked) || !affordable}
+                                            onClick={() => onBuild(selected.id, programme.id, programme.cost)}
+                                        >
+                                            <span className="province-programme-head">
+                                                <span className="province-programme-name">{programme.name}</span>
+                                                <span className="province-programme-cost">
+                                                    {formatCurrency(programme.cost)}
+                                                </span>
+                                            </span>
+                                            <span className="province-programme-blurb">{programme.blurb}</span>
+                                            {/* Qualitative, like every other forecast in this game —
+                                                the numbers show up in what the province does next. */}
+                                            <span className="province-programme-forecast">{programme.forecast}</span>
+                                        </button>
+
+                                        {built > 0 && (
+                                            <span className="province-programme-built">
+                                                Built here {built}
+                                                {programme.id === 'extraction' ? ` of ${LICENCE_CAP}` : ''}
+                                            </span>
+                                        )}
+                                        {blocked && <span className="province-programme-blocked">{blocked}</span>}
+                                    </li>
+                                );
+                            })}
+                        </ul>
 
                         {!canInvest && (
                             <p className="province-detail-hint">

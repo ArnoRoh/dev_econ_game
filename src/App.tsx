@@ -9,7 +9,14 @@ import {
 } from './engine/agendaLogic';
 import { newspaperForTurn, resolveDueConsequences, resolveDuePromises } from './engine/consequenceLogic';
 import { driftFactions } from './engine/factionLogic';
-import { INVESTMENT_STEP, investInProvince, provinceRevenue, summariseProvinces, tickProvinces } from './engine/provinceLogic';
+import {
+  INVESTMENT_STEP,
+  applyProvincialPressure,
+  buildProgramme,
+  provinceRevenue,
+  summariseProvinces,
+  tickProvinces,
+} from './engine/provinceLogic';
 import { ProvinceMap } from './components/ProvinceMap';
 import { answerKnowledgeCheck, headlineMetric, recordConceptExposure, scorePrediction, selectKnowledgeCheck, spendAdvisorInsight, summariseLearning } from './engine/learningLogic';
 import { buildEndingContext, endingCitations, resolveEnding } from './engine/endingLogic';
@@ -21,6 +28,7 @@ import type {
   EducationalPolicyOption,
   KnowledgeCheck,
   PolicyProposal,
+  ProgrammeId,
   TurnDebriefEntry,
   TurnPhase,
 } from './engine/types';
@@ -220,6 +228,9 @@ function App() {
     state = advanceTurn(state, DEVELOPMENT_PROJECTS, DIPLOMATIC_PARTNERS);
     state = driftFactions(state);
     state = tickProvinces(state);
+    // The provinces' condition presses back on the centre: restive districts and a
+    // widening regional gap cost national stability.
+    state = applyProvincialPressure(state);
 
     // The provinces pay into the treasury, and a slice comes back as the
     // development budget the player allocates across them next year. Routing it
@@ -266,9 +277,9 @@ function App() {
     setYearTurn({ from: crossedInto - 1, to: crossedInto });
   }, [handleGameOver]);
 
-  const handleInvest = (provinceId: string) => {
+  const handleBuild = (provinceId: string, programmeId: ProgrammeId, cost: number) => {
     if (!gameState) return;
-    const next = investInProvince(gameState, provinceId, INVESTMENT_STEP);
+    const next = buildProgramme(gameState, provinceId, programmeId, cost);
     if (next !== gameState) {
       playCue('invest');
       setGameState(next);
@@ -736,7 +747,7 @@ function App() {
               investmentStep={INVESTMENT_STEP}
               selectedId={selectedProvince}
               onSelect={setSelectedProvince}
-              onInvest={handleInvest}
+              onBuild={handleBuild}
             />
           )}
 
