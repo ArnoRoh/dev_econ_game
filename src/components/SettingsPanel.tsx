@@ -1,6 +1,19 @@
 import { useEffect, useState } from 'react';
 import { getVolume, isMuted, setMuted, setVolume } from '../audio';
-import { applyReduceMotion, readStoredReduceMotion, systemPrefersReducedMotion, writeStoredReduceMotion } from '../settings';
+import {
+    TEXT_SCALES,
+    applyHighContrast,
+    applyReduceMotion,
+    applyTextScale,
+    readStoredHighContrast,
+    readStoredReduceMotion,
+    readStoredTextScale,
+    systemPrefersReducedMotion,
+    writeStoredHighContrast,
+    writeStoredReduceMotion,
+    writeStoredTextScale,
+} from '../settings';
+import type { TextScaleId } from '../settings';
 import './SettingsPanel.css';
 
 interface SettingsPanelProps {
@@ -18,6 +31,8 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
     const [reduceMotion, setReduceMotionState] = useState(
         () => readStoredReduceMotion() ?? systemPrefersReducedMotion(),
     );
+    const [textScale, setTextScaleState] = useState<TextScaleId>(() => readStoredTextScale());
+    const [highContrast, setHighContrastState] = useState(() => readStoredHighContrast());
 
     // The dialog also closes on backdrop click; Escape gives keyboard users the
     // same exit without having to tab all the way to the close button.
@@ -34,6 +49,18 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
     const handleVolumeChange = (next: number) => {
         setVolume(next);
         setVolumeState(next);
+    };
+
+    const handleTextScaleChange = (next: TextScaleId) => {
+        applyTextScale(next);
+        writeStoredTextScale(next);
+        setTextScaleState(next);
+    };
+
+    const handleHighContrastChange = (next: boolean) => {
+        applyHighContrast(next);
+        writeStoredHighContrast(next);
+        setHighContrastState(next);
     };
 
     const handleMutedChange = (next: boolean) => {
@@ -120,6 +147,46 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                     </label>
                     <p className="settings-hint">
                         Turns off animation and screen transitions throughout the game.
+                    </p>
+
+                    <div className="settings-row settings-row-stack">
+                        <span className="settings-label" id="settings-text-size-label">Text size</span>
+                        <div
+                            className="settings-choices"
+                            role="radiogroup"
+                            aria-labelledby="settings-text-size-label"
+                        >
+                            {TEXT_SCALES.map(option => (
+                                <button
+                                    key={option.id}
+                                    type="button"
+                                    role="radio"
+                                    aria-checked={textScale === option.id}
+                                    className={`settings-choice${textScale === option.id ? ' is-active' : ''}`}
+                                    onClick={() => handleTextScaleChange(option.id)}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    <p className="settings-hint">
+                        Scales every size in the interface together. Layouts reflow rather than
+                        clipping.
+                    </p>
+
+                    <label className="settings-toggle-row" htmlFor="settings-contrast">
+                        <span className="settings-label">Higher contrast</span>
+                        <input
+                            id="settings-contrast"
+                            className="settings-toggle"
+                            type="checkbox"
+                            checked={highContrast}
+                            onChange={event => handleHighContrastChange(event.target.checked)}
+                        />
+                    </label>
+                    <p className="settings-hint">
+                        Brightens text and removes the paper grain and vignette that sit over it.
                     </p>
                 </section>
             </div>

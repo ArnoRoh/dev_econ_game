@@ -3,6 +3,13 @@
    can use them. @import must precede all other statements in the file. */
 @import './styles/foundation.css';
 
+/* Every size in the interface is in rem, so the text-size setting moves this one
+   number and the whole scale follows. Default 1; `src/settings.ts` overwrites the
+   custom property before first paint. */
+html {
+  font-size: calc(100% * var(--text-scale, 1));
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -29,6 +36,32 @@ body {
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
+}
+
+/* High-contrast mode. The art direction is deliberately low-contrast — aged
+   paper, muted ink, grain over everything — which is part of why it looks the way
+   it does and exactly why some players cannot read it. This lifts text to the
+   brightest tones in the ramp, stops secondary text being secondary, and dials
+   the material overlays that sit above copy back to nearly nothing. */
+:root[data-high-contrast="true"] {
+  --color-text: #fbf6e8;
+  --paper-500: #b6ad96;
+  --paper-400: #d3c9ad;
+  --paper-300: #eae2ca;
+  --ink-200: #6b6d53;
+  --brass-300: #f0cf5c;
+  --color-danger: #ff9c8c;
+  --color-success: #a9e5c0;
+}
+
+:root[data-high-contrast="true"] .mat-grain::after,
+:root[data-high-contrast="true"] .mat-paper::after,
+:root[data-high-contrast="true"] .mat-baize::after {
+  opacity: 0.015;
+}
+
+:root[data-high-contrast="true"] .mat-vignette::before {
+  display: none;
 }
 
 /* Layout Screens */
