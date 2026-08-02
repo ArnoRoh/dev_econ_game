@@ -1,25 +1,15 @@
+/* Printed on the shared paper stock (.mat-paper + .mat-grain from the
+   foundation) rather than assembled from a bespoke gradient — this is the one
+   screen in the turn loop that is meant to look like it came off a press, so
+   it inherits the paper's warm tone and dark ink colour directly. */
 .newspaper {
-    width: min(1000px, 100%);
+    width: min(1040px, 100%);
     margin: 0 auto;
-    padding: 28px 32px 32px;
-    /* Two faint layers of newsprint noise (a fine dot halftone and a hairline
-       grain) sit under the paper gradient. Both are CSS-only — no image asset. */
-    background:
-        radial-gradient(circle at 1px 1px, rgba(29, 26, 21, 0.05) 0.6px, transparent 0.6px),
-        repeating-linear-gradient(
-            0deg,
-            rgba(29, 26, 21, 0.028) 0px,
-            rgba(29, 26, 21, 0.028) 1px,
-            transparent 1px,
-            transparent 3px
-        ),
-        linear-gradient(180deg, #f2ece0 0%, #e9e1d2 100%);
-    background-size: 3px 3px, auto, auto;
-    color: #1d1a15;
-    border-radius: 4px;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    padding: 30px 36px 26px;
+    border-radius: 3px;
+    box-shadow: var(--lift-4);
     transform-origin: top center;
-    animation: newspaper-in 460ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+    animation: newspaper-in var(--dur-slow) var(--ease-out) both;
 }
 
 /* Arrives like a printed sheet dropped onto the desk: a touch of rotation and
@@ -35,57 +25,131 @@
     }
 }
 
+/* ---------------------------------------------------------------------------
+   Masthead
+   --------------------------------------------------------------------------- */
+
 .newspaper-masthead {
-    display: flex;
-    align-items: center;
-    gap: 16px;
+    position: relative;
+    z-index: 2;
+    text-align: center;
 }
 
-.newspaper-masthead h2 {
+.newspaper-eyebrow {
+    margin: 0 0 4px;
+    color: var(--ink-500);
+}
+
+.newspaper-title {
     margin: 0;
-    font-family: var(--font-serif);
-    font-size: clamp(1.6rem, 4vw, 2.6rem);
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 5.4vw, 3.2rem);
     font-weight: 700;
-    letter-spacing: 0.02em;
-    text-align: center;
-    white-space: nowrap;
+    letter-spacing: 0.01em;
+    color: var(--ink-900);
+    /* A hair of ink bleed at the letterforms' edges — press registration was
+       never perfect on cheap newsprint stock. Kept subtle: legibility first. */
+    text-shadow: 0.3px 0.4px 0.5px rgba(16, 18, 8, 0.28);
     overflow-wrap: anywhere;
 }
 
-.newspaper-rule {
-    flex: 1;
-    height: 3px;
-    border-top: 1px solid #1d1a15;
-    border-bottom: 1px solid #1d1a15;
+.newspaper-masthead-rule {
+    margin: 10px 0 8px;
 }
 
-.newspaper-dateline {
-    margin: 8px 0 20px;
-    padding-bottom: 12px;
-    border-bottom: 2px solid #1d1a15;
-    font-size: 0.72rem;
+.newspaper-dateline-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    align-items: baseline;
+    justify-content: space-between;
+    font-size: var(--type-xs);
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    text-align: center;
-    color: #4a4237;
+    color: var(--ink-500);
 }
+
+.newspaper-dateline-center {
+    flex: 1 1 220px;
+    text-align: center;
+}
+
+/* ---------------------------------------------------------------------------
+   Lead story — the largest headline on the page, with a dropped cap and a
+   small-caps opening line, the way a broadsheet front page leads its run.
+   --------------------------------------------------------------------------- */
+
+.newspaper-lead {
+    position: relative;
+    z-index: 2;
+    padding: 22px 0 20px;
+    margin-top: 6px;
+    border-top: 1px solid rgba(16, 18, 8, 0.5);
+    border-bottom: 1px solid rgba(16, 18, 8, 0.22);
+    animation: newspaper-item-in var(--dur-base) var(--ease-out) both;
+    animation-delay: 180ms;
+}
+
+.newspaper-lead-headline {
+    margin: 0 0 12px;
+    font-family: var(--font-serif);
+    font-size: clamp(1.7rem, 4.6vw, 2.6rem);
+    font-weight: 700;
+    line-height: 1.12;
+    color: var(--ink-900);
+    text-shadow: 0.3px 0.4px 0.5px rgba(16, 18, 8, 0.22);
+    overflow-wrap: anywhere;
+}
+
+.newspaper-lead-body {
+    max-width: 68ch;
+    margin: 0;
+    font-size: var(--type-lg);
+    line-height: 1.68;
+    color: var(--ink-600);
+    overflow-wrap: anywhere;
+}
+
+.newspaper-lead-body::first-letter {
+    float: left;
+    padding: 2px 7px 0 0;
+    font-family: var(--font-display);
+    font-size: 3.5em;
+    font-weight: 700;
+    line-height: 0.8;
+    color: var(--ink-900);
+}
+
+.newspaper-lead-body::first-line {
+    font-variant: small-caps;
+    letter-spacing: 0.03em;
+}
+
+/* ---------------------------------------------------------------------------
+   Secondary stories, set in true newspaper columns. `columns` picks its own
+   count from the available width, so a narrow viewport collapses to a single
+   column on its own — no separate breakpoint has to chase it.
+   --------------------------------------------------------------------------- */
 
 .newspaper-columns {
-    display: grid;
-    gap: 22px;
-    /* min(260px, 100%) keeps a single narrow column from forcing the grid
-       wider than its container on small screens. */
-    grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+    position: relative;
+    z-index: 2;
+    columns: 250px 3;
+    column-gap: 30px;
+    column-rule: 1px solid rgba(16, 18, 8, 0.18);
 }
 
 .newspaper-item {
-    min-width: 0;
-    padding-left: 16px;
-    border-left: 3px solid #b9ae98;
-    animation: newspaper-item-in 420ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
-    /* Base delay clears the sheet's own settle-in; stagger below builds on it. */
-    animation-delay: 220ms;
+    break-inside: avoid;
+    padding: 16px 0;
+    border-top: 1px solid rgba(16, 18, 8, 0.22);
+    animation: newspaper-item-in var(--dur-base) var(--ease-out) both;
+}
+
+.newspaper-item:first-child {
+    border-top: none;
+    padding-top: 0;
 }
 
 /* Headlines land one after another rather than all at once. Capped at eight —
@@ -110,36 +174,51 @@
     }
 }
 
-.newspaper-item.tone-good {
-    border-left-color: #3f7d4f;
+/* A short kicker rule instead of a full-height coloured bar, so a tone still
+   reads at a glance without eating into a 250px column's measure. */
+.newspaper-kicker {
+    display: block;
+    width: 34px;
+    height: 3px;
+    margin-bottom: 9px;
+    background: var(--ink-300);
+    border-radius: 2px;
 }
 
-.newspaper-item.tone-bad {
-    border-left-color: #a63d3d;
+.newspaper-lead.tone-good .newspaper-kicker,
+.newspaper-item.tone-good .newspaper-kicker {
+    background: var(--verdigris-dim);
+}
+
+.newspaper-lead.tone-bad .newspaper-kicker,
+.newspaper-item.tone-bad .newspaper-kicker {
+    background: var(--oxblood-dim);
 }
 
 .newspaper-headline {
     margin: 0 0 8px;
     font-family: var(--font-serif);
-    font-size: 1.22rem;
+    font-size: 1.14rem;
     font-weight: 700;
-    line-height: 1.25;
+    line-height: 1.28;
+    color: var(--ink-900);
+    text-shadow: 0.25px 0.35px 0.4px rgba(16, 18, 8, 0.2);
     overflow-wrap: anywhere;
 }
 
 .newspaper-body {
     margin: 0;
-    font-size: 0.92rem;
-    line-height: 1.6;
-    color: #2e2921;
+    font-size: var(--type-base);
+    line-height: 1.62;
+    color: var(--ink-600);
     overflow-wrap: anywhere;
 }
 
 .newspaper-trace {
     margin: 10px 0 0;
-    font-size: 0.78rem;
+    font-size: var(--type-sm);
     font-style: italic;
-    color: #5c5343;
+    color: var(--ink-500);
     overflow-wrap: anywhere;
 }
 
@@ -151,46 +230,91 @@
 .newspaper-effects {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 12px;
+    gap: 5px 14px;
     margin: 12px 0 0;
-    padding: 0;
+    padding-top: 8px;
+    border-top: 1px dotted rgba(16, 18, 8, 0.3);
     list-style: none;
-    font-size: 0.74rem;
+    font-size: var(--type-sm);
     font-weight: 700;
+    font-variant-numeric: tabular-nums;
 }
 
 .newspaper-effects li {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     overflow-wrap: anywhere;
 }
 
+.newspaper-effect-glyph {
+    font-size: 0.7em;
+}
+
 .newspaper-effects .is-good {
-    color: #2f6b3d;
+    color: var(--verdigris-dim);
 }
 
 .newspaper-effects .is-bad {
-    color: #94302f;
+    color: var(--oxblood-dim);
+}
+
+/* ---------------------------------------------------------------------------
+   Folio — the small footer line every broadsheet page carries.
+   --------------------------------------------------------------------------- */
+
+.newspaper-folio {
+    position: relative;
+    z-index: 2;
+    margin-top: 22px;
+}
+
+.newspaper-folio p {
+    margin: 8px 0 0;
+    font-size: var(--type-xs);
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--ink-500);
 }
 
 .newspaper-continue {
+    position: relative;
+    z-index: 2;
     display: block;
-    margin: 26px auto 0;
+    margin: 22px auto 0;
     min-height: 44px;
+    background: var(--ink-800);
+    border: 2px solid var(--ink-800);
+    color: var(--paper-100);
+    box-shadow: var(--lift-2);
 }
 
-/* The newspaper sits on a light card, so the shared gold focus ring (tuned
-   for the dark shell) would fail contrast here — use the dark ink instead. */
+.newspaper-continue:hover:not(:disabled) {
+    background: var(--brass-300);
+    border-color: var(--brass-300);
+    color: var(--ink-900);
+    box-shadow: var(--glow-brass);
+}
+
+/* The newspaper sits on the light paper stock, so the shared gold focus ring
+   (tuned for the dark shell) would fail contrast here — dark ink reads
+   clearly against the surrounding page regardless of the button's own state. */
 .newspaper-continue:focus-visible {
-    outline: 3px solid #1d1a15;
+    outline: 3px solid var(--ink-800);
     outline-offset: 3px;
 }
 
 @media (max-width: 640px) {
     .newspaper {
-        padding: 20px 18px 24px;
+        padding: 22px 20px 22px;
     }
+}
 
-    .newspaper-masthead h2 {
-        white-space: normal;
+@media (max-width: 400px) {
+    .newspaper {
+        padding: 18px 14px 20px;
     }
 }
 
@@ -198,12 +322,14 @@
    added above collapses to its settled end state, with nothing left invisible. */
 @media (prefers-reduced-motion: reduce) {
     .newspaper,
+    .newspaper-lead,
     .newspaper-item {
         animation: none;
     }
 }
 
 :root[data-reduce-motion='true'] .newspaper,
+:root[data-reduce-motion='true'] .newspaper-lead,
 :root[data-reduce-motion='true'] .newspaper-item {
     animation: none;
 }

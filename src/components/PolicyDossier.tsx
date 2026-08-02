@@ -57,6 +57,30 @@ const DIRECTION_WORD: Record<QualitativeForecast['predictedDirection'], string> 
 };
 
 /**
+ * A stable, decorative case number derived from the proposal id — never a
+ * real count of anything, so it carries no numeric effect information. Old
+ * government files were numbered; this dossier is one.
+ */
+function fileNumber(id: string): string {
+    let hash = 0;
+    for (let i = 0; i < id.length; i += 1) {
+        hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+    }
+    return String(100 + (hash % 899));
+}
+
+/** Initials for a marginal-note signature — "handwritten" in the margin. */
+function initials(name: string): string {
+    return name
+        .split(/\s+/)
+        .filter(Boolean)
+        .map(word => word[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 3);
+}
+
+/**
  * Progressive disclosure, per the educational design: the dispute first, the
  * mechanism on request, the evidence last. Numeric effects are deliberately
  * absent — the player commits under the same uncertainty a minister would.
@@ -76,8 +100,10 @@ export function PolicyDossier({
     const [prediction, setPrediction] = useState<PredictionChoice | null>(null);
 
     const sponsor = CHARACTERS_BY_ID[proposal.sponsorId];
+    const sponsorFaction = FACTIONS_BY_ID[sponsor.factionId];
     const concepts = ECONOMIC_CONCEPTS.filter(concept => proposal.conceptIds.includes(concept.id));
     const sources = SOURCES.filter(source => proposal.sourceIds.includes(source.id));
+    const docket = proposal.arcId.replace(/[-_]+/g, ' ').trim();
 
     const toggle = (id: string) => setOpenSection(current => (current === id ? null : id));
 
@@ -93,21 +119,35 @@ export function PolicyDossier({
                 ← Back to the cabinet table
             </button>
 
-            <header className="dossier-header">
-                <div className="dossier-sponsor-row">
-                    <Portrait characterId={proposal.sponsorId} size={54} />
-                    <p className="dossier-sponsor">
-                        Raised by <strong>{sponsor.name}</strong>, {sponsor.title}
-                    </p>
+            <div className="dossier-cover edge-lit">
+                <div className="dossier-tab" aria-hidden="true">
+                    <span className="type-eyebrow dossier-tab-label">{sponsorFaction.shortName}</span>
                 </div>
-                <h2 className="dossier-title">{proposal.title}</h2>
-                <p className="dossier-brief">{proposal.brief}</p>
-            </header>
 
-            <div className="dossier-section">
-                <h3 className="dossier-section-title">Who benefits, who pays</h3>
-                <p className="dossier-stakeholders">{proposal.stakeholderSummary}</p>
-            </div>
+                <div className="dossier-stamp" aria-hidden="true">
+                    <span>Cabinet</span>
+                    <span>Eyes Only</span>
+                </div>
+
+                <p className="dossier-file-ref">
+                    File No. {fileNumber(proposal.id)} &middot; Docket: {docket} · Step {proposal.arcStep}
+                </p>
+
+                <header className="dossier-header">
+                    <div className="dossier-sponsor-row">
+                        <Portrait characterId={proposal.sponsorId} size={54} />
+                        <p className="dossier-sponsor">
+                            Raised by <strong>{sponsor.name}</strong>, {sponsor.title}
+                        </p>
+                    </div>
+                    <h2 className="dossier-title">{proposal.title}</h2>
+                    <p className="dossier-brief">{proposal.brief}</p>
+                </header>
+
+                <div className="dossier-section">
+                    <h3 className="dossier-section-title">Who benefits, who pays</h3>
+                    <p className="dossier-stakeholders">{proposal.stakeholderSummary}</p>
+                </div>
 
             {concepts.map((concept, index) => {
                 const sectionId = `mechanism-${concept.id}`;
@@ -126,7 +166,7 @@ export function PolicyDossier({
                         <span aria-hidden="true">{isOpen ? '−' : '+'}</span>
                     </button>
                     {isOpen && (
-                        <div className="dossier-accordion-body">
+                        <div className="dossier-accordion-body mat-paper">
                             <p className="dossier-concept-summary">{concept.oneSentenceSummary}</p>
                             <ol className="dossier-chain">
                                 {concept.mechanismSteps.map(step => (
@@ -171,7 +211,7 @@ export function PolicyDossier({
                         <span aria-hidden="true">{openSection === 'background' ? '−' : '+'}</span>
                     </button>
                     {openSection === 'background' && (
-                        <div className="dossier-accordion-body">
+                        <div className="dossier-accordion-body mat-paper">
                             <div className="dossier-theory">{proposal.backgroundTheory}</div>
                             {(proposal.legacySource || proposal.wikiLink) && (
                                 <p className="dossier-theory-source">
@@ -200,7 +240,7 @@ export function PolicyDossier({
                         <span aria-hidden="true">{openSection === 'sources' ? '−' : '+'}</span>
                     </button>
                     {openSection === 'sources' && (
-                        <div className="dossier-accordion-body">
+                        <div className="dossier-accordion-body mat-paper">
                             <ul className="dossier-sources">
                                 {sources.map(source => (
                                     <li key={source.id}>
@@ -289,6 +329,12 @@ export function PolicyDossier({
                                                         </span>
                                                         <span className="dossier-forecast-summary">
                                                             {forecast.summary}
+                                                            <span
+                                                                className="dossier-forecast-initials"
+                                                                aria-hidden="true"
+                                                            >
+                                                                — {initials(advisor.name)}
+                                                            </span>
                                                         </span>
                                                         <span className="dossier-forecast-meta">
                                                             expects it {DIRECTION_WORD[forecast.predictedDirection]}
@@ -376,6 +422,7 @@ export function PolicyDossier({
                     did nothing.
                 </p>
             </footer>
+            </div>
         </section>
     );
 }

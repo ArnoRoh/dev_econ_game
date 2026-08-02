@@ -1,26 +1,12 @@
+/* The dossier is a folder on the cabinet table — dark card stock, brass edge —
+   holding a set of paper inserts (the accordion bodies) underneath. The folder
+   itself stays in the same ink-panel language as the cabinet room around it;
+   only the pages inside it are lit like paper. */
 .dossier {
+    position: relative;
     width: min(880px, 100%);
     margin: 0 auto;
-    padding: 24px 26px 28px;
-    background: linear-gradient(180deg, rgba(32, 34, 32, 0.96) 0%, rgba(22, 24, 22, 0.96) 100%);
-    border: 1px solid #3d3d35;
-    border-radius: 10px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-    transform-origin: top center;
-    animation: dossier-in 340ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
-}
-
-/* Opens like a folder laid flat on the table: it unfolds down from its top
-   edge rather than merely sliding up, without animating height itself. */
-@keyframes dossier-in {
-    from {
-        opacity: 0;
-        transform: translateY(-14px) scaleY(0.96);
-    }
-    to {
-        opacity: 1;
-        transform: none;
-    }
+    padding-top: 14px;
 }
 
 .dossier-back {
@@ -36,6 +22,94 @@
 
 .dossier-back:hover {
     color: var(--color-primary);
+}
+
+/* ---------------------------------------------------------------------------
+   The folder cover
+   --------------------------------------------------------------------------- */
+
+.dossier-cover {
+    position: relative;
+    padding: 24px 26px 28px;
+    background: linear-gradient(180deg, rgba(32, 34, 32, 0.97) 0%, rgba(22, 24, 22, 0.97) 100%);
+    border: 1px solid var(--ink-300);
+    border-radius: 3px 10px 10px 10px;
+    transform-origin: top center;
+    animation: dossier-in var(--dur-base) var(--ease-out) both;
+}
+
+/* Opens like a folder laid flat on the table: it unfolds down from its top
+   edge rather than merely sliding up, without animating height itself. */
+@keyframes dossier-in {
+    from {
+        opacity: 0;
+        transform: translateY(-14px) scaleY(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* A manila tab standing proud of the folder's top-left corner, the way a
+   hanging file's tab sits above the rest of the drawer. */
+.dossier-tab {
+    position: absolute;
+    top: -17px;
+    left: 22px;
+    padding: 5px 14px 8px;
+    background: linear-gradient(180deg, var(--paper-300) 0%, var(--paper-400) 100%);
+    border: 1px solid var(--ink-300);
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+    box-shadow: var(--lift-1);
+}
+
+/* Two classes beats the foundation's single-class `.type-eyebrow` rule
+   without needing `!important` — the tab sits on light card stock, so its
+   label needs dark ink rather than the eyebrow's default pale tone. */
+.dossier-tab .dossier-tab-label {
+    color: var(--ink-700);
+}
+
+/* A rubber-stamped classification mark, canted like an inked stamp struck by
+   hand and not quite square to the page. */
+.dossier-stamp {
+    position: absolute;
+    top: 20px;
+    right: 22px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 92px;
+    height: 92px;
+    padding: 6px;
+    border: 3px double var(--oxblood);
+    border-radius: 50%;
+    transform: rotate(-11deg);
+    color: var(--oxblood);
+    font-family: var(--font-display);
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    line-height: 1.3;
+    text-align: center;
+    text-transform: uppercase;
+    opacity: 0.82;
+}
+
+/* Old-style figures set in a typewriter face — the one place in the dossier
+   that is meant to look struck rather than typeset. */
+.dossier-file-ref {
+    margin: 4px 108px 18px 0;
+    font-family: 'Courier New', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.72rem;
+    font-variant-numeric: oldstyle-nums;
+    letter-spacing: 0.02em;
+    color: var(--paper-500);
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
 }
 
 .dossier-sponsor {
@@ -112,40 +186,72 @@
     color: var(--color-primary);
 }
 
+/* ---------------------------------------------------------------------------
+   Accordion bodies — paper inserts folded into the file. Each is set on the
+   shared paper stock (.mat-paper), tipped very slightly off true and given a
+   dog-eared top corner, the way an attached page sits a little proud of the
+   folder around it.
+   --------------------------------------------------------------------------- */
+
 .dossier-accordion-body {
-    padding: 0 0 18px;
-    transform-origin: top center;
-    animation: dossier-reveal 260ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+    margin: 0 0 18px;
+    padding: 16px 18px 18px;
+    border-radius: 2px 8px 8px 2px;
+    box-shadow: var(--lift-2);
+    transform: rotate(-0.35deg);
+    transform-origin: top left;
+    animation: dossier-reveal var(--dur-base) var(--ease-out) both;
+}
+
+/* A folded-down corner: two triangles standing in for the underside and the
+   crease of a dog-eared page. */
+.dossier-accordion-body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 2;
+    width: 20px;
+    height: 20px;
+    background:
+        linear-gradient(135deg, transparent 50%, var(--paper-400) 50%) top right / 20px 20px no-repeat,
+        linear-gradient(315deg, var(--ink-600) 0%, transparent 60%) top right / 20px 20px no-repeat;
+    opacity: 0.9;
+    pointer-events: none;
 }
 
 @keyframes dossier-reveal {
     from {
         opacity: 0;
-        transform: translateY(-6px);
+        transform: translateY(-6px) rotate(-0.35deg);
     }
     to {
         opacity: 1;
-        transform: none;
+        transform: rotate(-0.35deg);
     }
 }
 
 .dossier-concept-summary {
+    position: relative;
+    z-index: 2;
     margin: 0 0 14px;
-    padding: 12px 14px;
-    background: rgba(212, 175, 55, 0.07);
-    border-left: 3px solid rgba(212, 175, 55, 0.5);
-    border-radius: 0 4px 4px 0;
+    padding: 11px 13px;
+    background: rgba(16, 18, 8, 0.05);
+    border-left: 3px solid var(--brass-400);
+    border-radius: 0 3px 3px 0;
     font-size: 0.9rem;
     line-height: 1.6;
-    color: #d8d0be;
+    color: var(--ink-800);
 }
 
 .dossier-chain {
+    position: relative;
+    z-index: 2;
     margin: 0 0 16px;
     padding-left: 20px;
     font-size: 0.88rem;
     line-height: 1.65;
-    color: #b8b0a0;
+    color: var(--ink-700);
 }
 
 .dossier-chain li {
@@ -153,20 +259,31 @@
 }
 
 .dossier-minor-heading {
+    position: relative;
+    z-index: 2;
     margin: 0 0 8px;
     font-size: 0.7rem;
     font-weight: 800;
     letter-spacing: 0.1em;
     text-transform: uppercase;
+    color: var(--ink-500);
+}
+
+/* This heading also appears outside a paper insert (inside .dossier-option-body,
+   which stays on the folder's own dark ground) — the ink-toned colour above
+   would fail contrast there, so restore the light label colour in that context. */
+.dossier-option-body .dossier-minor-heading {
     color: #8d8578;
 }
 
 .dossier-list {
+    position: relative;
+    z-index: 2;
     margin: 0 0 14px;
     padding-left: 18px;
     font-size: 0.86rem;
     line-height: 1.6;
-    color: #aca492;
+    color: var(--ink-600);
 }
 
 .dossier-list li {
@@ -174,41 +291,49 @@
 }
 
 .dossier-list-insight li {
-    color: #d4c48a;
+    color: var(--brass-500);
+    font-weight: 600;
 }
 
 .dossier-theory {
+    position: relative;
+    z-index: 2;
     white-space: pre-wrap;
     font-size: 0.89rem;
     line-height: 1.7;
-    color: #b8b0a0;
+    color: var(--ink-700);
 }
 
 .dossier-theory-source {
+    position: relative;
+    z-index: 2;
     display: flex;
     flex-wrap: wrap;
     gap: 14px;
     justify-content: space-between;
     margin: 14px 0 0;
     padding-top: 10px;
-    border-top: 1px solid #2f2f29;
+    border-top: 1px solid rgba(16, 18, 8, 0.2);
     font-size: 0.76rem;
     font-style: italic;
-    color: #857d70;
+    color: var(--ink-500);
 }
 
 .dossier-theory-source a {
-    color: #7fb2e0;
+    color: var(--ink-800);
     font-style: normal;
-    text-decoration: none;
+    font-weight: 700;
+    text-decoration: underline;
 }
 
 .dossier-sources {
+    position: relative;
+    z-index: 2;
     margin: 0;
     padding-left: 18px;
     font-size: 0.84rem;
     line-height: 1.6;
-    color: #b8b0a0;
+    color: var(--ink-700);
 }
 
 .dossier-sources li {
@@ -216,7 +341,8 @@
 }
 
 .dossier-sources a {
-    color: #7fb2e0;
+    color: var(--ink-900);
+    font-weight: 700;
 }
 
 .dossier-source-type {
@@ -224,16 +350,16 @@
     margin-right: 4px;
     padding: 1px 6px;
     border-radius: 3px;
-    background: #33332c;
+    background: rgba(16, 18, 8, 0.12);
     font-size: 0.62rem;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #a99f8a;
+    color: var(--ink-700);
 }
 
 .dossier-source-meta {
-    color: #857d70;
+    color: var(--ink-500);
 }
 
 .dossier-insight-button {
@@ -264,7 +390,7 @@
     border: 1px solid #3a3a34;
     border-radius: 8px;
     overflow: hidden;
-    transition: border-color 160ms ease;
+    transition: border-color var(--dur-fast) ease;
 }
 
 .dossier-option.is-selected {
@@ -318,7 +444,7 @@
     font-style: italic;
     line-height: 1.6;
     color: #b0a894;
-    animation: dossier-stage-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+    animation: dossier-stage-in var(--dur-base) var(--ease-out) both;
 }
 
 @keyframes dossier-stage-in {
@@ -338,12 +464,16 @@
     list-style: none;
 }
 
+/* Marginal notes: pinned to the page by a dashed rule rather than boxed off,
+   the way a minister would annotate a memo in the margin rather than staple a
+   separate slip to it. Each is initialled at the end, like a hand signing off. */
 .dossier-forecast {
     display: flex;
     gap: 10px;
-    padding: 10px 0;
-    border-top: 1px solid #2c2c26;
-    animation: dossier-stage-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+    padding: 10px 0 10px 12px;
+    border-left: 2px dashed var(--brass-500);
+    margin-bottom: 8px;
+    animation: dossier-stage-in var(--dur-base) var(--ease-out) both;
 }
 
 /* Advisors speak up one at a time, on top of the rationale's own delay. */
@@ -363,12 +493,12 @@
 
 .dossier-forecast.dir-up .dossier-forecast-dir,
 .dossier-forecast.dir-stronglyUp .dossier-forecast-dir {
-    color: var(--color-success);
+    color: var(--verdigris);
 }
 
 .dossier-forecast.dir-down .dossier-forecast-dir,
 .dossier-forecast.dir-stronglyDown .dossier-forecast-dir {
-    color: var(--color-danger);
+    color: var(--oxblood);
 }
 
 .dossier-forecast-text {
@@ -384,8 +514,19 @@
     font-size: 0.76rem;
 }
 
+/* Rendered like a hand's note in the margin: a gentle italic lean rather than
+   the report's own upright voice. */
 .dossier-forecast-summary {
-    color: #b8b0a0;
+    color: #cdc5b5;
+    font-style: italic;
+}
+
+.dossier-forecast-initials {
+    margin-left: 6px;
+    color: var(--brass-300);
+    font-style: normal;
+    font-weight: 700;
+    letter-spacing: 0.04em;
 }
 
 .dossier-forecast-meta {
@@ -396,7 +537,7 @@
 
 .dossier-commit {
     width: 100%;
-    animation: dossier-stage-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+    animation: dossier-stage-in var(--dur-base) var(--ease-out) both;
     animation-delay: 420ms;
 }
 
@@ -430,14 +571,10 @@
     color: #7d766a;
 }
 
-@media (max-width: 640px) {
-    .dossier {
-        padding: 18px 16px 22px;
-    }
-}
-
 .dossier-predict {
-    animation: dossier-stage-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+    position: relative;
+    z-index: 2;
+    animation: dossier-stage-in var(--dur-base) var(--ease-out) both;
     animation-delay: 360ms;
     padding: 14px;
     margin-bottom: 14px;
@@ -496,10 +633,27 @@
     margin: 0;
 }
 
+@media (max-width: 640px) {
+    .dossier-cover {
+        padding: 30px 16px 22px;
+    }
+
+    .dossier-stamp {
+        position: static;
+        width: 84px;
+        height: 84px;
+        margin: 0 0 14px auto;
+    }
+
+    .dossier-file-ref {
+        margin-right: 0;
+    }
+}
+
 /* Reduced motion wins the cascade from here down: every entrance and staged
    reveal collapses to its settled end state — nothing stays hidden. */
 @media (prefers-reduced-motion: reduce) {
-    .dossier,
+    .dossier-cover,
     .dossier-accordion-body,
     .dossier-rationale,
     .dossier-forecast,
@@ -507,13 +661,21 @@
     .dossier-commit {
         animation: none;
     }
+
+    .dossier-accordion-body {
+        transform: none;
+    }
 }
 
-:root[data-reduce-motion='true'] .dossier,
+:root[data-reduce-motion='true'] .dossier-cover,
 :root[data-reduce-motion='true'] .dossier-accordion-body,
 :root[data-reduce-motion='true'] .dossier-rationale,
 :root[data-reduce-motion='true'] .dossier-forecast,
 :root[data-reduce-motion='true'] .dossier-predict,
 :root[data-reduce-motion='true'] .dossier-commit {
     animation: none;
+}
+
+:root[data-reduce-motion='true'] .dossier-accordion-body {
+    transform: none;
 }
