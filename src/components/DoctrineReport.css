@@ -1,0 +1,108 @@
+/*
+ * The doctrine report. Sits after the ending, styled as a ledger rather than a
+ * scorecard — the point is what the run is evidence of, which is usually less
+ * than the player would like.
+ */
+
+.doctrine-report {
+    max-width: 46rem;
+    margin: 1.5rem auto;
+    padding: 1.25rem 1.4rem;
+    border: 1px solid var(--color-border, #4a4036);
+    border-radius: 6px;
+    text-align: left;
+}
+
+.doctrine-report__head h2 {
+    margin: 0 0 0.4rem;
+    font-size: 1.35rem;
+}
+
+.doctrine-report__head p {
+    margin: 0 0 1.1rem;
+    font-size: 0.93rem;
+    line-height: 1.6;
+    opacity: 0.8;
+}
+
+.doctrine-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.9rem;
+}
+
+.doctrine-entry {
+    padding-left: 0.85rem;
+    border-left: 2px solid var(--color-border, #4a4036);
+}
+
+.doctrine-entry__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.doctrine-entry__head strong { font-size: 1rem; }
+
+.doctrine-tag {
+    font-size: 0.66rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    font-weight: 600;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    border: 1px solid currentColor;
+    white-space: nowrap;
+    opacity: 0.85;
+}
+
+.doctrine-tag.is-well-supported { color: #4b7a4f; }
+.doctrine-tag.is-contested { color: #b8862f; }
+.doctrine-tag.is-actively-disputed { color: #a8451f; }
+
+.doctrine-count {
+    margin-left: auto;
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.65;
+    white-space: nowrap;
+}
+
+.doctrine-verdict {
+    margin: 0.25rem 0 0;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+.doctrine-untested {
+    margin-top: 1.3rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--color-border, #4a4036);
+}
+
+.doctrine-untested h3 {
+    margin: 0 0 0.4rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    opacity: 0.72;
+}
+
+.doctrine-untested p {
+    margin: 0 0 0.6rem;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    opacity: 0.78;
+}
+
+.doctrine-untested ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    opacity: 0.85;
+}

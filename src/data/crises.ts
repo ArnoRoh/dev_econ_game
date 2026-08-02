@@ -477,8 +477,17 @@ export const WORLD_CRISES: WorldCrisis[] = [
             'The Eastern bloc has stopped existing as a going concern, and with it the concessional fuel, the guaranteed purchase agreements and the military assistance that three decades of foreign policy were built around. The Western institutions that remain are willing to help, and have a model they would like adopted first.',
         theory:
             'Cold War competition had a side effect that was invisible until it stopped: developing countries could extract real resources from both blocs by being courted rather than by being productive. Non-alignment was not merely a diplomatic posture, it was a revenue strategy.\n\nWhen the competition ended, that revenue ended, and the surviving institutions no longer had a rival to be compared against. Conditionality got much harder to refuse in 1990 than it had been in 1975 — not because the conditions changed but because the alternative disappeared.\n\nThe countries that came through this best were generally those whose foreign earnings came from selling things to people who wanted them, rather than from being strategically located.',
-        conceptIds: ['export_orientation'],
-        sourceIds: ['world_bank_1993_east_asian_miracle', 'stiglitz_2002_globalization'],
+        // The 1990 sitting is where the Consensus stops being one option among
+        // several and becomes the only one on offer, which is the concept's
+        // whole point: conditionality got harder to refuse when the rival bloc
+        // stopped existing, not when the conditions changed.
+        conceptIds: ['export_orientation', 'washington_consensus'],
+        sourceIds: [
+            'world_bank_1993_east_asian_miracle',
+            'stiglitz_2002_globalization',
+            'williamson_1990_washington_consensus',
+            'rodriguez_rodrik_2001_trade_policy_growth',
+        ],
         tags: ['crisis', 'geopolitics', 'history'],
         severity: state => {
             if (state.flags.non_aligned) {

@@ -35,7 +35,23 @@ export type ConceptId =
     | 'labor_standards'
     | 'dutch_disease'
     | 'sovereign_wealth_fund'
-    | 'resource_curse';
+    | 'resource_curse'
+    // The industrial-policy and export-led layer. These exist to be argued
+    // with: each carries a live scholarly dispute in `competingViews`, and
+    // several describe mechanisms whose empirical support is genuinely
+    // contested rather than merely simplified.
+    | 'developmental_state'
+    | 'dynamic_comparative_advantage'
+    | 'miracle_accounting_debate'
+    | 'fallacy_of_composition'
+    | 'premature_deindustrialization'
+    | 'self_discovery'
+    | 'exchange_rate_undervaluation'
+    | 'global_value_chains'
+    | 'middle_income_trap'
+    | 'washington_consensus'
+    | 'state_capacity'
+    | 'learning_by_exporting';
 
 export interface SourceCitation {
     id: string;
@@ -57,6 +73,27 @@ export interface EconomicConcept {
     competingViews: string[];
     observableIndicators: Array<keyof CountryStats | 'treasury' | 'factionPower'>;
     sourceIds: string[];
+    /**
+     * How settled the evidence actually is.
+     *
+     * The game teaches mechanisms, and a mechanism presented without its
+     * evidentiary status teaches false confidence. "Land titling raises
+     * investment" and "industrial policy caused the East Asian miracle" are not
+     * claims of the same kind, and a player who cannot tell them apart has
+     * learned something worse than nothing.
+     */
+    contestation?: 'well-supported' | 'contested' | 'actively-disputed';
+    /**
+     * The single strongest published objection, named. Not "critics say" —
+     * who, and what their argument is.
+     */
+    strongestObjection?: string;
+    /**
+     * What would have to be observed for this theory to be wrong. Stating it
+     * is the difference between a claim and an article of faith, and it is the
+     * habit the educational layer is actually trying to build.
+     */
+    whatWouldFalsifyIt?: string;
 }
 
 export interface FactionDefinition {

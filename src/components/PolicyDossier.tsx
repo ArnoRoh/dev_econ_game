@@ -3,6 +3,7 @@ import type {
     AdvisorRecord,
     CharacterId,
     CharacterState,
+    EconomicConcept,
     EducationalPolicyOption,
     PolicyProposal,
     QualitativeForecast,
@@ -49,6 +50,27 @@ interface PolicyDossierProps {
     onReject: () => void;
     onBack: () => void;
 }
+
+/**
+ * How the evidentiary status of a concept is named to the player.
+ *
+ * Deliberately blunt. A dossier that hedges every claim equally teaches that
+ * everything is equally uncertain, which is its own kind of miseducation.
+ */
+const CONTESTATION_LABEL: Record<NonNullable<EconomicConcept['contestation']>, string> = {
+    'well-supported': 'Well supported',
+    contested: 'Contested',
+    'actively-disputed': 'Actively disputed',
+};
+
+const CONTESTATION_NOTE: Record<NonNullable<EconomicConcept['contestation']>, string> = {
+    'well-supported':
+        'The mechanism is broadly accepted. The argument is about magnitude and about who captures the gain.',
+    contested:
+        'Competent economists reading the same evidence reach different conclusions about whether this works.',
+    'actively-disputed':
+        'This is an open fight in the literature. Treat any adviser who states it as settled as telling you about themselves.',
+};
 
 const DIRECTION_GLYPH: Record<QualitativeForecast['predictedDirection'], string> = {
     stronglyDown: '▼▼',
@@ -118,7 +140,13 @@ export function PolicyDossier({
 
     const sponsor = CHARACTERS_BY_ID[proposal.sponsorId];
     const sponsorFaction = FACTIONS_BY_ID[sponsor.factionId];
-    const concepts = ECONOMIC_CONCEPTS.filter(concept => proposal.conceptIds.includes(concept.id));
+    // Annotated rather than inferred: `ECONOMIC_CONCEPTS` uses `satisfies`, which
+    // keeps the literal element types and so hides optional fields the authored
+    // entries have not filled in yet. Widening here lets the contestation fields
+    // be read without forcing every concept to declare them.
+    const concepts: EconomicConcept[] = ECONOMIC_CONCEPTS.filter(concept =>
+        proposal.conceptIds.includes(concept.id),
+    );
     const sources = SOURCES.filter(source => proposal.sourceIds.includes(source.id));
     const docket = proposal.arcId.replace(/[-_]+/g, ' ').trim();
 
@@ -191,12 +219,56 @@ export function PolicyDossier({
                                 ))}
                             </ol>
 
+                            {/* How settled the evidence is, stated before the
+                                disagreements themselves. A player who reads the
+                                mechanism and stops should still have seen that
+                                the profession does not agree it is true. */}
+                            {concept.contestation && (
+                                <p className={`dossier-contestation is-${concept.contestation}`}>
+                                    <span className="dossier-contestation-tag">
+                                        {CONTESTATION_LABEL[concept.contestation]}
+                                    </span>
+                                    <span className="dossier-contestation-note">
+                                        {CONTESTATION_NOTE[concept.contestation]}
+                                    </span>
+                                </p>
+                            )}
+
                             <h4 className="dossier-minor-heading">Where reasonable people disagree</h4>
                             <ul className="dossier-list">
                                 {concept.competingViews.map(view => (
                                     <li key={view}>{view}</li>
                                 ))}
                             </ul>
+
+                            {concept.strongestObjection && (
+                                <>
+                                    <h4 className="dossier-minor-heading">The strongest case against</h4>
+                                    <p className="dossier-objection">{concept.strongestObjection}</p>
+                                </>
+                            )}
+
+                            {/* Authored since the first version of the educational
+                                layer and never rendered until now. These are the
+                                errors the mechanism invites, which is precisely
+                                what a minister reading a brief needs warning about. */}
+                            {concept.commonMisconceptions.length > 0 && (
+                                <>
+                                    <h4 className="dossier-minor-heading">Read this wrongly and you will believe</h4>
+                                    <ul className="dossier-list dossier-list-misconception">
+                                        {concept.commonMisconceptions.map(item => (
+                                            <li key={item}>{item}</li>
+                                        ))}
+                                    </ul>
+                                </>
+                            )}
+
+                            {concept.whatWouldFalsifyIt && (
+                                <>
+                                    <h4 className="dossier-minor-heading">What would show this is wrong</h4>
+                                    <p className="dossier-falsify">{concept.whatWouldFalsifyIt}</p>
+                                </>
+                            )}
 
                             {insightUsed && (
                                 <>

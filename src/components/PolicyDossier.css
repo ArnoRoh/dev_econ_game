@@ -693,3 +693,67 @@
     border-left: 2px solid currentColor;
     padding-left: 0.5rem;
 }
+
+/* Evidentiary status of a concept, shown above its disagreements. The colour
+   ramp runs neutral -> amber -> red so the player can see at a glance whether
+   they are reading an accepted mechanism or an open fight. */
+.dossier-contestation {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 0.9rem 0 0.6rem;
+    padding: 0.5rem 0.7rem;
+    border-radius: 4px;
+    border-left: 3px solid var(--color-border, #4a4036);
+    background: color-mix(in srgb, currentColor 4%, transparent);
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
+.dossier-contestation.is-well-supported { border-left-color: #4b7a4f; }
+.dossier-contestation.is-contested { border-left-color: #b8862f; }
+.dossier-contestation.is-actively-disputed { border-left-color: #a8451f; }
+
+.dossier-contestation-tag {
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0.9;
+}
+
+.dossier-contestation-note { opacity: 0.82; }
+
+.dossier-objection,
+.dossier-falsify {
+    margin: 0.2rem 0 0.7rem;
+    padding-left: 0.75rem;
+    border-left: 2px solid var(--color-border, #4a4036);
+    line-height: 1.6;
+    font-size: 0.93rem;
+    opacity: 0.9;
+}
+
+/* Misconceptions are things that are NOT true, so they are struck through in
+   spirit: marked with a different bullet and dimmed, to avoid a player skimming
+   the list and remembering the false statement as the lesson. */
+.dossier-list-misconception {
+    list-style: none;
+    padding-left: 0;
+}
+
+.dossier-list-misconception li {
+    position: relative;
+    padding-left: 1.4rem;
+    opacity: 0.85;
+}
+
+.dossier-list-misconception li::before {
+    content: '✗';
+    position: absolute;
+    left: 0.25rem;
+    color: #a8451f;
+    font-weight: 700;
+}

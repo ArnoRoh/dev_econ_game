@@ -18,6 +18,7 @@ import { FACTIONS } from '../src/data/factions.ts';
 import { ACHIEVEMENTS } from '../src/data/achievements.ts';
 import { KNOWLEDGE_CHECKS } from '../src/data/knowledgeChecks.ts';
 import { PROGRAMMES } from '../src/data/programmes.ts';
+import { WORLD_CRISES } from '../src/data/crises.ts';
 import { BASE_PROVINCES } from '../src/data/provinces.ts';
 
 /** Flags set by the engine and crisis content rather than by an arc option. */
@@ -195,6 +196,42 @@ for (const programme of PROGRAMMES) {
 
 const authored = ALL_POLICY_PROPOSALS.filter(p => !p.isGeneric);
 const generic = ALL_POLICY_PROPOSALS.filter(p => p.isGeneric);
+
+/**
+ * Every authored concept must be reachable from somewhere the player can go.
+ *
+ * A concept that no proposal, option or programme references is written,
+ * validated, cited — and never once shown to anybody. That failure is silent
+ * in every other check here, because nothing is malformed; the content is
+ * simply orphaned. It is an easy state to reach when concepts and the arcs
+ * that use them are written separately.
+ */
+const referencedConcepts = new Set();
+for (const proposal of ALL_POLICY_PROPOSALS) {
+    for (const concept of proposal.conceptIds ?? []) referencedConcepts.add(concept);
+    for (const option of proposal.options ?? []) {
+        for (const concept of option.conceptIds ?? []) referencedConcepts.add(concept);
+        for (const consequence of option.delayedConsequences ?? []) {
+            for (const concept of consequence.conceptIds ?? []) referencedConcepts.add(concept);
+        }
+    }
+    for (const concept of proposal.ignoreOutcome?.conceptIds ?? []) referencedConcepts.add(concept);
+}
+for (const programme of PROGRAMMES) {
+    for (const concept of programme.conceptIds ?? []) referencedConcepts.add(concept);
+}
+for (const crisis of WORLD_CRISES) {
+    for (const concept of crisis.conceptIds ?? []) referencedConcepts.add(concept);
+    for (const option of crisis.options ?? []) {
+        for (const concept of option.conceptIds ?? []) referencedConcepts.add(concept);
+    }
+}
+
+for (const concept of conceptIds) {
+    if (!referencedConcepts.has(concept)) {
+        note(`concept ${concept} is authored but unreachable: no proposal, crisis or programme references it`);
+    }
+}
 
 if (problems.length) {
     console.error(`Arc validation FAILED with ${problems.length} problem(s):`);

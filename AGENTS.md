@@ -10,7 +10,8 @@ This is a small, client-only economic policy roguelite built with React 19, Type
 - `src/data/` contains authored starting conditions and policy events.
 - `src/data/missions.ts` and `src/data/projects.ts` define long-run objectives and five-year development choices.
 - `src/data/diplomacy.ts` defines neighboring states, pact terms, and annual treaty dividends shown on the regional map.
-- `src/data/arcs/` contains the authored multi-step policy arcs plus `legacyProposals.ts`, which adapts the annual-event corpus into cabinet proposals.
+- `src/data/arcs/` contains the authored multi-step policy arcs plus `legacyProposals.ts`, which adapts the annual-event corpus into cabinet proposals. The industrial-policy strand runs across `industrialStrategyArc.ts`, `exportLedArc.ts` and `developmentalStateArc.ts`; between them they carry the Lin-Chang debate, the miracle-accounting dispute, the fallacy of composition, and premature deindustrialization.
+- `src/data/worldEras.ts` and `src/data/crises.ts` are the world outside the republic: authored decade conditions, and the six emergencies that suspend the agenda.
 - `src/data/concepts.ts`, `sources.ts`, `characters.ts`, `factions.ts`, and `knowledgeChecks.ts` carry the educational layer.
 - `src/components/` contains presentational React components and their adjacent CSS.
 - `public/assets/` contains event artwork addressed as `assets/<file>`.

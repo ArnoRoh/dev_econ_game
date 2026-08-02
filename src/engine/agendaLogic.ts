@@ -274,6 +274,27 @@ export function confirmProposal(
         resolvedConsequenceIds: [],
     };
 
+    // Park the authored forecasts so they can be scored once an outcome is
+    // observable. This lives here rather than in the UI because
+    // `resolveCrisis` already does it in the engine, and because audits created
+    // only on the React path meant the balance simulations never exercised the
+    // calibration layer at all — the one place a systematic advisor bias would
+    // show up as a measurable effect.
+    nextState = {
+        ...nextState,
+        forecastAudits: [
+            ...(nextState.forecastAudits ?? []),
+            ...option.forecasts.map(forecast => ({
+                decisionId,
+                advisorId: forecast.advisorId,
+                summary: forecast.summary,
+                predictedDirection: forecast.predictedDirection,
+                confidence: forecast.confidence,
+                affectedMetric: forecast.affectedMetric,
+            })),
+        ],
+    };
+
     return appendDecision(nextState, proposal, record, scheduled);
 }
 

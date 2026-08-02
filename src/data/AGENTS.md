@@ -22,6 +22,31 @@ This directory contains authored, player-facing content. Keep mechanics in `src/
 - Every proposal needs an `ignoreOutcome`. The cost of ignoring should be political — faction support and a grievance — rather than a direct stat penalty, because the player is forced to ignore something almost every year.
 - `conceptIds` and `sourceIds` must exist in `concepts.ts` and `sources.ts`; the content validator enforces this.
 
+## Concepts and the honesty rule
+
+The educational layer teaches mechanisms. A mechanism presented without its
+evidentiary status teaches false confidence, so `concepts.ts` carries three
+fields that exist specifically to stop that:
+
+- `contestation` — `well-supported`, `contested`, or `actively-disputed`.
+  "Secure land tenure lengthens investment horizons" and "industrial policy
+  caused the East Asian miracle" are not claims of the same kind, and a player
+  who cannot tell them apart has learned something worse than nothing.
+- `strongestObjection` — the best published argument against, with its author
+  named. Never "critics say"; say who, and what their argument actually is.
+- `whatWouldFalsifyIt` — what would have to be observed for the claim to fail.
+
+`validate:content` requires all three on every concept in its disputed set, and
+requires at least two `competingViews` and two `commonMisconceptions` on every
+concept. Both lists render in the dossier, misconceptions marked as false so a
+skimming player cannot mistake them for the lesson.
+
+Where a real debate exists, cite both sides. Amsden, Wade and Chang argue the
+state built the East Asian miracle; Krugman, Young, Pack and Saggi argue there
+was less miracle to explain and weaker evidence that policy explains it. Lin and
+Chang published a debate with each other. A concept citing only one side is
+teaching a position rather than a subject.
+
 ## Artifacts
 
 - Keep the point-buy budget in `src/App.tsx` in mind when setting `pointCost`.

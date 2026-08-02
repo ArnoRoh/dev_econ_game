@@ -14,6 +14,7 @@ import { loadProfile, mergeCalibration, recordRun, saveProfile } from './metaPro
 import type { MetaProfile } from './metaProgression';
 import { CrisisSession } from './components/CrisisSession';
 import { ProfilePanel } from './components/ProfilePanel';
+import { DoctrineReport } from './components/DoctrineReport';
 import { newspaperForTurn } from './engine/consequenceLogic';
 import {
   INVESTMENT_STEP,
@@ -381,24 +382,9 @@ function App() {
     let next = confirmProposal(gameState, proposal, option);
     next = recordConceptExposure(next, option.conceptIds);
 
-    // Park the authored forecasts so the archive can score them later.
+    // Forecast audits are parked by `confirmProposal` itself, so both the game
+    // and the balance simulations record them.
     const decision = (next.policyDecisions ?? [])[(next.policyDecisions ?? []).length - 1];
-    if (decision) {
-      next = {
-        ...next,
-        forecastAudits: [
-          ...(next.forecastAudits ?? []),
-          ...option.forecasts.map(forecast => ({
-            decisionId: decision.id,
-            advisorId: forecast.advisorId,
-            summary: forecast.summary,
-            predictedDirection: forecast.predictedDirection,
-            confidence: forecast.confidence,
-            affectedMetric: forecast.affectedMetric,
-          })),
-        ],
-      };
-    }
 
     setDebriefEntries(entries => [
       ...entries,
@@ -694,6 +680,8 @@ function App() {
           onOpenLedger={() => setLedgerOpen(true)}
           onRestart={() => { setGameState(null); setLedgerOpen(false); setAtTitle(true); }}
         />
+
+        <DoctrineReport state={gameState} />
 
         <ProfilePanel
           profile={profile}
