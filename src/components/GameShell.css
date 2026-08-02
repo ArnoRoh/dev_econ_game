@@ -1,6 +1,12 @@
 /* Shell chrome for the cabinet loop: a thin status bar, a wide decision stage
    and a persistent political rail. The dashboard is deliberately not here — it
-   lives behind the Statistics Office toggle. */
+   lives behind the Statistics Office toggle.
+
+   This file cannot add classes to the markup in App.tsx (that file is not
+   owned here), so where the brief calls for a foundation material — grain on
+   the top bar, a printer's rule instead of a flat border — the same recipe
+   used by .mat-grain / .rule-double in styles/foundation.css is reproduced
+   directly against these selectors instead of relying on a shared class. */
 
 .game-screen.shell {
     min-height: 100vh;
@@ -11,38 +17,87 @@
     position: sticky;
     top: 0;
     z-index: 20;
+    isolation: isolate;
     display: flex;
     flex-wrap: wrap;
     gap: 14px;
     align-items: center;
     justify-content: space-between;
     padding: 12px 22px;
-    background: rgba(12, 14, 12, 0.94);
+    background: linear-gradient(180deg, var(--ink-800) 0%, var(--ink-900) 100%);
     backdrop-filter: blur(8px);
-    border-bottom: 1px solid #2f2f29;
+    box-shadow: var(--lift-2);
+}
+
+/* Fine tooth over the bar, same recipe as .mat-grain, sat behind the content
+   via a negative z-index rather than DOM order. */
+.shell-bar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: var(--grain-tile);
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+}
+
+/* A struck brass rule along the bottom edge, the same thick/thin/gap pattern
+   as .rule-double, standing in for the old flat 1px border. */
+.shell-bar::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 3px;
+    background:
+        linear-gradient(var(--brass-400), var(--brass-400)) top / 100% 2px no-repeat,
+        linear-gradient(var(--brass-500), var(--brass-500)) bottom / 100% 1px no-repeat;
+    opacity: 0.8;
+    pointer-events: none;
 }
 
 .shell-identity {
     display: flex;
     align-items: baseline;
-    gap: 10px;
+    gap: 12px;
 }
 
+/* Foiled brass masthead type, the same clipped-gradient recipe as
+   .type-foil. */
 .shell-country {
-    font-family: var(--font-serif);
-    font-size: 1.2rem;
+    font-family: var(--font-display);
+    font-size: 1.28rem;
     font-weight: 700;
-    color: var(--color-primary);
+    letter-spacing: 0.015em;
+    color: var(--brass-300);
+    background: linear-gradient(
+        100deg,
+        var(--brass-400) 0%,
+        var(--brass-200) 34%,
+        var(--brass-100) 47%,
+        var(--brass-200) 60%,
+        var(--brass-400) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
+/* A stamped date rosette rather than a pill: rotated slightly off true, the
+   way an ink stamp never lands quite square. */
 .shell-year {
-    padding: 2px 9px;
-    border: 1px solid #3d3d35;
+    padding: 2px 10px;
+    border: 1.5px solid var(--oxblood-dim);
     border-radius: 999px;
+    font-family: var(--font-serif);
     font-size: 0.76rem;
     font-weight: 700;
-    letter-spacing: 0.06em;
-    color: #b8b0a0;
+    letter-spacing: 0.05em;
+    color: var(--oxblood);
+    transform: rotate(-2deg);
+    box-shadow: inset 0 0 0 2px rgba(180, 72, 63, 0.16);
 }
 
 .shell-meters {
@@ -54,7 +109,7 @@
 .shell-meter {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 3px;
     line-height: 1.2;
 }
 
@@ -63,14 +118,13 @@
     font-weight: 800;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #7d766a;
+    color: var(--paper-500);
 }
 
-.shell-meter strong,
-.shell-meter .stat-counter {
+.shell-meter strong {
     font-size: 0.94rem;
     font-weight: 700;
-    color: #ece5d4;
+    color: var(--paper-100);
 }
 
 .shell-meter small {
@@ -98,22 +152,34 @@
 }
 
 .shell-nav button {
-    padding: 7px 13px;
-    background: transparent;
-    border: 1px solid #3d3d35;
-    border-radius: 6px;
-    color: #b8b0a0;
+    min-height: 44px;
+    padding: 7px 14px;
+    background: linear-gradient(180deg, var(--ink-500) 0%, var(--ink-700) 100%);
+    border: 1px solid var(--ink-200);
+    border-radius: 5px;
+    color: var(--paper-400);
     font-family: inherit;
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.05em;
     cursor: pointer;
-    transition: border-color 150ms ease, color 150ms ease;
+    box-shadow: var(--lift-1), inset 0 1px 0 rgba(255, 238, 197, 0.07);
+    transition: border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out),
+        transform var(--dur-fast) var(--ease-out);
 }
 
 .shell-nav button:hover {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
+    border-color: var(--brass-300);
+    color: var(--brass-200);
+}
+
+.shell-nav button:active {
+    transform: translateY(1px);
+}
+
+.shell-nav button:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
 }
 
 .shell-body {
@@ -131,10 +197,26 @@
 }
 
 .shell-stats {
+    position: relative;
     max-width: 1440px;
     margin: 30px auto 0;
-    padding: 24px 22px 0;
-    border-top: 1px solid #2f2f29;
+    padding: 26px 22px 0;
+}
+
+/* The same struck brass rule as the top bar, marking the statistics office as
+   a distinct section of the desk rather than a continuation of the table. */
+.shell-stats::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 22px;
+    right: 22px;
+    height: 3px;
+    background:
+        linear-gradient(var(--brass-400), var(--brass-400)) top / 100% 2px no-repeat,
+        linear-gradient(var(--brass-500), var(--brass-500)) bottom / 100% 1px no-repeat;
+    opacity: 0.55;
+    pointer-events: none;
 }
 
 @media (max-width: 1080px) {
@@ -159,6 +241,11 @@
         padding-right: 14px;
     }
 
+    .shell-stats::before {
+        left: 14px;
+        right: 14px;
+    }
+
     .shell-meters {
         gap: 12px;
     }
@@ -172,34 +259,36 @@
     gap: 6px;
     margin-bottom: 20px;
     padding-bottom: 12px;
-    border-bottom: 1px solid #2f2f29;
+    border-bottom: 1px solid var(--ink-300);
 }
 
 .stats-tab {
     min-height: 44px;
     padding: 10px 18px;
-    background: transparent;
-    border: 1px solid #3d3d35;
+    background: var(--ink-600);
+    border: 1px solid var(--ink-300);
     border-radius: 999px;
-    color: #9d968a;
+    color: var(--paper-400);
     font-family: inherit;
     font-size: 0.76rem;
     font-weight: 700;
     letter-spacing: 0.07em;
     text-transform: uppercase;
     cursor: pointer;
-    transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+    transition: border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out),
+        background var(--dur-fast) var(--ease-out);
 }
 
 .stats-tab:hover {
-    border-color: rgba(212, 175, 55, 0.55);
-    color: #e2c76b;
+    border-color: var(--brass-300);
+    color: var(--brass-200);
 }
 
 .stats-tab.is-active {
-    background: rgba(212, 175, 55, 0.14);
-    border-color: var(--color-primary);
-    color: var(--color-primary);
+    background: linear-gradient(180deg, var(--brass-300) 0%, var(--brass-400) 100%);
+    border-color: var(--brass-200);
+    color: var(--ink-900);
+    box-shadow: var(--lift-1);
 }
 
 .stats-tab:focus-visible {
@@ -225,27 +314,30 @@
     position: relative;
     min-height: 44px;
     padding: 11px 20px;
-    background: transparent;
-    border: 1px solid #3d3d35;
-    border-radius: 7px;
-    color: #9d968a;
+    background: var(--ink-600);
+    border: 1px solid var(--ink-300);
+    border-radius: 7px 7px 0 0;
+    color: var(--paper-400);
     font-family: inherit;
     font-size: 0.8rem;
     font-weight: 700;
     letter-spacing: 0.06em;
     cursor: pointer;
-    transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+    transition: border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out),
+        background var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 
 .stage-switch-tab:hover {
-    border-color: rgba(212, 175, 55, 0.55);
-    color: #e2c76b;
+    border-color: var(--brass-300);
+    color: var(--brass-200);
 }
 
 .stage-switch-tab.is-active {
-    background: rgba(212, 175, 55, 0.14);
-    border-color: var(--color-primary);
-    color: var(--color-primary);
+    background: linear-gradient(180deg, var(--brass-300) 0%, var(--brass-400) 100%);
+    border-color: var(--brass-200);
+    color: var(--ink-900);
+    box-shadow: var(--lift-1);
+    transform: translateY(-1px);
 }
 
 .stage-switch-tab:focus-visible {
@@ -271,7 +363,20 @@
     50% { opacity: 0.35; }
 }
 
+/* ---------------------------------------------------------------------------
+   Reduced motion, kept at the end so it wins over everything above. Materials
+   (grain, the brass rules, the stamped year) are static already and survive
+   untouched; only the looping dot pulse and hover/press transitions stop.
+   --------------------------------------------------------------------------- */
+
 @media (prefers-reduced-motion: reduce) {
+    .shell-nav button,
+    .stats-tab,
     .stage-switch-tab { transition: none; }
     .stage-switch-dot { animation: none; }
 }
+
+:root[data-reduce-motion='true'] .shell-nav button,
+:root[data-reduce-motion='true'] .stats-tab,
+:root[data-reduce-motion='true'] .stage-switch-tab { transition: none; }
+:root[data-reduce-motion='true'] .stage-switch-dot { animation: none; }

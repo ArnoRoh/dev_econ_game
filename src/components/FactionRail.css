@@ -1,23 +1,28 @@
+/* The faction rail reads as a brass-edged tally board mounted on the office
+   wall: a dark ledger panel, engraved section rules, and gauge bars standing
+   in for the plain progress divs a dashboard would use. */
+
 .faction-rail {
-    padding: 18px;
-    background: rgba(20, 22, 20, 0.7);
-    border: 1px solid #33332c;
+    padding: 18px 18px 20px;
+    background: linear-gradient(180deg, var(--ink-600) 0%, var(--ink-700) 100%);
+    border: 1px solid var(--ink-300);
     border-radius: 10px;
+    box-shadow: var(--lift-2), inset 0 1px 0 rgba(255, 238, 197, 0.06);
 }
 
 .rail-heading {
     margin: 0 0 12px;
-    font-size: 0.66rem;
-    font-weight: 800;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--color-primary);
+    color: var(--brass-300);
 }
 
+/* A printer's double-rule stands in for the plain border every other section
+   divider used, painted as its own band above the heading text. */
 .rail-heading:not(:first-child) {
     margin-top: 22px;
-    padding-top: 16px;
-    border-top: 1px solid #2e2e28;
+    padding-top: 15px;
+    background:
+        linear-gradient(var(--brass-400), var(--brass-400)) top / 100% 2px no-repeat,
+        linear-gradient(var(--brass-500), var(--brass-500)) top 3px / 100% 1px no-repeat;
 }
 
 .rail-factions,
@@ -29,7 +34,7 @@
 }
 
 .rail-faction {
-    margin-bottom: 15px;
+    margin-bottom: 16px;
 }
 
 .rail-faction-head {
@@ -37,14 +42,15 @@
     align-items: baseline;
     justify-content: space-between;
     gap: 8px;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
 }
 
 .rail-faction-name {
     min-width: 0;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: #ded6c4;
+    font-family: var(--font-serif);
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--paper-100);
     overflow-wrap: anywhere;
 }
 
@@ -61,7 +67,7 @@
 }
 
 .rail-mood.tone-warn {
-    color: #e0b64a;
+    color: var(--brass-200);
 }
 
 .rail-mood.tone-danger {
@@ -69,41 +75,70 @@
 }
 
 .rail-mood.tone-neutral {
-    color: #8d8578;
+    color: var(--paper-500);
 }
 
-.rail-bar {
+/* --- the gauge: a debossed track, four printed calibration ticks, and a
+       brass fill standing in for a needle sweep. --- */
+
+.rail-gauge {
     position: relative;
-    height: 6px;
-    border-radius: 3px;
-    background: #2b2b25;
-    overflow: visible;
+    height: 10px;
+    padding: 0 1px;
 }
 
-.rail-bar-fill {
+.rail-gauge-track {
     display: block;
-    height: 100%;
+    height: 6px;
+    margin-top: 2px;
     border-radius: 3px;
-    background: linear-gradient(90deg, #6f6330, var(--color-primary));
-    transition: width 420ms cubic-bezier(0.2, 0.8, 0.3, 1);
+    background: var(--ink-900);
+    box-shadow:
+        inset 0 1px 2px rgba(0, 0, 0, 0.65),
+        inset 0 -1px 0 rgba(255, 238, 197, 0.05);
+    overflow: hidden;
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .rail-bar-fill {
-        transition: none;
-    }
+.rail-gauge-fill {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform-origin: left center;
+    background: linear-gradient(90deg, var(--brass-500), var(--brass-200) 70%, var(--brass-100));
+    transition: transform 420ms var(--ease-out);
 }
 
-/* Power is a caret above the bar: how hard they can push, independent of whether they like you. */
-.rail-bar-power {
+/* Four calibration ticks at 20/40/60/80%, printed onto the track rather than
+   dividing it, so the gauge reads as measured instrument rather than a bar. */
+.rail-gauge-ticks {
+    position: absolute;
+    inset: 2px 1px auto;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 19%;
+    height: 6px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.rail-gauge-ticks span {
+    width: 1px;
+    height: 100%;
+    background: rgba(10, 11, 7, 0.55);
+}
+
+/* Power is a caret above the track: how hard a faction can push, independent
+   of whether it currently likes you. */
+.rail-gauge-power {
     position: absolute;
     top: -4px;
     width: 2px;
     height: 14px;
     margin-left: -1px;
-    background: #cfd6e0;
-    opacity: 0.75;
+    background: var(--paper-100);
+    opacity: 0.8;
     border-radius: 1px;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.6);
 }
 
 .rail-faction-meta {
@@ -111,9 +146,9 @@
     flex-wrap: wrap;
     gap: 8px;
     justify-content: space-between;
-    margin-top: 5px;
+    margin-top: 7px;
     font-size: 0.68rem;
-    color: #857d70;
+    color: var(--paper-500);
     overflow-wrap: anywhere;
 }
 
@@ -123,11 +158,14 @@
 }
 
 .rail-grievance {
-    margin: 6px 0 0;
-    font-size: 0.68rem;
+    margin: 7px 0 0;
+    padding-left: 8px;
+    border-left: 2px solid var(--ink-300);
+    font-family: var(--font-serif);
+    font-size: 0.7rem;
     font-style: italic;
     line-height: 1.4;
-    color: #a8837f;
+    color: #b89490;
     overflow: hidden;
     overflow-wrap: anywhere;
     display: -webkit-box;
@@ -140,9 +178,9 @@
     gap: 8px;
     justify-content: space-between;
     padding: 7px 0;
-    border-bottom: 1px solid #2a2a24;
+    border-bottom: 1px solid var(--ink-400);
     font-size: 0.74rem;
-    color: #b8b0a0;
+    color: var(--paper-300);
 }
 
 .rail-promise-text {
@@ -151,7 +189,7 @@
 }
 
 .rail-promises li.is-urgent {
-    color: #e0b64a;
+    color: var(--brass-200);
 }
 
 .rail-promise-due {
@@ -160,29 +198,41 @@
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: #857d70;
+    color: var(--paper-500);
 }
 
 .rail-promises li.is-urgent .rail-promise-due {
-    color: #e0b64a;
+    color: var(--brass-200);
 }
 
 .rail-characters li {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 6px 0;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 0;
     font-size: 0.74rem;
 }
 
+.rail-character-portrait {
+    flex-shrink: 0;
+    display: inline-flex;
+}
+
+.rail-character-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
 .rail-character-name {
-    color: #c6beae;
+    color: var(--paper-300);
     overflow-wrap: anywhere;
 }
 
 .rail-character-trust {
     font-size: 0.66rem;
-    color: #857d70;
+    color: var(--paper-500);
     overflow-wrap: anywhere;
 }
 
@@ -191,4 +241,20 @@
     align-items: center;
     gap: 6px;
     min-width: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced motion. Kept at the end so it wins over everything above; only the
+   gauge fill's transition is motion, and turning it off just makes the level
+   snap to its new reading instead of sweeping to it.
+   --------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .rail-gauge-fill {
+        transition: none;
+    }
+}
+
+:root[data-reduce-motion='true'] .rail-gauge-fill {
+    transition: none;
 }

@@ -17,13 +17,16 @@ interface ProvinceMapProps {
     onBuild: (provinceId: string, programmeId: ProgrammeId, cost: number) => void;
 }
 
-/* --- development ramp: deep ink -> antique gold -> pale cream --- */
+/* --- development ramp: deep ink -> antique gold -> pale cream ---
+   Anchors are the numeric equivalents of the foundation's own --ink-700,
+   --brass-300 and --paper-100 so the choropleth reads as part of the same
+   printed palette rather than a second, invented one. */
 
 type Rgb = readonly [number, number, number];
 
-const RAMP_INK: Rgb = [26, 23, 15];
+const RAMP_INK: Rgb = [22, 24, 15];
 const RAMP_GOLD: Rgb = [212, 175, 55];
-const RAMP_CREAM: Rgb = [246, 236, 201];
+const RAMP_CREAM: Rgb = [246, 239, 220];
 
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
 
@@ -39,6 +42,14 @@ const developmentColor = (development: number): string => {
     const value = clamp(development, 0, 100);
     return value <= 50 ? mixRgb(RAMP_INK, RAMP_GOLD, value / 50) : mixRgb(RAMP_GOLD, RAMP_CREAM, (value - 50) / 50);
 };
+
+/**
+ * Which half of the ramp a province's fill sits on decides which tone of
+ * terrain glyph and neighbouring furniture will actually show up against it.
+ * The crossover matches the ramp's own midpoint so a gold, medium-contrast
+ * province gets a mark that reads fine in either tone.
+ */
+const isDarkFill = (development: number): boolean => clamp(development, 0, 100) <= 50;
 
 const CALM_CEILING = 30;
 const RESTIVE_FLOOR = 60;
@@ -65,6 +76,8 @@ const TERRAIN_LABELS: Record<Terrain, string> = {
     border: 'Borderland',
 };
 
+const TERRAIN_LIST = Object.keys(TERRAIN_LABELS) as Terrain[];
+
 const formatCurrency = (value: number): string => `$${Math.round(value).toLocaleString()}M`;
 
 /**
@@ -75,6 +88,219 @@ const formatCurrency = (value: number): string => `$${Math.round(value).toLocale
 const splitLabel = (name: string): [string, string] => {
     const cut = name.lastIndexOf(' ');
     return cut === -1 ? [name, ''] : [name.slice(0, cut), name.slice(cut + 1)];
+};
+
+/* ---------------------------------------------------------------------------
+   The country's silhouette isn't authored anywhere in src/data/provinces.ts —
+   it only exists implicitly, as wherever the seven polygons don't share an
+   edge with a neighbour. Deriving the coastline and the land frontier from
+   that fact (rather than hand-tracing a hull that would silently drift out of
+   sync with the province shapes) means the sheet's cartography can never
+   disagree with the choropleth sitting on top of it.
+   --------------------------------------------------------------------------- */
+
+type Pt = readonly [number, number];
+
+const parseShape = (shape: string): Pt[] =>
+    shape
+        .trim()
+        .split(/\s+/)
+        .map(pair => {
+            const [x, y] = pair.split(',').map(Number);
+            return [x, y] as Pt;
+        });
+
+const pointKey = (p: Pt): string => `${p[0].toFixed(2)},${p[1].toFixed(2)}`;
+
+interface FrontierEdge {
+    p1: Pt;
+    p2: Pt;
+    kind: 'coast' | 'border';
+}
+
+/** An edge that belongs to exactly one province has no neighbour on its far
+ * side — it is part of the republic's outer frontier. Whether that stretch of
+ * frontier is drawn as coast or as a land border follows from the lone owning
+ * province's own `coastal` flag. */
+const frontierEdges = (provinces: Province[]): FrontierEdge[] => {
+    const occurrences = new Map<string, { p1: Pt; p2: Pt; coastal: boolean }[]>();
+
+    for (const province of provinces) {
+        const points = parseShape(province.shape);
+        for (let i = 0; i < points.length; i += 1) {
+            const p1 = points[i];
+            const p2 = points[(i + 1) % points.length];
+            const a = pointKey(p1);
+            const b = pointKey(p2);
+            const key = a < b ? `${a}|${b}` : `${b}|${a}`;
+            const list = occurrences.get(key) ?? [];
+            list.push({ p1, p2, coastal: province.coastal });
+            occurrences.set(key, list);
+        }
+    }
+
+    const edges: FrontierEdge[] = [];
+    for (const list of occurrences.values()) {
+        if (list.length === 1) {
+            const [{ p1, p2, coastal }] = list;
+            edges.push({ p1, p2, kind: coastal ? 'coast' : 'border' });
+        }
+    }
+    return edges;
+};
+
+/** The rough centre of the republic, used only to tell which side of a
+ * frontier edge is "out to sea" or "over the border" versus "home territory". */
+const countryCenter = (provinces: Province[]): Pt => {
+    const n = provinces.length || 1;
+    const sx = provinces.reduce((sum, p) => sum + p.cx, 0);
+    const sy = provinces.reduce((sum, p) => sum + p.cy, 0);
+    return [sx / n, sy / n];
+};
+
+/** The outward unit normal of an edge: whichever perpendicular points further
+ * from the country's centre than the edge's own midpoint does. */
+const outwardNormal = (p1: Pt, p2: Pt, center: Pt): Pt => {
+    const dx = p2[0] - p1[0];
+    const dy = p2[1] - p1[1];
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len;
+    const ny = dx / len;
+    const mid: Pt = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
+    const outDistance = Math.hypot(mid[0] + nx - center[0], mid[1] + ny - center[1]);
+    const midDistance = Math.hypot(mid[0] - center[0], mid[1] - center[1]);
+    return outDistance > midDistance ? [nx, ny] : [-nx, -ny];
+};
+
+const pointsAttr = (points: Pt[]): string => points.map(p => `${p[0].toFixed(2)},${p[1].toFixed(2)}`).join(' ');
+
+const SEA_DEPTH = 12;
+const seaQuad = (edge: FrontierEdge, center: Pt): string => {
+    const [nx, ny] = outwardNormal(edge.p1, edge.p2, center);
+    const p3: Pt = [edge.p2[0] + nx * SEA_DEPTH, edge.p2[1] + ny * SEA_DEPTH];
+    const p4: Pt = [edge.p1[0] + nx * SEA_DEPTH, edge.p1[1] + ny * SEA_DEPTH];
+    return pointsAttr([edge.p1, edge.p2, p3, p4]);
+};
+
+const BORDER_OFFSET = 1;
+const borderLine = (edge: FrontierEdge, center: Pt): { x1: number; y1: number; x2: number; y2: number } => {
+    const [nx, ny] = outwardNormal(edge.p1, edge.p2, center);
+    return {
+        x1: edge.p1[0] + nx * BORDER_OFFSET,
+        y1: edge.p1[1] + ny * BORDER_OFFSET,
+        x2: edge.p2[0] + nx * BORDER_OFFSET,
+        y2: edge.p2[1] + ny * BORDER_OFFSET,
+    };
+};
+
+/* ---------------------------------------------------------------------------
+   Sheet geometry. The province polygons live in the fixed 0-100 space defined
+   by src/data/provinces.ts and are never rescaled. A margin is added around
+   them for the sea, the land frontier, and the printed furniture (neatline,
+   cartouche, compass, scale bar) that makes this read as a plate rather than
+   a diagram. SCALE compensates every stroke width, pattern tile and type size
+   that existed before that margin was added, so borders and labels keep the
+   same apparent weight instead of thinning out as the canvas grows around them.
+   --------------------------------------------------------------------------- */
+
+const MAP_MARGIN = 15;
+const VIEW_MIN = -MAP_MARGIN;
+const VIEW_SIZE = 100 + MAP_MARGIN * 2;
+const SCALE = VIEW_SIZE / 100;
+const FRAME_MIN = VIEW_MIN + 2;
+const FRAME_SIZE = VIEW_SIZE - 4;
+const FRAME_MAX = FRAME_MIN + FRAME_SIZE;
+
+/** Small "+" registration mark, the kind a printing plate carries at its corners. */
+const CornerTick = ({ x, y }: { x: number; y: number }): JSX.Element => (
+    <path className="pm-corner-tick" d={`M${x - 1.6},${y} L${x + 1.6},${y} M${x},${y - 1.6} L${x},${y + 1.6}`} />
+);
+
+/* ---------------------------------------------------------------------------
+   Terrain texture. Each of the seven fields gets its own hand-set glyph —
+   hachures for a hillside, a reed-tuft for wetland, furrows for farmland, a
+   tree mark for forest — tiled the same way the existing unrest hatch already
+   is. A single stroke colour cannot survive the whole development ramp (a
+   dark glyph vanishes into RAMP_INK, a light one bleaches out on RAMP_CREAM),
+   so every terrain is authored twice, once in ink and once in cream, and the
+   province picks whichever tone its own fill is on the wrong side of — the
+   same two-variant trick the unrest hatch already uses for severity.
+   --------------------------------------------------------------------------- */
+
+const TERRAIN_TILE: Record<Terrain, [number, number]> = {
+    highland: [7, 9],
+    delta: [10, 11],
+    river: [9, 6],
+    savannah: [7, 7],
+    coast: [9, 6],
+    forest: [9, 9],
+    border: [6, 6],
+};
+
+const terrainGlyph = (terrain: Terrain, stroke: string): JSX.Element => {
+    switch (terrain) {
+        case 'highland':
+            // A bunched run of hachures, short-to-tall, the classic shorthand for a slope.
+            return (
+                <path
+                    d="M1,8 L1,4.2 M3,8 L3,1.8 M5,8 L5,3.6 M7,8 L7,5.4"
+                    stroke={stroke}
+                    strokeWidth={0.55}
+                    strokeLinecap="round"
+                    fill="none"
+                />
+            );
+        case 'delta':
+            // A reed tuft: three blades fanning from a base, the engraved-map mark for marsh.
+            return (
+                <path
+                    d="M2,10 L2,6.6 M2,6.6 L0.6,3.4 M2,6.6 L2,2.4 M2,6.6 L3.6,3.4
+                       M7.5,10 L7.5,7 M7.5,7 L6.3,4.4 M7.5,7 L8.4,4.4"
+                    stroke={stroke}
+                    strokeWidth={0.5}
+                    strokeLinecap="round"
+                    fill="none"
+                />
+            );
+        case 'river':
+            // Ploughed furrows across the basin's fields.
+            return (
+                <path
+                    d="M0,2 Q2.25,0.3 4.5,2 T9,2 M0,4.6 Q2.25,2.9 4.5,4.6 T9,4.6"
+                    stroke={stroke}
+                    strokeWidth={0.45}
+                    fill="none"
+                />
+            );
+        case 'savannah':
+            // Sparse grass ticks, far less dense than the delta's reeds.
+            return (
+                <path
+                    d="M1.5,5.6 L1.5,3.4 M1.1,3.6 L1.9,3.6 M5.3,6.3 L5.3,4.3 M4.9,4.5 L5.7,4.5"
+                    stroke={stroke}
+                    strokeWidth={0.4}
+                    strokeLinecap="round"
+                    fill="none"
+                />
+            );
+        case 'coast':
+            // A single low swell, standing in for dune and lagoon.
+            return (
+                <path d="M0,3 Q2.25,1 4.5,3 Q6.75,5 9,3" stroke={stroke} strokeWidth={0.45} fill="none" />
+            );
+        case 'forest':
+            // A lollipop tree mark, one per tile.
+            return (
+                <>
+                    <line x1="4.5" y1="6.5" x2="4.5" y2="8.2" stroke={stroke} strokeWidth={0.45} strokeLinecap="round" />
+                    <circle cx="4.5" cy="4.6" r="1.7" fill="none" stroke={stroke} strokeWidth={0.5} />
+                </>
+            );
+        case 'border':
+        default:
+            // Fine crosshatch — contested ground, not a slope or a field.
+            return <path d="M0,0 L6,6 M6,0 L0,6" stroke={stroke} strokeWidth={0.4} fill="none" />;
+    }
 };
 
 /**
@@ -97,11 +323,18 @@ export function ProvinceMap({
     const uid = useId();
     const hatchLowId = `pm-hatch-low-${uid}`;
     const hatchHighId = `pm-hatch-high-${uid}`;
+    const seaPatternId = `pm-sea-${uid}`;
+    const terrainPatternId = (terrain: Terrain, tone: 'ink' | 'cream'): string => `pm-terrain-${terrain}-${tone}-${uid}`;
     const [hoveredId, setHoveredId] = useState<string | null>(null);
     const [focusedId, setFocusedId] = useState<string | null>(null);
 
     const selected = provinces.find(province => province.id === selectedId) ?? null;
     const canInvest = budget >= investmentStep;
+
+    const center = countryCenter(provinces);
+    const edges = frontierEdges(provinces);
+    const coastEdges = edges.filter(edge => edge.kind === 'coast');
+    const borderEdges = edges.filter(edge => edge.kind === 'border');
 
     const toggleSelection = (id: string) => onSelect(selectedId === id ? null : id);
 
@@ -132,7 +365,7 @@ export function ProvinceMap({
 
     return (
         <section className="province-map-panel">
-            <div className="province-map-wrap">
+            <div className="province-map-wrap mat-paper mat-grain mat-vignette anim-settle">
                 {/* Stated above the map rather than only beside the invest button: a
                     disabled button with no visible budget reads as a broken control,
                     and the player has no way to learn the money is annual. */}
@@ -145,10 +378,11 @@ export function ProvinceMap({
                             : 'Spent — provincial revenue funds the next allocation in the new year'}
                     </span>
                 </header>
+                <hr className="rule-double" />
 
                 <svg
                     className="province-map-svg"
-                    viewBox="0 0 100 100"
+                    viewBox={`${VIEW_MIN} ${VIEW_MIN} ${VIEW_SIZE} ${VIEW_SIZE}`}
                     preserveAspectRatio="xMidYMid meet"
                     role="group"
                     aria-label={`Provincial development map — ${provinces.length} provinces`}
@@ -160,7 +394,64 @@ export function ProvinceMap({
                         <pattern id={hatchHighId} width="3" height="3" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
                             <line x1="0" y1="0" x2="0" y2="3" stroke="#3a0c0c" strokeWidth="1.5" />
                         </pattern>
+
+                        {/* Concentric ripple lines over a faint verdigris wash — the engraved-
+                            map convention for open water, kept inside the ink/paper/brass
+                            family rather than reaching for an unrelated blue. */}
+                        <pattern id={seaPatternId} width="12" height="8" patternUnits="userSpaceOnUse">
+                            <rect width="12" height="8" fill="rgba(63, 107, 88, 0.16)" />
+                            <path d="M0,2 Q3,0.2 6,2 T12,2" stroke="rgba(10, 11, 7, 0.42)" strokeWidth="0.4" fill="none" />
+                            <path d="M0,5.6 Q3,3.8 6,5.6 T12,5.6" stroke="rgba(10, 11, 7, 0.36)" strokeWidth="0.4" fill="none" />
+                        </pattern>
+
+                        {TERRAIN_LIST.flatMap(terrain => {
+                            const [tw, th] = TERRAIN_TILE[terrain];
+                            return [
+                                <pattern
+                                    key={`${terrain}-ink`}
+                                    id={terrainPatternId(terrain, 'ink')}
+                                    width={tw}
+                                    height={th}
+                                    patternUnits="userSpaceOnUse"
+                                >
+                                    {terrainGlyph(terrain, 'rgba(24, 20, 11, 0.62)')}
+                                </pattern>,
+                                <pattern
+                                    key={`${terrain}-cream`}
+                                    id={terrainPatternId(terrain, 'cream')}
+                                    width={tw}
+                                    height={th}
+                                    patternUnits="userSpaceOnUse"
+                                >
+                                    {terrainGlyph(terrain, 'rgba(248, 242, 226, 0.58)')}
+                                </pattern>,
+                            ];
+                        })}
                     </defs>
+
+                    {/* Hydrography and the land frontier sit behind every province and are
+                        derived, not authored — see frontierEdges. Both are decorative: they
+                        never intercept a click, and they carry no information a province's
+                        own fill, hatch or label doesn't already state. */}
+                    <g className="pm-hydrography" aria-hidden="true" pointerEvents="none">
+                        {coastEdges.map((edge, i) => (
+                            <polygon key={`sea-${i}`} className="pm-sea" points={seaQuad(edge, center)} fill={`url(#${seaPatternId})`} />
+                        ))}
+                        {coastEdges.map((edge, i) => (
+                            <line
+                                key={`coast-${i}`}
+                                className="pm-coastline"
+                                x1={edge.p1[0]}
+                                y1={edge.p1[1]}
+                                x2={edge.p2[0]}
+                                y2={edge.p2[1]}
+                            />
+                        ))}
+                        {borderEdges.map((edge, i) => {
+                            const line = borderLine(edge, center);
+                            return <line key={`border-${i}`} className="pm-border-line" {...line} />;
+                        })}
+                    </g>
 
                     {orderedProvinces.map(province => {
                         const isSelected = province.id === selectedId;
@@ -168,6 +459,7 @@ export function ProvinceMap({
                         const isRestive = province.unrest > RESTIVE_FLOOR;
                         const isInvestedThisYear = province.lastInvestedYear === year;
                         const hatch = hatchOpacity(province.unrest);
+                        const terrainTone = isDarkFill(province.development) ? 'cream' : 'ink';
                         const [labelTop, labelBottom] = splitLabel(province.name);
                         const label = `${province.name}, ${TERRAIN_LABELS[province.terrain]} province of the ${province.group}. `
                             + `Development ${Math.round(province.development)} of 100. `
@@ -206,6 +498,16 @@ export function ProvinceMap({
                                     }}
                                 />
 
+                                {/* The terrain field rendered as texture, not colour, so it never
+                                    competes with the development ramp for the same visual channel. */}
+                                <polygon
+                                    className="province-terrain"
+                                    points={province.shape}
+                                    fill={`url(#${terrainPatternId(province.terrain, terrainTone)})`}
+                                    aria-hidden="true"
+                                    pointerEvents="none"
+                                />
+
                                 {hatch > 0 && (
                                     <polygon
                                         className="province-hatch"
@@ -232,7 +534,7 @@ export function ProvinceMap({
                                         className="province-invest-ring"
                                         cx={province.cx}
                                         cy={province.cy}
-                                        r="6"
+                                        r={6 * SCALE}
                                         aria-hidden="true"
                                         pointerEvents="none"
                                     />
@@ -270,6 +572,66 @@ export function ProvinceMap({
                             pointerEvents="none"
                         />
                     )}
+
+                    {/* Cartographic furniture: a plate border, a title cartouche, a compass
+                        and a scale bar. All static, all aria-hidden, all pointer-events:none —
+                        the sr-only list below and each province's own aria-label already carry
+                        every fact a player needs. */}
+                    <g className="pm-frame" aria-hidden="true" pointerEvents="none">
+                        <rect
+                            className="pm-neatline-misreg"
+                            x={FRAME_MIN + 0.5}
+                            y={FRAME_MIN + 0.4}
+                            width={FRAME_SIZE}
+                            height={FRAME_SIZE}
+                        />
+                        <rect className="pm-neatline-outer" x={FRAME_MIN} y={FRAME_MIN} width={FRAME_SIZE} height={FRAME_SIZE} />
+                        <rect
+                            className="pm-neatline-inner"
+                            x={FRAME_MIN + 1.6}
+                            y={FRAME_MIN + 1.6}
+                            width={FRAME_SIZE - 3.2}
+                            height={FRAME_SIZE - 3.2}
+                        />
+                        <CornerTick x={FRAME_MIN} y={FRAME_MIN} />
+                        <CornerTick x={FRAME_MAX} y={FRAME_MIN} />
+                        <CornerTick x={FRAME_MAX} y={FRAME_MAX} />
+                        <CornerTick x={FRAME_MIN} y={FRAME_MAX} />
+                    </g>
+
+                    <g className="pm-cartouche" aria-hidden="true" pointerEvents="none">
+                        <rect x={20} y={-12.5} width={60} height={9.5} rx={0.6} />
+                        <text className="pm-cartouche-title" x={50} y={-8.3} textAnchor="middle">
+                            Ministry of Development
+                        </text>
+                        <text className="pm-cartouche-sub" x={50} y={-4.4} textAnchor="middle">
+                            Provincial Survey — {year}
+                        </text>
+                    </g>
+
+                    <g className="pm-compass" aria-hidden="true" pointerEvents="none" transform="translate(97, -5)">
+                        <circle className="pm-compass-plate" r={7} />
+                        <circle className="pm-compass-ring" r={4.8} />
+                        <path className="pm-compass-needle-dark" d="M0,-4.8 L1.4,0 L0,4.8 Z" />
+                        <path className="pm-compass-needle-light" d="M0,-4.8 L-1.4,0 L0,4.8 Z" />
+                        <path className="pm-compass-needle-cross" d="M-4.8,0 L0,-1 L4.8,0 L0,1 Z" />
+                        <text className="pm-compass-label" x={0} y={-6} textAnchor="middle">N</text>
+                    </g>
+
+                    <g className="pm-scale" aria-hidden="true" pointerEvents="none" transform="translate(-10.5, 100)">
+                        <rect className="pm-scale-plate" x={-1.4} y={-2} width={19} height={11} rx={0.5} />
+                        {[0, 1, 2, 3].map(i => (
+                            <rect
+                                key={i}
+                                className={`pm-scale-seg${i % 2 === 0 ? ' is-fill' : ''}`}
+                                x={i * 3.5}
+                                y={2.2}
+                                width={3.5}
+                                height={1.4}
+                            />
+                        ))}
+                        <text className="pm-scale-label" x={7} y={8.4} textAnchor="middle">Approx. scale</text>
+                    </g>
                 </svg>
 
                 <div className="province-map-legend" aria-hidden="true">
@@ -308,7 +670,7 @@ export function ProvinceMap({
                 </ul>
             </div>
 
-            <aside className="province-detail" aria-live="polite">
+            <aside className="province-detail mat-paper mat-grain anim-rise" aria-live="polite">
                 {selected ? (
                     <>
                         <span className="province-detail-eyebrow">{TERRAIN_LABELS[selected.terrain]} · {selected.group}</span>

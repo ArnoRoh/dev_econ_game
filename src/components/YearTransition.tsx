@@ -20,9 +20,10 @@ const prefersReducedMotion = () =>
  * A brief beat between the debrief and the next cabinet session.
  *
  * Without it a decade passes in the time it takes to click twice, and nothing
- * in the interface registers that time is the resource being spent. It is
- * skippable on any key or click, and reduced-motion users get a much shorter
- * hold with no movement.
+ * in the interface registers that time is the resource being spent. It reads
+ * as a date stamped into a ledger: a ring strikes down, the old year lifts
+ * away, the new one lands in brass. It is skippable on any key or click, and
+ * reduced-motion users get a much shorter hold with no movement.
  */
 export function YearTransition({ fromYear, toYear, onDone }: YearTransitionProps) {
     const [leaving, setLeaving] = useState(false);
@@ -30,7 +31,7 @@ export function YearTransition({ fromYear, toYear, onDone }: YearTransitionProps
 
     useEffect(() => {
         const reduced = prefersReducedMotion();
-        const hold = reduced ? 260 : 1100;
+        const hold = reduced ? 260 : 1150;
 
         const finish = () => {
             if (doneRef.current) return;
@@ -56,18 +57,25 @@ export function YearTransition({ fromYear, toYear, onDone }: YearTransitionProps
 
     return (
         <div className={`year-turn${leaving ? ' is-leaving' : ''}`} role="status" aria-live="polite">
-            <div className="year-turn-rule" aria-hidden="true" />
-            <p className="year-turn-years">
-                <span className="year-turn-from" aria-hidden="true">
-                    {fromYear}
-                </span>
-                <span className="year-turn-to">{toYear}</span>
-            </p>
-            <p className="year-turn-caption">The year turns</p>
+            <div className="year-turn-grain" aria-hidden="true" />
+            <div className="year-turn-rule rule-double" aria-hidden="true" />
+
+            <div className="year-turn-dial">
+                <span className="year-turn-burst" aria-hidden="true" />
+                <span className="year-turn-ring" aria-hidden="true" />
+                <p className="year-turn-years">
+                    <span className="year-turn-from type-letterpress" aria-hidden="true">
+                        {fromYear}
+                    </span>
+                    <span className="year-turn-to type-foil">{toYear}</span>
+                </p>
+            </div>
+
+            <p className="year-turn-caption type-eyebrow">The year turns</p>
             <div className="year-turn-progress" aria-hidden="true">
                 <span className="year-turn-progress-fill" />
             </div>
-            <div className="year-turn-rule" aria-hidden="true" />
+            <div className="year-turn-rule rule-double" aria-hidden="true" />
         </div>
     );
 }

@@ -35,7 +35,10 @@
     text-align: center;
 }
 
-.newspaper-eyebrow {
+/* Compound selector (not just source order) beats the foundation's single-class
+   `.type-eyebrow` rule for certain, regardless of how the bundler orders
+   component CSS relative to the foundation import. */
+.newspaper-eyebrow.type-eyebrow {
     margin: 0 0 4px;
     color: var(--ink-500);
 }

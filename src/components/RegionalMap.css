@@ -1,3 +1,8 @@
+/* Ministry Print, 1962 — same aged-stock, ink-and-brass treatment as
+   ProvinceMap.css, applied to the smaller regional diplomacy plate. The
+   territory silhouettes and pact-line geometry are unchanged; only the
+   material (paper instead of a dark panel) and the ink/brass palette are new. */
+
 .regional-panel {
     display: grid;
     grid-template-columns: minmax(360px, 1.2fr) minmax(290px, 0.8fr);
@@ -9,20 +14,18 @@
     position: relative;
     min-height: 330px;
     overflow: hidden;
-    background:
-        radial-gradient(circle at 50% 50%, rgba(129, 199, 132, 0.1), transparent 27%),
-        linear-gradient(145deg, #18201e, #101413);
-    border: 1px solid #3c4943;
-    border-radius: 10px;
+    border: 1px solid rgba(111, 91, 30, 0.4);
+    border-radius: 4px;
+    box-shadow: var(--lift-3);
 }
 
 .map-contours {
     position: absolute;
     inset: 0;
-    opacity: 0.18;
+    opacity: 0.16;
     background:
-        radial-gradient(ellipse at 20% 30%, transparent 0 25px, #7d8e82 26px 27px, transparent 28px 50px, #7d8e82 51px 52px, transparent 53px),
-        radial-gradient(ellipse at 78% 68%, transparent 0 34px, #7d8e82 35px 36px, transparent 37px 67px, #7d8e82 68px 69px, transparent 70px);
+        radial-gradient(ellipse at 20% 30%, transparent 0 25px, var(--ink-500) 26px 27px, transparent 28px 50px, var(--ink-500) 51px 52px, transparent 53px),
+        radial-gradient(ellipse at 78% 68%, transparent 0 34px, var(--ink-500) 35px 36px, transparent 37px 67px, var(--ink-500) 68px 69px, transparent 70px);
 }
 
 .home-state,
@@ -34,7 +37,7 @@
     justify-content: center;
     flex-direction: column;
     text-align: center;
-    transition: border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+    transition: border-color var(--dur-base) var(--ease-out), background var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
 }
 
 .home-state {
@@ -43,27 +46,31 @@
     width: 150px;
     height: 128px;
     transform: translate(-50%, -50%);
-    color: #e8daa8;
-    background: linear-gradient(145deg, #4b5c42, #27372e);
-    border: 2px solid #d4af37;
+    color: var(--ink-800);
+    background:
+        linear-gradient(155deg, rgba(212, 175, 55, 0.22), rgba(212, 175, 55, 0.08)),
+        var(--paper-200);
+    border: 2px solid var(--brass-400);
+    box-shadow: var(--lift-2);
     clip-path: polygon(20% 0, 82% 8%, 100% 55%, 72% 100%, 18% 90%, 0 42%);
 }
 
 .neighbor-state {
     width: 112px;
     height: 76px;
-    color: #a7ada9;
-    background: #252b29;
-    border: 1px solid #47514c;
+    color: var(--ink-600);
+    background: var(--paper-300);
+    border: 1px solid rgba(111, 91, 30, 0.5);
     border-radius: 38% 62% 44% 56% / 50% 42% 58% 50%;
+    box-shadow: var(--lift-1);
 }
 
 .neighbor-state.active {
     transform: scale(1.06);
-    color: #efe0ae;
-    background: #3b4638;
-    border-color: #d4af37;
-    box-shadow: 0 0 24px rgba(212, 175, 55, 0.18);
+    color: var(--ink-800);
+    background: var(--paper-200);
+    border-color: var(--brass-400);
+    box-shadow: var(--glow-brass), var(--lift-2);
 }
 
 .neighbor-state.north { top: 20px; left: calc(50% - 56px); }
@@ -83,11 +90,12 @@
 .neighbor-state strong {
     margin-top: 3px;
     font-size: 1.12rem;
+    color: var(--brass-500);
 }
 
 .home-state small,
 .neighbor-state small {
-    color: #89928d;
+    color: var(--ink-400);
     font-size: 0.56rem;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -98,7 +106,7 @@
     z-index: 1;
     top: 50%;
     left: 50%;
-    background: linear-gradient(90deg, #d4af37, rgba(212, 175, 55, 0.1));
+    background: linear-gradient(90deg, var(--brass-400), rgba(212, 175, 55, 0.08));
     transform-origin: 0 50%;
 }
 
@@ -119,34 +127,71 @@
 .pact-line.north { transform: rotate(-90deg); }
 .pact-line.south { transform: rotate(90deg); }
 
+/* --- compass rose: a smaller sibling of ProvinceMap's --- */
+
 .map-compass {
     position: absolute;
+    z-index: 2;
     top: 14px;
     right: 15px;
-    color: #768079;
+    width: 30px;
+    height: 30px;
+}
+
+.map-compass-plate {
+    fill: rgba(246, 239, 220, 0.6);
+    stroke: var(--brass-400);
+    stroke-width: 0.4;
+}
+
+.map-compass-ring {
+    fill: none;
+    stroke: var(--ink-500);
+    stroke-width: 0.35;
+    opacity: 0.7;
+}
+
+.map-compass-needle-dark,
+.map-compass-needle-cross {
+    fill: var(--ink-700);
+}
+
+.map-compass-needle-light {
+    fill: var(--paper-200);
+    stroke: var(--ink-700);
+    stroke-width: 0.2;
+}
+
+.map-compass-label {
     font-family: var(--font-serif);
-    font-size: 0.75rem;
+    font-weight: 700;
+    font-size: 3.4px;
+    fill: var(--ink-700);
 }
 
 .regional-brief {
     padding: 20px;
-    background: linear-gradient(145deg, #1d211f, #171918);
-    border: 1px solid #363d39;
-    border-radius: 10px;
+    border: 1px solid rgba(111, 91, 30, 0.4);
+    border-radius: 4px;
+    box-shadow: var(--lift-2);
 }
 
 .regional-brief h3 {
     margin: 5px 0 8px;
-    color: #e6d7a6;
+    color: var(--brass-500);
     font-family: var(--font-serif);
     font-size: 1.2rem;
 }
 
 .regional-brief > p {
-    margin: 0 0 18px;
-    color: #8f9792;
+    margin: 0 0 4px;
+    color: var(--ink-500);
     font-size: 0.76rem;
     line-height: 1.5;
+}
+
+.regional-brief > .rule-double {
+    margin: 14px 0;
 }
 
 .relation-list {
@@ -159,32 +204,33 @@
     grid-template-columns: 118px 1fr 28px;
     align-items: center;
     gap: 8px;
-    color: #a8aaa5;
+    color: var(--ink-500);
     font-size: 0.67rem;
 }
 
 .relation-list strong {
-    color: #d4c992;
+    color: var(--brass-500);
     text-align: right;
 }
 
 .relation-track {
     height: 4px;
     overflow: hidden;
-    background: #303633;
+    background: var(--paper-400);
     border-radius: 2px;
+    box-shadow: inset 0 1px 2px rgba(20, 16, 8, 0.35);
 }
 
 .relation-track i {
     display: block;
     height: 100%;
-    background: linear-gradient(90deg, #815e4d, #d4af37, #81c784);
+    background: linear-gradient(90deg, var(--oxblood-dim), var(--brass-300), var(--verdigris));
 }
 
 .summit-note {
     display: block;
     margin-top: 18px;
-    color: #626965;
+    color: var(--ink-400);
     font-size: 0.62rem;
     text-transform: uppercase;
 }
@@ -218,4 +264,32 @@
     .relation-list > div {
         grid-template-columns: 105px 1fr 26px;
     }
+}
+
+/* --- reduced motion: kept last so it wins the cascade over the rules above --- */
+
+@media (prefers-reduced-motion: reduce) {
+    .home-state,
+    .neighbor-state,
+    .regional-map.anim-settle,
+    .regional-brief.anim-rise {
+        transition: none;
+        animation: none;
+    }
+
+    .neighbor-state.active {
+        transform: none;
+    }
+}
+
+:root[data-reduce-motion="true"] .home-state,
+:root[data-reduce-motion="true"] .neighbor-state,
+:root[data-reduce-motion="true"] .regional-map.anim-settle,
+:root[data-reduce-motion="true"] .regional-brief.anim-rise {
+    transition: none;
+    animation: none;
+}
+
+:root[data-reduce-motion="true"] .neighbor-state.active {
+    transform: none;
 }

@@ -36,13 +36,18 @@ export function ChapterReport({
     );
 
     return (
-        <div className={`chapter-report tone-${ending.tone}`}>
+        <div className={`chapter-report tone-${ending.tone} edge-lit`}>
+            <div className="report-tab" aria-hidden="true">
+                <span className="type-eyebrow report-tab-label">Final Dossier</span>
+            </div>
+
             <header className="report-header">
                 <p className="report-kicker">
                     {state.countryName} · 1960–{state.year}
                 </p>
                 <h1 className="report-ending-name">{ending.name}</h1>
                 <p className="report-ending-summary">{ending.summary}</p>
+                <div className="rule-double report-header-rule" aria-hidden="true" />
             </header>
 
             <p className="report-verdict">{ending.verdict}</p>
@@ -54,27 +59,27 @@ export function ChapterReport({
             <section className="report-section">
                 <h2 className="report-section-title">The republic you leave behind</h2>
                 <div className="report-stats">
-                    <div className="report-stat">
+                    <div className="report-stat mat-paper">
                         <span className="report-stat-value">${Math.round(gdpPerCapita)}</span>
                         <span className="report-stat-label">GDP per head</span>
                     </div>
-                    <div className="report-stat">
+                    <div className="report-stat mat-paper">
                         <span className="report-stat-value">{Math.round(country.educationLevel)}%</span>
                         <span className="report-stat-label">Education</span>
                     </div>
-                    <div className="report-stat">
+                    <div className="report-stat mat-paper">
                         <span className="report-stat-value">{Math.round(country.famineRisk)}%</span>
                         <span className="report-stat-label">Famine risk</span>
                     </div>
-                    <div className="report-stat">
+                    <div className="report-stat mat-paper">
                         <span className="report-stat-value">{Math.round(country.genderEquality)}%</span>
                         <span className="report-stat-label">Gender equality</span>
                     </div>
-                    <div className="report-stat">
+                    <div className="report-stat mat-paper">
                         <span className="report-stat-value">{Math.round(country.stability)}%</span>
                         <span className="report-stat-label">Stability</span>
                     </div>
-                    <div className="report-stat">
+                    <div className="report-stat mat-paper">
                         <span className="report-stat-value">${Math.round(country.externalDebt)}M</span>
                         <span className="report-stat-label">External debt</span>
                     </div>
@@ -151,9 +156,14 @@ export function ChapterReport({
                 )}
             </section>
 
-            <p className="report-score">
-                Legacy score <strong>{legacyScore}</strong>
-            </p>
+            <div className="report-score">
+                <span className="report-score-stamp" aria-hidden="true">
+                    Legacy
+                </span>
+                <p className="report-score-line">
+                    Legacy score <strong>{legacyScore}</strong>
+                </p>
+            </div>
 
             <div className="report-actions">
                 <button type="button" className="report-secondary" onClick={onOpenLedger}>

@@ -38,7 +38,7 @@ export function CabinetAgenda({
     const decidedArcIds = new Set(decisions.map(decision => decision.proposalId));
 
     return (
-        <section className="cabinet-agenda" aria-label={`Cabinet agenda for ${year}`}>
+        <section className="cabinet-agenda mat-baize mat-vignette" aria-label={`Cabinet agenda for ${year}`}>
             <header className="cabinet-header">
                 <div className="cabinet-header-text">
                     <h2 className="cabinet-title">Cabinet Session · {year}</h2>

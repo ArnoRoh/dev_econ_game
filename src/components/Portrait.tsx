@@ -118,7 +118,7 @@ const LOOKS: Record<CharacterId, Look> = {
                 <path d="M75 11 L95 3 L86 25 Z" fill={GOLD} />
             </>
         ),
-        shade: (hatchId, _crossId) => (
+        shade: hatchId => (
             <>
                 <path
                     d="M17 44 Q13 7 50 5 Q87 7 83 44 Q83 53 50 55 Q17 53 17 44 Z"
@@ -151,7 +151,7 @@ const LOOKS: Record<CharacterId, Look> = {
                 )}
             </>
         ),
-        shade: (hatchId, _crossId) => (
+        shade: hatchId => (
             <>
                 <ellipse cx="50" cy="39" rx="46" ry="9.4" fill={`url(#${hatchId})`} opacity="0.3" />
                 {FACE_LINES}

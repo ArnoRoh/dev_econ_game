@@ -31,6 +31,9 @@ const MOOD_GLYPH: Record<string, string> = {
  * Standing political pressure, always visible. Radicalisation is shown
  * separately from support because the dangerous combination is a faction that
  * has stopped supporting you but has not stopped being powerful.
+ *
+ * Reads as a tally board mounted in the room: a brass-edged ledger panel with
+ * engraved gauge bars, not a stack of plain divs.
  */
 export function FactionRail({ factions, characters, promises, turn }: FactionRailProps) {
     if (!factions) return null;
@@ -38,8 +41,8 @@ export function FactionRail({ factions, characters, promises, turn }: FactionRai
     const activePromises = promises.filter(promise => promise.status === 'active');
 
     return (
-        <aside className="faction-rail" aria-label="Political standing">
-            <h3 className="rail-heading">The Room</h3>
+        <aside className="faction-rail mat-grain" aria-label="Political standing">
+            <h3 className="rail-heading type-eyebrow">The Room</h3>
 
             <ul className="rail-factions">
                 {FACTIONS.map(faction => {
@@ -58,13 +61,18 @@ export function FactionRail({ factions, characters, promises, turn }: FactionRai
                             </div>
 
                             <div
-                                className="rail-bar"
+                                className="rail-gauge"
                                 role="img"
                                 aria-label={`${faction.shortName} support ${Math.round(state.support)} of 100`}
                             >
-                                <span className="rail-bar-fill" style={{ width: `${state.support}%` }} />
+                                <span className="rail-gauge-ticks" aria-hidden="true">
+                                    <span /><span /><span /><span />
+                                </span>
+                                <span className="rail-gauge-track">
+                                    <span className="rail-gauge-fill" style={{ transform: `scaleX(${state.support / 100})` }} />
+                                </span>
                                 <span
-                                    className="rail-bar-power"
+                                    className="rail-gauge-power"
                                     style={{ left: `${state.power}%` }}
                                     title={`Power to act: ${Math.round(state.power)}`}
                                 />
@@ -94,7 +102,7 @@ export function FactionRail({ factions, characters, promises, turn }: FactionRai
 
             {activePromises.length > 0 && (
                 <>
-                    <h3 className="rail-heading">Outstanding Promises</h3>
+                    <h3 className="rail-heading type-eyebrow">Outstanding Promises</h3>
                     <ul className="rail-promises">
                         {activePromises.map(promise => {
                             const due = promise.deadlineTurn - turn;
@@ -113,16 +121,21 @@ export function FactionRail({ factions, characters, promises, turn }: FactionRai
 
             {characters && (
                 <>
-                    <h3 className="rail-heading">Your Ministers</h3>
+                    <h3 className="rail-heading type-eyebrow">Your Ministers</h3>
                     <ul className="rail-characters">
                         {Object.entries(characters).map(([id, state]) => {
                             const character = CHARACTERS_BY_ID[id as CharacterId];
                             if (!character) return null;
                             return (
                                 <li key={id}>
-                                    <span className="rail-character-name">{character.name}</span>
-                                    <span className="rail-character-trust">
-                                        trust {Math.round(state.trust)} · loyalty {Math.round(state.loyalty)}
+                                    <span className="rail-character-portrait" aria-hidden="true">
+                                        <Portrait characterId={id as CharacterId} size={22} />
+                                    </span>
+                                    <span className="rail-character-text">
+                                        <span className="rail-character-name">{character.name}</span>
+                                        <span className="rail-character-trust">
+                                            trust {Math.round(state.trust)} · loyalty {Math.round(state.loyalty)}
+                                        </span>
                                     </span>
                                 </li>
                             );

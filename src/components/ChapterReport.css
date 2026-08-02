@@ -1,30 +1,53 @@
 .chapter-report {
+    position: relative;
     width: min(820px, 100%);
     margin: 0 auto;
-    padding: 34px 32px 36px;
+    padding: 40px 32px 36px;
     background: linear-gradient(180deg, rgba(32, 34, 30, 0.97) 0%, rgba(20, 22, 19, 0.97) 100%);
-    border: 1px solid #3d3d35;
-    border-top: 3px solid #7d766a;
-    border-radius: 10px;
+    border: 1px solid var(--ink-300);
+    border-top: 3px solid var(--paper-500);
+    border-radius: 3px 10px 10px 10px;
     text-align: left;
 }
 
 .chapter-report.tone-triumph {
-    border-top-color: var(--color-success);
+    border-top-color: var(--verdigris);
 }
 
 .chapter-report.tone-grim {
-    border-top-color: var(--color-danger);
+    border-top-color: var(--oxblood);
 }
 
 .chapter-report.tone-qualified {
     border-top-color: var(--color-primary);
 }
 
+/* The country's own case file, closed out — the same tab treatment the
+   cabinet dossier uses, so the finale reads as the last page of the same
+   set of files rather than a different kind of screen entirely. */
+.report-tab {
+    position: absolute;
+    top: -17px;
+    left: 28px;
+    padding: 5px 14px 8px;
+    background: linear-gradient(180deg, var(--paper-300) 0%, var(--paper-400) 100%);
+    border: 1px solid var(--ink-300);
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+    box-shadow: var(--lift-1);
+}
+
+.report-tab .report-tab-label {
+    color: var(--ink-700);
+}
+
 .report-header {
     padding-bottom: 18px;
     margin-bottom: 20px;
-    border-bottom: 1px solid #33332c;
+}
+
+.report-header-rule {
+    margin-top: 16px;
 }
 
 .report-kicker {
@@ -39,15 +62,15 @@
 
 .report-ending-name {
     margin: 0 0 8px;
-    font-family: var(--font-serif);
-    font-size: clamp(1.8rem, 5vw, 2.6rem);
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 5vw, 2.7rem);
     line-height: 1.15;
     color: #f2ebda;
     overflow-wrap: anywhere;
 }
 
 .tone-triumph .report-ending-name {
-    color: #b9e0bb;
+    color: #bfe3c1;
 }
 
 .tone-grim .report-ending-name {
@@ -72,8 +95,8 @@
 .report-cause {
     margin: 0 0 20px;
     padding: 10px 14px;
-    background: rgba(229, 115, 115, 0.1);
-    border-left: 3px solid var(--color-danger);
+    background: rgba(180, 72, 63, 0.12);
+    border-left: 3px solid var(--oxblood);
     border-radius: 0 4px 4px 0;
     font-size: 0.86rem;
     color: #dcb4b4;
@@ -94,33 +117,50 @@
     color: var(--color-primary);
 }
 
+/* ---------------------------------------------------------------------------
+   The republic's final figures, each one entered on its own card of paper
+   stock — this is where the run's numbers land, and they land as print, not
+   as another dashboard tile.
+   --------------------------------------------------------------------------- */
+
 .report-stats {
     display: grid;
-    gap: 12px;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
 }
 
 .report-stat {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding: 12px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid #33332c;
-    border-radius: 7px;
+    padding: 12px 13px;
+    border-radius: 2px;
+    box-shadow: var(--lift-1);
+    transform: rotate(-0.3deg);
+}
+
+.report-stat:nth-child(even) {
+    transform: rotate(0.3deg);
 }
 
 .report-stat-value {
+    position: relative;
+    z-index: 2;
     font-family: var(--font-serif);
-    font-size: 1.35rem;
-    color: #ece5d4;
+    font-size: 1.4rem;
+    font-variant-numeric: oldstyle-nums;
+    color: var(--ink-900);
 }
 
 .report-stat-label {
-    font-size: 0.66rem;
-    letter-spacing: 0.09em;
+    position: relative;
+    z-index: 2;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #857d70;
+    color: var(--ink-500);
 }
 
 .report-citations {
@@ -168,9 +208,20 @@
 }
 
 .report-faction-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     font-size: 0.7rem;
-    color: #857d70;
+    font-weight: 700;
     white-space: nowrap;
+}
+
+.report-faction-value.is-good {
+    color: var(--verdigris);
+}
+
+.report-faction-value.is-bad {
+    color: var(--oxblood);
 }
 
 .report-learning {
@@ -204,19 +255,56 @@
     line-height: 1.5;
 }
 
+/* ---------------------------------------------------------------------------
+   The legacy score, struck like an ink stamp over the closing line — the
+   run's one headline number, given the same treatment the dossier gives its
+   classification mark.
+   --------------------------------------------------------------------------- */
+
 .report-score {
-    margin: 24px 0 0;
-    padding-top: 18px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin: 26px 0 0;
+    padding-top: 20px;
     border-top: 1px solid #33332c;
+}
+
+.report-score-stamp {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border: 3px double var(--brass-300);
+    border-radius: 50%;
+    transform: rotate(-8deg);
+    color: var(--brass-300);
+    font-family: var(--font-display);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-align: center;
+    text-transform: uppercase;
+    opacity: 0.88;
+}
+
+.report-score-line {
+    margin: 0;
     font-size: 0.82rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: #8d8578;
 }
 
-.report-score strong {
+.report-score-line strong {
+    display: block;
+    margin-top: 2px;
     font-family: var(--font-serif);
-    font-size: 1.6rem;
+    font-size: 1.9rem;
+    font-variant-numeric: oldstyle-nums;
     color: var(--color-primary);
     letter-spacing: 0;
 }
@@ -247,11 +335,31 @@
 
 @media (max-width: 640px) {
     .chapter-report {
-        padding: 24px 18px 28px;
+        padding: 30px 18px 28px;
     }
 
     .report-factions li {
         grid-template-columns: 1fr;
         gap: 4px;
     }
+
+    .report-score {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
+
+/* Static art (the stamps, the tab, the tilted paper cards) survives reduced
+   motion by construction — nothing on this screen animates in the first
+   place, so there is nothing to neutralise here. This block exists to match
+   the convention followed by the rest of the turn loop's stylesheets. */
+@media (prefers-reduced-motion: reduce) {
+    .chapter-report {
+        animation: none;
+    }
+}
+
+:root[data-reduce-motion='true'] .chapter-report {
+    animation: none;
 }

@@ -1,21 +1,21 @@
+/* The cabinet session is a baize-topped table (see .mat-baize in
+   styles/foundation.css, applied directly on the <section> in
+   CabinetAgenda.tsx) with paper dossiers dealt onto it. Card text therefore
+   sits on printed paper, not a dark panel, and is themed accordingly. */
+
 .cabinet-agenda {
     width: min(1120px, 100%);
     margin: 0 auto;
-    animation: cabinet-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
-}
-
-@keyframes cabinet-in {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: none;
-    }
+    padding: 22px;
+    border: 1px solid var(--brass-500);
+    border-radius: 12px;
+    box-shadow: var(--lift-3);
+    animation: settle-in var(--dur-slow) var(--ease-out) backwards;
 }
 
 .cabinet-header {
+    position: relative;
+    z-index: 2;
     display: flex;
     flex-wrap: wrap;
     gap: 16px;
@@ -23,7 +23,7 @@
     justify-content: space-between;
     padding-bottom: 14px;
     margin-bottom: 22px;
-    border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+    border-bottom: 1px solid rgba(212, 175, 55, 0.4);
 }
 
 .cabinet-header-text {
@@ -34,7 +34,7 @@
     margin: 0;
     font-family: var(--font-serif);
     font-size: clamp(1.4rem, 3vw, 2rem);
-    color: var(--color-primary);
+    color: var(--brass-200);
     letter-spacing: 0.02em;
     overflow-wrap: anywhere;
 }
@@ -42,7 +42,7 @@
 .cabinet-subtitle {
     margin: 4px 0 0;
     font-size: 0.86rem;
-    color: #9d968a;
+    color: var(--paper-400);
     overflow-wrap: anywhere;
 }
 
@@ -52,22 +52,26 @@
     gap: 8px;
 }
 
+/* A small engraved brass stud rather than a plain circle: dim and sunken when
+   spent, lit and raised when an action is still available. */
 .cabinet-action-pip {
     width: 14px;
     height: 14px;
     border-radius: 50%;
     border: 1px solid rgba(212, 175, 55, 0.5);
-    background: transparent;
+    background: var(--ink-800);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
     /* Spending an action reads as the pip settling from full to spent, or
        back, on its own scale rather than a flat colour swap. */
     transform: scale(0.62);
-    transition: transform 280ms cubic-bezier(0.2, 0.8, 0.3, 1), background 220ms ease;
+    transition: transform 280ms var(--ease-out), background 220ms ease, box-shadow 220ms ease;
 }
 
 .cabinet-action-pip.is-available {
     transform: scale(1);
-    background: var(--color-primary);
-    box-shadow: 0 0 10px rgba(212, 175, 55, 0.6);
+    background: radial-gradient(circle at 32% 30%, var(--brass-100), var(--brass-300) 70%);
+    border-color: var(--brass-100);
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.65);
 }
 
 .cabinet-actions-label {
@@ -75,30 +79,46 @@
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: #b6ad97;
+    color: var(--paper-300);
 }
 
 .cabinet-grid {
+    position: relative;
+    z-index: 2;
     display: grid;
-    gap: 16px;
+    gap: 20px;
+    padding: 6px 2px 14px;
     /* min(268px, 100%) keeps a single card from forcing the grid wider than
        its container on small screens. */
     grid-template-columns: repeat(auto-fit, minmax(min(268px, 100%), 1fr));
 }
 
-/* --- proposal card --- */
+/* --- proposal card: a paper dossier laid on the felt --- */
 
 .proposal-card {
+    position: relative;
     display: flex;
     flex-direction: column;
     min-width: 0;
     padding: 18px;
-    background: linear-gradient(180deg, rgba(38, 40, 38, 0.92) 0%, rgba(26, 28, 26, 0.92) 100%);
-    border: 1px solid #3a3a34;
-    border-radius: 8px;
-    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
-    animation: proposal-deal 440ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+    border: 1px solid var(--paper-400);
+    border-radius: 3px;
+    color: var(--ink-700);
+    box-shadow: var(--lift-3);
+    transition: transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out), border-color 200ms ease;
+    /* The entrance settles into whichever resting rotation the nth-child rule
+       below sets, because fill-mode is `backwards`: it holds the *from*
+       keyframe during any stagger delay but releases the property once the
+       animation ends, instead of pinning `transform` forever the way
+       `forwards`/`both` would — which would silently defeat every hover and
+       rest-state transform declared below it. */
+    animation: proposal-deal 440ms var(--ease-out) backwards;
 }
+
+/* A slight, alternating tilt — dealt onto the table rather than snapped to a
+   grid — straightened on hover as if picked up to read. */
+.proposal-card:nth-child(odd) { transform: rotate(-0.6deg); }
+.proposal-card:nth-child(even) { transform: rotate(0.55deg); }
 
 /* Cards are dealt onto the table in order — the same order the corner numbers
    already read in, so the motion and the keyboard shortcut agree. */
@@ -111,36 +131,50 @@
 @keyframes proposal-deal {
     from {
         opacity: 0;
-        transform: translateY(-18px) scale(0.97);
+        transform: translateY(-22px) scale(0.96) rotate(-3deg);
     }
+    /* `to` deliberately omits `transform`: the browser fills it in from each
+       card's own resting rotation above, so the deal ends exactly where the
+       card will sit, with nothing left for `backwards` to hand off abruptly. */
     to {
         opacity: 1;
-        transform: none;
     }
 }
 
 .proposal-card:hover:not(.is-disabled) {
-    transform: translateY(-3px);
-    border-color: rgba(212, 175, 55, 0.55);
-    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+    transform: translateY(-4px) rotate(0deg);
+    border-color: var(--brass-400);
+    box-shadow: var(--lift-4);
 }
 
 .proposal-card.is-disabled {
-    opacity: 0.55;
+    opacity: 0.6;
+}
+
+/* The clip pinning the dossier shut, set at the top edge above the fold. */
+.proposal-clip {
+    position: absolute;
+    top: -9px;
+    left: 22px;
+    color: var(--brass-400);
+    filter: drop-shadow(0 2px 1px rgba(6, 5, 2, 0.4));
+    transform: rotate(-6deg);
+    pointer-events: none;
 }
 
 .proposal-flag {
     align-self: flex-start;
-    margin-bottom: 10px;
-    padding: 3px 9px;
-    border-radius: 999px;
-    background: rgba(212, 175, 55, 0.16);
-    border: 1px solid rgba(212, 175, 55, 0.4);
+    margin: 6px 0 10px;
+    padding: 3px 10px;
+    border: 1.5px solid var(--oxblood);
+    border-radius: 2px;
+    background: rgba(180, 72, 63, 0.06);
     font-size: 0.64rem;
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #e2c76b;
+    color: var(--oxblood);
+    transform: rotate(-1.6deg);
 }
 
 .proposal-sponsor {
@@ -168,28 +202,13 @@
     width: 60%;
     height: 7px;
     transform: translateX(-50%);
-    background: radial-gradient(closest-side, rgba(0, 0, 0, 0.5), transparent 75%);
+    background: radial-gradient(closest-side, rgba(0, 0, 0, 0.35), transparent 75%);
     border-radius: 50%;
     pointer-events: none;
 }
 
 .proposal-card:hover:not(.is-disabled) .proposal-portrait-seat {
     transform: translateY(-1px);
-}
-
-.proposal-avatar {
-    display: grid;
-    place-items: center;
-    flex-shrink: 0;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 30% 25%, #4e4a3c, #2b2a24);
-    border: 1px solid rgba(212, 175, 55, 0.45);
-    font-family: var(--font-serif);
-    font-size: 0.92rem;
-    font-weight: 700;
-    color: #e0cf90;
 }
 
 .proposal-sponsor-text {
@@ -200,21 +219,24 @@
 }
 
 .proposal-sponsor-text strong {
-    font-size: 0.86rem;
+    font-family: var(--font-serif);
+    font-size: 0.9rem;
+    color: var(--ink-900);
     overflow-wrap: anywhere;
 }
 
 .proposal-sponsor-title {
     font-size: 0.72rem;
-    color: #9d968a;
+    color: var(--ink-500);
     overflow-wrap: anywhere;
 }
 
 .proposal-sponsor-faction {
-    font-size: 0.66rem;
+    font-size: 0.64rem;
+    font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #7d766a;
+    color: var(--brass-500);
     overflow-wrap: anywhere;
 }
 
@@ -228,39 +250,44 @@
 
 .proposal-trust-bar {
     width: 46px;
-    height: 4px;
+    height: 5px;
     border-radius: 2px;
-    background: #33332c;
+    background: var(--paper-400);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.22);
     overflow: hidden;
 }
 
 .proposal-trust-fill {
     display: block;
     height: 100%;
-    background: linear-gradient(90deg, #8a7a3f, var(--color-primary));
+    background: linear-gradient(90deg, var(--brass-500), var(--brass-300));
 }
 
 .proposal-trust-label {
     font-size: 0.6rem;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #8d8578;
+    color: var(--ink-500);
 }
 
 .proposal-title {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
     margin: 0 0 8px;
     font-family: var(--font-serif);
     font-size: 1.1rem;
     line-height: 1.3;
-    color: #ece5d4;
+    color: var(--ink-900);
     overflow-wrap: anywhere;
+    text-shadow: 0 1px 0 rgba(255, 250, 235, 0.5);
 }
 
 .proposal-brief {
     margin: 0 0 16px;
     font-size: 0.86rem;
     line-height: 1.55;
-    color: #ada595;
+    color: var(--ink-600);
     overflow-wrap: anywhere;
 }
 
@@ -268,35 +295,42 @@
     margin-top: auto;
     min-height: 44px;
     padding: 10px 14px;
-    background: rgba(212, 175, 55, 0.12);
-    border: 1px solid rgba(212, 175, 55, 0.45);
-    border-radius: 6px;
-    color: #e2c76b;
+    /* Ink on the card's own stock rather than a dark slab: a near-black button on
+       a paper dossier reads as a hole punched through the sheet, not as something
+       printed on it. This is a rubber stamp — a ruled box, ink-coloured type, and
+       a faint wash — which keeps the card reading as one piece of paper. */
+    background: rgba(111, 91, 30, 0.09);
+    border: 1.5px solid var(--brass-500);
+    border-radius: 2px;
+    color: #3a2f10;
     font-family: inherit;
     font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
+    font-weight: 800;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     cursor: pointer;
-    transition: background 160ms ease, transform 120ms ease;
+    box-shadow: none;
+    transition: background 160ms ease, transform 120ms ease, box-shadow 160ms ease;
 }
 
 .proposal-open:hover:not(:disabled) {
-    background: rgba(212, 175, 55, 0.24);
+    background: rgba(111, 91, 30, 0.2);
+    border-color: var(--ink-700);
+    color: var(--ink-800);
 }
 
 /* A clear pressed state: the button settles down and in, so committing to
    opening a dossier reads as a physical push rather than a colour swap. */
 .proposal-open:active:not(:disabled) {
     transform: translateY(1px) scale(0.98);
-    background: rgba(212, 175, 55, 0.3);
 }
 
 .proposal-open:disabled {
     cursor: not-allowed;
-    color: #7d766a;
-    border-color: #3a3a34;
-    background: transparent;
+    color: var(--paper-500);
+    border-color: var(--paper-400);
+    background: var(--paper-300);
+    box-shadow: none;
 }
 
 .proposal-open:focus-visible {
@@ -305,21 +339,23 @@
 }
 
 .cabinet-footer {
+    position: relative;
+    z-index: 2;
     display: flex;
     flex-wrap: wrap;
     gap: 14px;
     align-items: center;
     justify-content: space-between;
-    margin-top: 24px;
+    margin-top: 8px;
     padding-top: 18px;
-    border-top: 1px solid #33332c;
+    border-top: 1px solid rgba(212, 175, 55, 0.28);
 }
 
 .cabinet-warning {
     margin: 0;
     font-size: 0.82rem;
     font-style: italic;
-    color: #9d968a;
+    color: var(--paper-400);
     overflow-wrap: anywhere;
 }
 
@@ -329,17 +365,20 @@
 }
 
 .cabinet-empty {
+    position: relative;
+    z-index: 2;
     padding: 22px;
-    margin: 0 0 18px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px dashed #3d3d35;
+    margin: 6px 0 18px;
+    background: rgba(0, 0, 0, 0.18);
+    border: 1px dashed rgba(212, 175, 55, 0.4);
     border-radius: 8px;
     font-size: 0.92rem;
-    color: #9d968a;
+    color: var(--paper-300);
     text-align: center;
 }
 
-/* Keyboard affordance: number the cards so the shortcut is discoverable. */
+/* Keyboard affordance: number the cards so the shortcut is discoverable, as a
+   small stamped ink tag rather than an outlined square. */
 .cabinet-grid {
     counter-reset: proposal;
 }
@@ -348,21 +387,20 @@
     counter-increment: proposal;
     content: counter(proposal);
     position: absolute;
-    top: 14px;
-    right: 14px;
+    top: 12px;
+    right: 12px;
     display: grid;
     place-items: center;
-    width: 20px;
-    height: 20px;
-    border: 1px solid #4a4a42;
-    border-radius: 4px;
-    font-size: 0.62rem;
-    font-weight: 800;
-    color: #7d766a;
-}
-
-.proposal-card {
-    position: relative;
+    width: 21px;
+    height: 21px;
+    border-radius: 50%;
+    background: var(--ink-800);
+    color: var(--paper-200);
+    font-family: var(--font-serif);
+    font-size: 0.68rem;
+    font-weight: 700;
+    box-shadow: var(--lift-1);
+    transform: rotate(4deg);
 }
 
 .proposal-record {
@@ -371,20 +409,21 @@
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: #8d8578;
+    color: var(--brass-500);
 }
 
 .proposal-emblem {
     display: inline-flex;
-    vertical-align: -3px;
-    margin-right: 7px;
-    opacity: 0.85;
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--brass-500);
+    opacity: 0.9;
 }
 
 /* Reduced motion wins the cascade from here down: entrance animations
    collapse to their settled end state and every hover/press transition is
-   removed, but the state itself (available pip scale, hover lift, etc.) is
-   untouched, so nothing sits in the wrong place. */
+   removed, but the state itself (available pip scale, hover lift, resting
+   card tilt, etc.) is untouched, so nothing sits in the wrong place. */
 @media (prefers-reduced-motion: reduce) {
     .cabinet-agenda,
     .proposal-card {
@@ -399,7 +438,12 @@
     }
 
     .proposal-card:hover:not(.is-disabled) {
-        transform: none;
+        transform: rotate(0deg);
+    }
+
+    .proposal-card:nth-child(odd):hover:not(.is-disabled),
+    .proposal-card:nth-child(even):hover:not(.is-disabled) {
+        transform: rotate(0deg);
     }
 
     .proposal-card:hover:not(.is-disabled) .proposal-portrait-seat {
@@ -424,7 +468,7 @@
 }
 
 :root[data-reduce-motion='true'] .proposal-card:hover:not(.is-disabled) {
-    transform: none;
+    transform: rotate(0deg);
 }
 
 :root[data-reduce-motion='true'] .proposal-card:hover:not(.is-disabled) .proposal-portrait-seat {

@@ -12,6 +12,17 @@ interface TurnDebriefProps {
 }
 
 /**
+ * Split "Label: value" into a ledger row's two halves. Every string this
+ * component receives from formatEffectList / formatEffect is built with
+ * exactly one ": " separator, so a single split is safe.
+ */
+function splitLedgerLabel(label: string): [string, string] {
+    const index = label.indexOf(': ');
+    if (index === -1) return [label, ''];
+    return [label.slice(0, index), label.slice(index + 2)];
+}
+
+/**
  * Numbers appear here and nowhere earlier. The debrief closes the loop the
  * dossier opened: this is what you chose, this is what it did, and this is the
  * thing that has not happened yet but will.
@@ -35,7 +46,10 @@ export function TurnDebrief({ year, entries, ignoredTitles, onContinue }: TurnDe
                 const effects = formatEffectList(entry.effects, entry.treasuryEffect);
 
                 return (
-                    <article key={entry.decisionId} className="debrief-entry">
+                    <article key={entry.decisionId} className="debrief-entry mat-paper">
+                        <p className="debrief-entry-kicker" aria-hidden="true">
+                            Entered in the Record
+                        </p>
                         <h3 className="debrief-entry-title">{entry.proposalTitle}</h3>
                         <p className="debrief-choice">
                             You chose: <strong>{entry.optionText}</strong>
@@ -45,12 +59,27 @@ export function TurnDebrief({ year, entries, ignoredTitles, onContinue }: TurnDe
                         {effects.length > 0 && (
                             <div className="debrief-block">
                                 <h4 className="debrief-block-title">Measured this year</h4>
-                                <ul className="debrief-effects">
-                                    {effects.map(effect => (
-                                        <li key={effect.label} className={effect.positive ? 'is-good' : 'is-bad'}>
-                                            {effect.label}
-                                        </li>
-                                    ))}
+                                <ul className="debrief-ledger">
+                                    {effects.map(effect => {
+                                        const [name, value] = splitLedgerLabel(effect.label);
+                                        return (
+                                            <li
+                                                key={effect.label}
+                                                className={`debrief-ledger-row ${
+                                                    effect.positive ? 'is-good' : 'is-bad'
+                                                }`}
+                                            >
+                                                <span className="debrief-ledger-label">{name}</span>
+                                                <span className="debrief-ledger-leader" aria-hidden="true" />
+                                                <span className="debrief-ledger-value">
+                                                    <span className="debrief-ledger-glyph" aria-hidden="true">
+                                                        {effect.positive ? '▲' : '▼'}
+                                                    </span>
+                                                    {effect.positive ? value : `(${value})`}
+                                                </span>
+                                            </li>
+                                        );
+                                    })}
                                 </ul>
                             </div>
                         )}
@@ -58,24 +87,32 @@ export function TurnDebrief({ year, entries, ignoredTitles, onContinue }: TurnDe
                         {entry.factionEffects.length > 0 && (
                             <div className="debrief-block">
                                 <h4 className="debrief-block-title">How the room reacted</h4>
-                                <ul className="debrief-factions">
+                                <ul className="debrief-ledger">
                                     {entry.factionEffects.map(effect => {
                                         const faction = FACTIONS_BY_ID[effect.factionId];
                                         const delta = effect.support ?? 0;
+                                        const isGood = delta >= 0;
                                         return (
-                                            <li key={effect.factionId}>
-                                                <span className="debrief-faction-name">{faction.shortName}</span>
-                                                <span
-                                                    className={`debrief-faction-delta ${
-                                                        delta >= 0 ? 'is-good' : 'is-bad'
-                                                    }`}
-                                                >
-                                                    {delta > 0 ? '+' : ''}
-                                                    {delta}
+                                            <li
+                                                key={effect.factionId}
+                                                className={`debrief-ledger-row ${isGood ? 'is-good' : 'is-bad'}`}
+                                            >
+                                                <span className="debrief-ledger-label">
+                                                    {faction.shortName}
+                                                    {effect.grievance && (
+                                                        <span className="debrief-grievance">
+                                                            {' '}
+                                                            {effect.grievance}
+                                                        </span>
+                                                    )}
                                                 </span>
-                                                {effect.grievance && (
-                                                    <span className="debrief-grievance">{effect.grievance}</span>
-                                                )}
+                                                <span className="debrief-ledger-leader" aria-hidden="true" />
+                                                <span className="debrief-ledger-value">
+                                                    <span className="debrief-ledger-glyph" aria-hidden="true">
+                                                        {isGood ? '▲' : '▼'}
+                                                    </span>
+                                                    {isGood ? `${delta > 0 ? '+' : ''}${delta}` : `(${-delta})`}
+                                                </span>
                                             </li>
                                         );
                                     })}
@@ -130,7 +167,7 @@ export function TurnDebrief({ year, entries, ignoredTitles, onContinue }: TurnDe
             })}
 
             {ignoredTitles.length > 0 && (
-                <article className="debrief-entry debrief-ignored">
+                <article className="debrief-entry debrief-ignored mat-paper">
                     <h3 className="debrief-entry-title">Settled without you</h3>
                     <ul className="debrief-watch-list">
                         {ignoredTitles.map(title => (
