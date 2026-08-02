@@ -11,6 +11,24 @@
     transition: opacity 400ms ease;
 }
 
+/* On a phone the stack is nearly the full width of the screen and sits exactly
+   where the primary action of most screens is, so several achievements landing at
+   once cover the button the player needs for the six seconds they are up.
+   Moving them to the top is not the answer — the header wraps to three rows at
+   this width and they would cover that instead. Instead the container never takes
+   pointer events, so whatever is underneath stays pressable, and the toasts
+   themselves get more compact so the stack is shorter to begin with. */
+.toasts {
+    pointer-events: none;
+}
+
+/* Only the dismiss control takes input. The cards themselves are not interactive,
+   so letting them capture clicks would block whatever they happen to be sitting
+   over — which on a phone is the screen's primary action. */
+.toast-dismiss {
+    pointer-events: auto;
+}
+
 .toasts.is-leaving {
     opacity: 0;
 }
@@ -97,6 +115,22 @@
 .toast-dismiss:focus-visible {
     outline: 3px solid var(--color-primary);
     outline-offset: 2px;
+}
+
+/* Placed after the base rules so these actually win. A compact stack on a phone
+   is a shorter stack, which is half of why several at once stopped covering the
+   screen's primary action; the other half is the container ignoring pointer
+   events above. The name still reads — only the explanatory line is dropped, and
+   it remains in the achievements gallery. */
+@media (max-width: 620px) {
+    .toast {
+        padding: 8px 10px;
+        gap: 8px;
+    }
+
+    .toast-desc {
+        display: none;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
