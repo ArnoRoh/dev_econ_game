@@ -3,14 +3,16 @@ import { createProvinces } from './data/provinces';
 
 const ACTIVE_RUN_KEY = 'dev_econ_active_run';
 /**
- * v5 adds the territorial layer and achievements.
+ * v6 adds per-province development programmes (`works`).
+ * v5 added the territorial layer and achievements.
  * v4 added the cabinet turn phase; v3 and earlier have no agenda at all.
  *
- * v4 saves are migrated rather than discarded — a run can be forty years deep
+ * Old saves are migrated rather than discarded — a run can be forty years deep
  * by the time a version changes, and throwing that away over an added field is
- * not a defensible thing to do to a player.
+ * not a defensible thing to do to a player. Migration chains, so a v4 save is
+ * carried through v5 to v6 rather than needing its own path.
  */
-const SAVE_VERSION = 5;
+const SAVE_VERSION = 6;
 const MIGRATABLE_FROM = 4;
 
 export interface SavedRun {
@@ -29,13 +31,37 @@ export const saveRun = (save: Omit<SavedRun, 'version'>) => {
     localStorage.setItem(ACTIVE_RUN_KEY, JSON.stringify(payload));
 };
 
-/** Bring a v4 run forward: seed the territorial layer it never had. */
-const migrateFromV4 = (state: GameState): GameState => ({
+/** v4 -> v5: seed the territorial layer the run never had. */
+const migrateToV5 = (state: GameState): GameState => ({
     ...state,
     provinces: state.provinces ?? createProvinces(),
     provinceBudget: state.provinceBudget ?? 0,
     achievements: state.achievements ?? [],
 });
+
+/**
+ * v5 -> v6: give every province an empty programme record.
+ *
+ * `works` is optional and absent already reads as "nothing built", so this is
+ * belt-and-braces rather than strictly required — but the field is now part of
+ * the stored shape, and leaving the version un-bumped is how a save format
+ * quietly diverges from what the code believes it is reading.
+ */
+const migrateToV6 = (state: GameState): GameState => ({
+    ...state,
+    provinces: (state.provinces ?? createProvinces()).map(province => ({
+        ...province,
+        works: province.works ?? {},
+    })),
+});
+
+/** Run a stored state forward through every migration newer than its version. */
+const migrate = (state: GameState, from: number): GameState => {
+    let next = state;
+    if (from < 5) next = migrateToV5(next);
+    if (from < 6) next = migrateToV6(next);
+    return next;
+};
 
 export const loadRun = (): SavedRun | null => {
     try {
@@ -46,13 +72,19 @@ export const loadRun = (): SavedRun | null => {
         if (!parsed.gameState?.country || !parsed.gameState.countryName) return null;
 
         const version = parsed.version as number | undefined;
-        if (version !== SAVE_VERSION && version !== MIGRATABLE_FROM) return null;
+        // A range, not two equality checks. Testing only against the current and
+        // oldest-supported versions silently discards every save written by an
+        // intermediate one — which is exactly what happens on the next bump, to
+        // the runs of anyone who was mid-game when it shipped.
+        if (typeof version !== 'number' || version < MIGRATABLE_FROM || version > SAVE_VERSION) {
+            return null;
+        }
 
         return {
             ...(parsed as SavedRun),
             version: SAVE_VERSION,
             gameState:
-                version === SAVE_VERSION ? parsed.gameState : migrateFromV4(parsed.gameState),
+                version === SAVE_VERSION ? parsed.gameState : migrate(parsed.gameState, version),
         };
     } catch {
         return null;
