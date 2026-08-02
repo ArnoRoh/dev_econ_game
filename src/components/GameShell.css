@@ -85,9 +85,16 @@
     color: var(--color-danger);
 }
 
+/* Wraps rather than overflowing: the nav grows as features are added — Settings
+   was the fourth button — and a fixed row silently pushes the last one off the
+   right edge of a narrow screen, taking the whole page's horizontal scroll with
+   it. `min-width: 0` lets it actually shrink inside the header's flex row. */
 .shell-nav {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 8px;
+    min-width: 0;
 }
 
 .shell-nav button {

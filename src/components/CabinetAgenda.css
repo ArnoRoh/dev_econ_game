@@ -1,7 +1,7 @@
 .cabinet-agenda {
     width: min(1120px, 100%);
     margin: 0 auto;
-    animation: cabinet-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1);
+    animation: cabinet-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
 }
 
 @keyframes cabinet-in {
@@ -11,22 +11,6 @@
     }
     to {
         opacity: 1;
-        transform: none;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .cabinet-agenda {
-        animation: none;
-    }
-
-    .cabinet-action-pip,
-    .proposal-card,
-    .proposal-open {
-        transition: none;
-    }
-
-    .proposal-card:hover:not(.is-disabled) {
         transform: none;
     }
 }
@@ -74,10 +58,14 @@
     border-radius: 50%;
     border: 1px solid rgba(212, 175, 55, 0.5);
     background: transparent;
-    transition: background 200ms ease;
+    /* Spending an action reads as the pip settling from full to spent, or
+       back, on its own scale rather than a flat colour swap. */
+    transform: scale(0.62);
+    transition: transform 280ms cubic-bezier(0.2, 0.8, 0.3, 1), background 220ms ease;
 }
 
 .cabinet-action-pip.is-available {
+    transform: scale(1);
     background: var(--color-primary);
     box-shadow: 0 0 10px rgba(212, 175, 55, 0.6);
 }
@@ -109,6 +97,26 @@
     border: 1px solid #3a3a34;
     border-radius: 8px;
     transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    animation: proposal-deal 440ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+/* Cards are dealt onto the table in order — the same order the corner numbers
+   already read in, so the motion and the keyboard shortcut agree. */
+.proposal-card:nth-child(1) { animation-delay: 60ms; }
+.proposal-card:nth-child(2) { animation-delay: 150ms; }
+.proposal-card:nth-child(3) { animation-delay: 240ms; }
+.proposal-card:nth-child(4) { animation-delay: 330ms; }
+.proposal-card:nth-child(n+5) { animation-delay: 330ms; }
+
+@keyframes proposal-deal {
+    from {
+        opacity: 0;
+        transform: translateY(-18px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
 }
 
 .proposal-card:hover:not(.is-disabled) {
@@ -140,6 +148,33 @@
     align-items: center;
     gap: 10px;
     margin-bottom: 14px;
+}
+
+/* Gives the portrait a seat at the table: a soft shadow grounds it like a
+   figure sitting opposite you, and it settles half a pixel closer on hover —
+   the same lift the card itself gets, echoed on the person raising the matter. */
+.proposal-portrait-seat {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    transition: transform 180ms ease;
+}
+
+.proposal-portrait-seat::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -5px;
+    width: 60%;
+    height: 7px;
+    transform: translateX(-50%);
+    background: radial-gradient(closest-side, rgba(0, 0, 0, 0.5), transparent 75%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.proposal-card:hover:not(.is-disabled) .proposal-portrait-seat {
+    transform: translateY(-1px);
 }
 
 .proposal-avatar {
@@ -243,11 +278,18 @@
     letter-spacing: 0.06em;
     text-transform: uppercase;
     cursor: pointer;
-    transition: background 160ms ease;
+    transition: background 160ms ease, transform 120ms ease;
 }
 
 .proposal-open:hover:not(:disabled) {
     background: rgba(212, 175, 55, 0.24);
+}
+
+/* A clear pressed state: the button settles down and in, so committing to
+   opening a dossier reads as a physical push rather than a colour swap. */
+.proposal-open:active:not(:disabled) {
+    transform: translateY(1px) scale(0.98);
+    background: rgba(212, 175, 55, 0.3);
 }
 
 .proposal-open:disabled {
@@ -337,4 +379,58 @@
     vertical-align: -3px;
     margin-right: 7px;
     opacity: 0.85;
+}
+
+/* Reduced motion wins the cascade from here down: entrance animations
+   collapse to their settled end state and every hover/press transition is
+   removed, but the state itself (available pip scale, hover lift, etc.) is
+   untouched, so nothing sits in the wrong place. */
+@media (prefers-reduced-motion: reduce) {
+    .cabinet-agenda,
+    .proposal-card {
+        animation: none;
+    }
+
+    .cabinet-action-pip,
+    .proposal-card,
+    .proposal-open,
+    .proposal-portrait-seat {
+        transition: none;
+    }
+
+    .proposal-card:hover:not(.is-disabled) {
+        transform: none;
+    }
+
+    .proposal-card:hover:not(.is-disabled) .proposal-portrait-seat {
+        transform: none;
+    }
+
+    .proposal-open:active:not(:disabled) {
+        transform: none;
+    }
+}
+
+:root[data-reduce-motion='true'] .cabinet-agenda,
+:root[data-reduce-motion='true'] .proposal-card {
+    animation: none;
+}
+
+:root[data-reduce-motion='true'] .cabinet-action-pip,
+:root[data-reduce-motion='true'] .proposal-card,
+:root[data-reduce-motion='true'] .proposal-open,
+:root[data-reduce-motion='true'] .proposal-portrait-seat {
+    transition: none;
+}
+
+:root[data-reduce-motion='true'] .proposal-card:hover:not(.is-disabled) {
+    transform: none;
+}
+
+:root[data-reduce-motion='true'] .proposal-card:hover:not(.is-disabled) .proposal-portrait-seat {
+    transform: none;
+}
+
+:root[data-reduce-motion='true'] .proposal-open:active:not(:disabled) {
+    transform: none;
 }

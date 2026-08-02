@@ -2,27 +2,36 @@
     width: min(1000px, 100%);
     margin: 0 auto;
     padding: 28px 32px 32px;
-    background: linear-gradient(180deg, #f2ece0 0%, #e9e1d2 100%);
+    /* Two faint layers of newsprint noise (a fine dot halftone and a hairline
+       grain) sit under the paper gradient. Both are CSS-only — no image asset. */
+    background:
+        radial-gradient(circle at 1px 1px, rgba(29, 26, 21, 0.05) 0.6px, transparent 0.6px),
+        repeating-linear-gradient(
+            0deg,
+            rgba(29, 26, 21, 0.028) 0px,
+            rgba(29, 26, 21, 0.028) 1px,
+            transparent 1px,
+            transparent 3px
+        ),
+        linear-gradient(180deg, #f2ece0 0%, #e9e1d2 100%);
+    background-size: 3px 3px, auto, auto;
     color: #1d1a15;
     border-radius: 4px;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
-    animation: newspaper-in 380ms cubic-bezier(0.2, 0.8, 0.3, 1);
+    transform-origin: top center;
+    animation: newspaper-in 460ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
 }
 
+/* Arrives like a printed sheet dropped onto the desk: a touch of rotation and
+   scale reads as a physical object settling, not a panel sliding into place. */
 @keyframes newspaper-in {
     from {
         opacity: 0;
-        transform: translateY(14px) scale(0.985);
+        transform: translateY(-22px) scale(0.97) rotate(-1.1deg);
     }
     to {
         opacity: 1;
         transform: none;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .newspaper {
-        animation: none;
     }
 }
 
@@ -74,6 +83,31 @@
     min-width: 0;
     padding-left: 16px;
     border-left: 3px solid #b9ae98;
+    animation: newspaper-item-in 420ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+    /* Base delay clears the sheet's own settle-in; stagger below builds on it. */
+    animation-delay: 220ms;
+}
+
+/* Headlines land one after another rather than all at once. Capped at eight —
+   past that every item shares the last delay rather than pushing the read
+   further out. */
+.newspaper-item:nth-child(1) { animation-delay: 220ms; }
+.newspaper-item:nth-child(2) { animation-delay: 290ms; }
+.newspaper-item:nth-child(3) { animation-delay: 360ms; }
+.newspaper-item:nth-child(4) { animation-delay: 430ms; }
+.newspaper-item:nth-child(5) { animation-delay: 500ms; }
+.newspaper-item:nth-child(6) { animation-delay: 570ms; }
+.newspaper-item:nth-child(n+7) { animation-delay: 640ms; }
+
+@keyframes newspaper-item-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
 }
 
 .newspaper-item.tone-good {
@@ -158,4 +192,18 @@
     .newspaper-masthead h2 {
         white-space: normal;
     }
+}
+
+/* Reduced motion wins the cascade from here down: every entrance animation
+   added above collapses to its settled end state, with nothing left invisible. */
+@media (prefers-reduced-motion: reduce) {
+    .newspaper,
+    .newspaper-item {
+        animation: none;
+    }
+}
+
+:root[data-reduce-motion='true'] .newspaper,
+:root[data-reduce-motion='true'] .newspaper-item {
+    animation: none;
 }

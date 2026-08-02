@@ -8,6 +8,15 @@ interface YearTransitionProps {
 }
 
 /**
+ * True when motion should be held down, whether that comes from the OS-level
+ * media query or the in-game settings toggle (which stamps the root element
+ * rather than changing the media query the browser reports).
+ */
+const prefersReducedMotion = () =>
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+    document.documentElement.getAttribute('data-reduce-motion') === 'true';
+
+/**
  * A brief beat between the debrief and the next cabinet session.
  *
  * Without it a decade passes in the time it takes to click twice, and nothing
@@ -20,7 +29,7 @@ export function YearTransition({ fromYear, toYear, onDone }: YearTransitionProps
     const doneRef = useRef(false);
 
     useEffect(() => {
-        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const reduced = prefersReducedMotion();
         const hold = reduced ? 260 : 1100;
 
         const finish = () => {
@@ -55,6 +64,9 @@ export function YearTransition({ fromYear, toYear, onDone }: YearTransitionProps
                 <span className="year-turn-to">{toYear}</span>
             </p>
             <p className="year-turn-caption">The year turns</p>
+            <div className="year-turn-progress" aria-hidden="true">
+                <span className="year-turn-progress-fill" />
+            </div>
             <div className="year-turn-rule" aria-hidden="true" />
         </div>
     );

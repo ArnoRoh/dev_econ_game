@@ -106,17 +106,63 @@
     color: #7d766a;
 }
 
+/* A thin ledger-line that fills over the hold, so the pause itself reads as
+   time elapsing rather than as a blank wait between two static screens. */
+.year-turn-progress {
+    width: min(220px, 46vw);
+    height: 2px;
+    border-radius: 2px;
+    background: rgba(212, 175, 55, 0.16);
+    overflow: hidden;
+}
+
+.year-turn-progress-fill {
+    display: block;
+    height: 100%;
+    width: 100%;
+    transform-origin: left center;
+    transform: scaleX(0);
+    background: linear-gradient(90deg, rgba(212, 175, 55, 0.45), var(--color-primary));
+    animation: year-turn-progress-fill 860ms cubic-bezier(0.2, 0.8, 0.3, 1) 180ms both;
+}
+
+@keyframes year-turn-progress-fill {
+    from {
+        transform: scaleX(0);
+    }
+    to {
+        transform: scaleX(1);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .year-turn,
     .year-turn.is-leaving,
     .year-turn-rule,
     .year-turn-from,
-    .year-turn-to {
+    .year-turn-to,
+    .year-turn-progress-fill {
         animation: none;
     }
 
-    /* No cross-fade to read, so only show the year being entered. */
-    .year-turn-from {
+    /* No cross-fade to read, so only show the year being entered, and drop
+       the fill sweep — the hold is too short for it to read as motion. */
+    .year-turn-from,
+    .year-turn-progress {
         display: none;
     }
+}
+
+:root[data-reduce-motion='true'] .year-turn,
+:root[data-reduce-motion='true'] .year-turn.is-leaving,
+:root[data-reduce-motion='true'] .year-turn-rule,
+:root[data-reduce-motion='true'] .year-turn-from,
+:root[data-reduce-motion='true'] .year-turn-to,
+:root[data-reduce-motion='true'] .year-turn-progress-fill {
+    animation: none;
+}
+
+:root[data-reduce-motion='true'] .year-turn-from,
+:root[data-reduce-motion='true'] .year-turn-progress {
+    display: none;
 }

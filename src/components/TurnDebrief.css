@@ -1,23 +1,19 @@
 .debrief {
     width: min(820px, 100%);
     margin: 0 auto;
-    animation: debrief-in 300ms cubic-bezier(0.2, 0.8, 0.3, 1);
+    /* The debrief is the payoff of the turn, so it settles slower and heavier
+       than the panels either side of it. */
+    animation: debrief-in 460ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
 }
 
 @keyframes debrief-in {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(16px);
     }
     to {
         opacity: 1;
         transform: none;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .debrief {
-        animation: none;
     }
 }
 
@@ -55,6 +51,23 @@
     background: rgba(255, 255, 255, 0.025);
     border: 1px solid #3a3a34;
     border-radius: 8px;
+    animation: debrief-entry-in 440ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+.debrief-entry:nth-of-type(1) { animation-delay: 120ms; }
+.debrief-entry:nth-of-type(2) { animation-delay: 220ms; }
+.debrief-entry:nth-of-type(3) { animation-delay: 320ms; }
+.debrief-entry:nth-of-type(n+4) { animation-delay: 420ms; }
+
+@keyframes debrief-entry-in {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
 }
 
 .debrief-entry-title {
@@ -110,18 +123,54 @@
     border-radius: 999px;
     font-size: 0.74rem;
     font-weight: 700;
+    animation-duration: 360ms;
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1);
+    animation-fill-mode: both;
 }
 
+/* These are the numbers the whole turn was building to, so a gain and a loss
+   are not only coloured apart — a gain rises into place from below, a loss
+   drops in from above, the same distinction a ledger clerk's hand would make. */
 .debrief-effects .is-good,
 .debrief-faction-delta.is-good {
     background: rgba(129, 199, 132, 0.14);
     color: var(--color-success);
+    animation-name: debrief-figure-rise;
 }
 
 .debrief-effects .is-bad,
 .debrief-faction-delta.is-bad {
     background: rgba(229, 115, 115, 0.14);
     color: var(--color-danger);
+    animation-name: debrief-figure-drop;
+}
+
+.debrief-effects li:nth-child(1) { animation-delay: 260ms; }
+.debrief-effects li:nth-child(2) { animation-delay: 320ms; }
+.debrief-effects li:nth-child(3) { animation-delay: 380ms; }
+.debrief-effects li:nth-child(4) { animation-delay: 440ms; }
+.debrief-effects li:nth-child(n+5) { animation-delay: 500ms; }
+
+@keyframes debrief-figure-rise {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes debrief-figure-drop {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
 }
 
 .debrief-factions {
@@ -137,6 +186,24 @@
     align-items: center;
     padding: 5px 0;
     font-size: 0.82rem;
+    animation: debrief-row-in 300ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+.debrief-factions li:nth-child(1) { animation-delay: 260ms; }
+.debrief-factions li:nth-child(2) { animation-delay: 320ms; }
+.debrief-factions li:nth-child(3) { animation-delay: 380ms; }
+.debrief-factions li:nth-child(4) { animation-delay: 440ms; }
+.debrief-factions li:nth-child(n+5) { animation-delay: 500ms; }
+
+@keyframes debrief-row-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
 }
 
 .debrief-faction-name {
@@ -149,6 +216,12 @@
     border-radius: 999px;
     font-size: 0.72rem;
     font-weight: 700;
+    /* Lands a beat after its own row, and rises or drops like the figures
+       in the effects list above. */
+    animation-duration: 320ms;
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1);
+    animation-fill-mode: both;
+    animation-delay: 160ms;
 }
 
 .debrief-grievance {
@@ -204,4 +277,24 @@
     background: rgba(229, 115, 115, 0.1);
     border-left: 3px solid var(--color-danger);
     color: #dfc0c0;
+}
+
+/* Reduced motion wins the cascade from here down: the debrief still lands,
+   but instantly, at its final position, with every number already in place. */
+@media (prefers-reduced-motion: reduce) {
+    .debrief,
+    .debrief-entry,
+    .debrief-effects li,
+    .debrief-factions li,
+    .debrief-faction-delta {
+        animation: none;
+    }
+}
+
+:root[data-reduce-motion='true'] .debrief,
+:root[data-reduce-motion='true'] .debrief-entry,
+:root[data-reduce-motion='true'] .debrief-effects li,
+:root[data-reduce-motion='true'] .debrief-factions li,
+:root[data-reduce-motion='true'] .debrief-faction-delta {
+    animation: none;
 }

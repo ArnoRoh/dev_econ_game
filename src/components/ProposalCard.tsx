@@ -62,7 +62,9 @@ export function ProposalCard({
             )}
 
             <header className="proposal-sponsor">
-                <Portrait characterId={proposal.sponsorId} size={42} />
+                <span className="proposal-portrait-seat">
+                    <Portrait characterId={proposal.sponsorId} size={42} />
+                </span>
                 <span className="proposal-sponsor-text">
                     <strong>{sponsor.name}</strong>
                     <span className="proposal-sponsor-title">{sponsor.title}</span>

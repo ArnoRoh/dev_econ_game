@@ -6,23 +6,20 @@
     border: 1px solid #3d3d35;
     border-radius: 10px;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-    animation: dossier-in 260ms cubic-bezier(0.2, 0.8, 0.3, 1);
+    transform-origin: top center;
+    animation: dossier-in 340ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
 }
 
+/* Opens like a folder laid flat on the table: it unfolds down from its top
+   edge rather than merely sliding up, without animating height itself. */
 @keyframes dossier-in {
     from {
         opacity: 0;
-        transform: translateY(12px);
+        transform: translateY(-14px) scaleY(0.96);
     }
     to {
         opacity: 1;
         transform: none;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .dossier {
-        animation: none;
     }
 }
 
@@ -117,6 +114,19 @@
 
 .dossier-accordion-body {
     padding: 0 0 18px;
+    transform-origin: top center;
+    animation: dossier-reveal 260ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+@keyframes dossier-reveal {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
 }
 
 .dossier-concept-summary {
@@ -299,12 +309,27 @@
     border-top: 1px solid #33332c;
 }
 
+/* The reveal on selecting an option is staged, not simultaneous: rationale,
+   then the advisor forecasts, then the prediction prompt and the commit
+   button, each a beat behind the last. */
 .dossier-rationale {
     margin: 12px 0 16px;
     font-size: 0.88rem;
     font-style: italic;
     line-height: 1.6;
     color: #b0a894;
+    animation: dossier-stage-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+@keyframes dossier-stage-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
 }
 
 .dossier-forecasts {
@@ -318,7 +343,14 @@
     gap: 10px;
     padding: 10px 0;
     border-top: 1px solid #2c2c26;
+    animation: dossier-stage-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
 }
+
+/* Advisors speak up one at a time, on top of the rationale's own delay. */
+.dossier-forecast:nth-child(1) { animation-delay: 90ms; }
+.dossier-forecast:nth-child(2) { animation-delay: 170ms; }
+.dossier-forecast:nth-child(3) { animation-delay: 250ms; }
+.dossier-forecast:nth-child(n+4) { animation-delay: 330ms; }
 
 .dossier-forecast-dir {
     flex-shrink: 0;
@@ -364,6 +396,8 @@
 
 .dossier-commit {
     width: 100%;
+    animation: dossier-stage-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+    animation-delay: 420ms;
 }
 
 .dossier-footer {
@@ -403,6 +437,8 @@
 }
 
 .dossier-predict {
+    animation: dossier-stage-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+    animation-delay: 360ms;
     padding: 14px;
     margin-bottom: 14px;
     background: rgba(212, 175, 55, 0.05);
@@ -458,4 +494,26 @@
 
 .dossier-sponsor-row .dossier-sponsor {
     margin: 0;
+}
+
+/* Reduced motion wins the cascade from here down: every entrance and staged
+   reveal collapses to its settled end state — nothing stays hidden. */
+@media (prefers-reduced-motion: reduce) {
+    .dossier,
+    .dossier-accordion-body,
+    .dossier-rationale,
+    .dossier-forecast,
+    .dossier-predict,
+    .dossier-commit {
+        animation: none;
+    }
+}
+
+:root[data-reduce-motion='true'] .dossier,
+:root[data-reduce-motion='true'] .dossier-accordion-body,
+:root[data-reduce-motion='true'] .dossier-rationale,
+:root[data-reduce-motion='true'] .dossier-forecast,
+:root[data-reduce-motion='true'] .dossier-predict,
+:root[data-reduce-motion='true'] .dossier-commit {
+    animation: none;
 }
