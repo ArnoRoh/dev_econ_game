@@ -18,11 +18,28 @@ This is a small, client-only economic policy roguelite built with React 19, Type
 
 More specific `AGENTS.md` files under `src/engine/` and `src/data/` override this guidance for those areas.
 
-## The turn loop
+## The session loop
 
-A turn runs: newspaper of landed consequences -> cabinet agenda of three or four
-proposals with two action slots -> policy dossier -> decision -> debrief ->
-optional knowledge check -> the simulated year.
+The campaign is **twenty-five cabinet sessions**, not seventy annual turns.
+`GameState.turn` is the session index; `src/data/chapters.ts` owns the schedule
+and asserts its own invariants at module load (twenty-five sittings, spans
+summing to seventy years, 1960 to 2030).
+
+An ordinary session runs: newspaper of landed consequences -> cabinet agenda of
+three or four proposals with two action slots -> policy dossier -> decision ->
+debrief -> optional knowledge check -> the simulated years.
+
+A **crisis session** runs instead: newspaper -> crisis -> decision -> debrief.
+The agenda is suspended entirely and the whole sitting goes to the crisis.
+
+`src/engine/chapterLogic.ts` owns the per-year loop for both. It is the only
+place that sequence lives — `App.tsx` and `scripts/simulate-agenda.mjs` both
+call `runChapter`, so the balance simulation exercises the real code rather
+than a reimplementation of it. Do not inline a year loop anywhere else.
+
+Authored `delayTurns` and `deadlineTurns` throughout `src/data` are **years**;
+the corpus predates multi-year sessions. They are converted at the point of use
+with `yearsToChapters`, never rewritten in the data.
 
 - Exact numeric effects must never appear before a decision. The dossier shows
   qualitative advisor forecasts; numbers are revealed in the debrief and archive.
@@ -78,8 +95,14 @@ For Electron development, start `npm run dev` first, then run `npm run electron:
 ## Change discipline
 
 - When changing balance, explain the intended player-facing tradeoff in the change summary.
-- Keep the five-year project cadence aligned between `buildProject` and the project-due check in `App.tsx`.
-- Keep the diplomacy cadence aligned between `signDiplomaticPact` and the diplomacy-due check in `App.tsx`: 1965, then every ten years.
+- Cadences are **session-based**, never `year % n`. The sitting years are irregular
+  and only four of the twenty-five are divisible by five, so a year test silently
+  stops firing. `isDevelopmentPlanChapter` and `isSummitChapter` in
+  `src/data/chapters.ts` are the single source for both; `buildProject`,
+  `signDiplomaticPact` and the due-checks in `App.tsx` all read them.
+- Development-plan sessions and crisis sessions are authored not to collide. If
+  you move either, re-check that they stay disjoint — a milestone and a world
+  emergency in one sitting will bury one of them.
 - Preserve the unresolved agenda and turn phase when changing autosave behavior; reloading must not let a player skip a decision or re-take a spent action.
 - Bump `SAVE_VERSION` in `src/saveGame.ts` whenever the stored shape changes.
 - When adding a stat, update the type, initial value, clamping rules if applicable, simulation behavior, dashboard display, and relevant content together.

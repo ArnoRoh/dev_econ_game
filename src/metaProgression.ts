@@ -109,9 +109,15 @@ export function memoryFromRun(state: GameState, score: number): number {
     );
 }
 
-const mergeAdvisorRecords = (
+/**
+ * Pool two sets of advisor records.
+ *
+ * Used both to fold a finished run into the profile and, live, to show the
+ * dossier this run's forecasts on top of every previous run's.
+ */
+export const mergeCalibration = (
     base: Partial<Record<CharacterId, AdvisorRecord>>,
-    incoming: Partial<Record<CharacterId, AdvisorRecord>>,
+    incoming: Partial<Record<CharacterId, AdvisorRecord>> = {},
 ): Partial<Record<CharacterId, AdvisorRecord>> => {
     const merged: Partial<Record<CharacterId, AdvisorRecord>> = { ...base };
 
@@ -153,7 +159,7 @@ export function recordRun(
         furthestYear: Math.max(profile.furthestYear, state.year),
         institutionalMemory: memory,
         unlocked,
-        advisorRecords: mergeAdvisorRecords(profile.advisorRecords, state.advisorCalibration ?? {}),
+        advisorRecords: mergeCalibration(profile.advisorRecords, state.advisorCalibration ?? {}),
         conceptsSeen: unique([
             ...profile.conceptsSeen,
             ...(Object.keys(state.conceptProgress ?? {}) as ConceptId[]),

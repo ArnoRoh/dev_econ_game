@@ -8,6 +8,12 @@ interface TurnDebriefProps {
     year: number;
     entries: TurnDebriefEntry[];
     ignoredTitles: string[];
+    /**
+     * The year the next session sits in. A session covers several years now, so
+     * the button has to name what the player is actually skipping past —
+     * "let the year run" was true when a turn was a year and is not any more.
+     */
+    nextYear?: number;
     onContinue: () => void;
 }
 
@@ -27,7 +33,7 @@ function splitLedgerLabel(label: string): [string, string] {
  * dossier opened: this is what you chose, this is what it did, and this is the
  * thing that has not happened yet but will.
  */
-export function TurnDebrief({ year, entries, ignoredTitles, onContinue }: TurnDebriefProps) {
+export function TurnDebrief({ year, entries, ignoredTitles, nextYear, onContinue }: TurnDebriefProps) {
     return (
         <section className="debrief" aria-label={`Cabinet debrief for ${year}`}>
             <header className="debrief-header">
@@ -37,7 +43,7 @@ export function TurnDebrief({ year, entries, ignoredTitles, onContinue }: TurnDe
 
             {entries.length === 0 && (
                 <p className="debrief-empty">
-                    You took no action this year. The cabinet notes it, and so does everyone who was waiting.
+                    You took no action this session. The cabinet notes it, and so does everyone who was waiting.
                 </p>
             )}
 
@@ -58,7 +64,7 @@ export function TurnDebrief({ year, entries, ignoredTitles, onContinue }: TurnDe
 
                         {effects.length > 0 && (
                             <div className="debrief-block">
-                                <h4 className="debrief-block-title">Measured this year</h4>
+                                <h4 className="debrief-block-title">Measured at once</h4>
                                 <ul className="debrief-ledger">
                                     {effects.map(effect => {
                                         const [name, value] = splitLedgerLabel(effect.label);
@@ -181,7 +187,9 @@ export function TurnDebrief({ year, entries, ignoredTitles, onContinue }: TurnDe
             )}
 
             <button type="button" className="primary-button debrief-continue" onClick={onContinue} autoFocus>
-                Let the year run
+                {nextYear && nextYear > year + 1
+                    ? `Rise until ${nextYear}`
+                    : 'Let the year run'}
             </button>
         </section>
     );

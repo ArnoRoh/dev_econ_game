@@ -10,7 +10,7 @@ import {
 import { runChapter } from './engine/chapterLogic';
 import { activeCrisis, resolveCrisis, severityOf } from './engine/crisisLogic';
 import { TOTAL_CHAPTERS, chapterAt, isDevelopmentPlanChapter, isSummitChapter } from './data/chapters';
-import { loadProfile, recordRun, saveProfile } from './metaProgression';
+import { loadProfile, mergeCalibration, recordRun, saveProfile } from './metaProgression';
 import type { MetaProfile } from './metaProgression';
 import { CrisisSession } from './components/CrisisSession';
 import { ProfilePanel } from './components/ProfilePanel';
@@ -730,6 +730,12 @@ function App() {
   const sessionCrisis = activeCrisis(state);
   const session = chapterAt(state.turn);
 
+  // The advisor record the dossier shows is this run's forecasts on top of every
+  // previous run's. A minister's habits are a property of the office, not of the
+  // campaign, and pooling is what makes the record trustworthy early on — three
+  // judged forecasts arrive much sooner across five runs than within one.
+  const pooledCalibration = mergeCalibration(profile.advisorRecords, state.advisorCalibration);
+
   const projectDue = isDevelopmentPlanChapter(state.turn) && state.lastProjectYear !== state.year && hasAvailableProject;
   const diplomacyDue = isSummitChapter(state.turn) && state.lastDiplomacyYear !== state.year;
   const milestoneDue = projectDue || diplomacyDue;
@@ -887,6 +893,8 @@ function App() {
               proposal={openProposal}
               characters={state.characters}
               advisorInsight={state.advisorInsight ?? 0}
+              calibration={pooledCalibration}
+              unlockedIds={state.unlockedIds}
               onSpendInsight={() => setGameState(spendAdvisorInsight(state))}
               onConfirm={(option, prediction) => handleConfirmOption(openProposal, option, prediction)}
               onReject={() => handleRejectProposal(openProposal)}
@@ -899,6 +907,7 @@ function App() {
               year={state.year}
               entries={debriefEntries}
               ignoredTitles={ignoredTitles}
+              nextYear={session.year + session.span}
               onContinue={handleDebriefContinue}
             />
           )}

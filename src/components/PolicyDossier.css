@@ -679,3 +679,17 @@
 :root[data-reduce-motion='true'] .dossier-accordion-body {
     transform: none;
 }
+
+/* The advisor's track record, shown with `advisor_record` unlocked. Set below
+   the forecast in a quieter weight: it is metadata about who is speaking, not
+   part of what they said. */
+.dossier-forecast-record {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    opacity: 0.72;
+    font-variant-numeric: tabular-nums;
+    border-left: 2px solid currentColor;
+    padding-left: 0.5rem;
+}

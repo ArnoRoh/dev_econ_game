@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type {
+    AdvisorRecord,
     CharacterId,
     CharacterState,
     EducationalPolicyOption,
@@ -10,6 +11,7 @@ import { CHARACTERS_BY_ID } from '../data/characters';
 import { FACTIONS_BY_ID } from '../data/factions';
 import { ECONOMIC_CONCEPTS } from '../data/concepts';
 import { headlineMetric } from '../engine/learningLogic';
+import { accuracyOf, advisorReading } from '../engine/calibrationLogic';
 import { Portrait } from './Portrait';
 import { SOURCES } from '../data/sources';
 import './PolicyDossier.css';
@@ -34,6 +36,14 @@ interface PolicyDossierProps {
     proposal: PolicyProposal;
     characters?: Record<CharacterId, CharacterState>;
     advisorInsight: number;
+    /**
+     * Per-advisor forecast records, pooled from the player's previous runs and
+     * this one. Shown only with `advisor_record` unlocked — the whole point of
+     * the unlock is that a state which has governed before knows who to believe.
+     */
+    calibration?: Partial<Record<CharacterId, AdvisorRecord>>;
+    /** Unlock ids for this run, fixed at run start. */
+    unlockedIds?: string[];
     onSpendInsight: () => void;
     onConfirm: (option: EducationalPolicyOption, prediction: PredictionChoice | null) => void;
     onReject: () => void;
@@ -89,6 +99,8 @@ export function PolicyDossier({
     proposal,
     characters,
     advisorInsight,
+    calibration,
+    unlockedIds,
     onSpendInsight,
     onConfirm,
     onReject,
@@ -98,6 +110,11 @@ export function PolicyDossier({
     const [openSection, setOpenSection] = useState<string | null>(null);
     const [insightUsed, setInsightUsed] = useState(false);
     const [prediction, setPrediction] = useState<PredictionChoice | null>(null);
+
+    const showRecord = (unlockedIds ?? []).includes('advisor_record');
+    // `advisor_bias` names the lean permanently; spending insight still reveals
+    // it for a single dossier, which is what a government without the record does.
+    const showBias = (unlockedIds ?? []).includes('advisor_bias');
 
     const sponsor = CHARACTERS_BY_ID[proposal.sponsorId];
     const sponsorFaction = FACTIONS_BY_ID[sponsor.factionId];
@@ -342,10 +359,24 @@ export function PolicyDossier({
                                                                 ? ` · ${forecast.affectedMetric}`
                                                                 : ''}{' '}
                                                             · {shownConfidence} confidence
-                                                            {insightUsed && forecast.hiddenBias
+                                                            {(insightUsed || showBias) && forecast.hiddenBias
                                                                 ? ` · interest: ${forecast.hiddenBias}`
                                                                 : ''}
                                                         </span>
+                                                        {showRecord && (() => {
+                                                            // The record describes the adviser, never the
+                                                            // option, so this reveals no number about a
+                                                            // decision that has not been taken yet.
+                                                            const record = calibration?.[forecast.advisorId];
+                                                            const accuracy = record ? accuracyOf(record) : null;
+                                                            if (!record || accuracy === null) return null;
+                                                            return (
+                                                                <span className="dossier-forecast-record">
+                                                                    Track record: {Math.round(accuracy * 100)}% over{' '}
+                                                                    {record.judged} judged · {advisorReading(record)}
+                                                                </span>
+                                                            );
+                                                        })()}
                                                     </span>
                                                 </li>
                                             );
