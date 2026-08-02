@@ -23,3 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 release/
+
+# Throwaway harness entry points. Bundling a component in isolation (esbuild +
+# Playwright, to look at a portrait at four sizes or a map at three development
+# levels) needs its entry file to sit where `react` resolves from, which means
+# the project root. These are scratch and must never be committed.
+__*_harness_entry.tsx
+.*-harness.tsx
