@@ -274,8 +274,18 @@ function App() {
     setIgnoredTitles([]);
     playCue('year');
 
+    // The page turn is the sound of the paper arriving; the warning is what is
+    // printed on it. Bad news gets its own cue so the player hears that something
+    // has gone wrong before they have finished reading the headline — and it
+    // fires once for the edition, not once per bad story, which at four
+    // consequences in a year would be an alarm rather than a warning.
     const headlines = newspaperForTurn(state, state.turn);
-    if (headlines.length > 0) playCue('page');
+    if (headlines.length > 0) {
+      playCue('page');
+      if (headlines.some(item => item.tone === 'bad')) {
+        window.setTimeout(() => playCue('warn'), 520);
+      }
+    }
     setTurnPhase(headlines.length > 0 ? 'newspaper' : 'agenda');
     setYearTurn({ from: crossedInto - 1, to: crossedInto });
   }, [handleGameOver]);
