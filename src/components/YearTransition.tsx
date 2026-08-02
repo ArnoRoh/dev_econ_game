@@ -43,14 +43,32 @@ export function YearTransition({ fromYear, toYear, onDone }: YearTransitionProps
         const fadeTimer = window.setTimeout(() => setLeaving(true), Math.max(0, hold - 220));
         const doneTimer = window.setTimeout(finish, hold);
 
-        const skip = () => finish();
-        window.addEventListener('keydown', skip);
+        // Enter is bound globally in App as "the single forward move for this
+        // phase", so a player moving at speed is usually still on the key, or
+        // already pressing it again, when this mounts. Listening from the first
+        // frame let that momentum skip the transition instantly — the year turned
+        // with nothing visible between one cabinet and the next. Watching keyup
+        // rather than keydown means a held key cannot skip what it just opened,
+        // and the short arming delay covers a fast second press. Neither is
+        // perceptible when the skip is actually wanted.
+        const ARM_DELAY = 320;
+        let armed = false;
+        const skip = () => {
+            if (!armed) return;
+            finish();
+        };
+        const armTimer = window.setTimeout(() => {
+            armed = true;
+        }, ARM_DELAY);
+
+        window.addEventListener('keyup', skip);
         window.addEventListener('pointerdown', skip);
 
         return () => {
             window.clearTimeout(fadeTimer);
             window.clearTimeout(doneTimer);
-            window.removeEventListener('keydown', skip);
+            window.clearTimeout(armTimer);
+            window.removeEventListener('keyup', skip);
             window.removeEventListener('pointerdown', skip);
         };
     }, [onDone]);

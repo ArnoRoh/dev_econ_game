@@ -699,68 +699,79 @@ export function ProvinceMap({
                                 )}
 
                                 {/* Settlement buildings: small inked structures that grow with
-                                    development. Clipped to the province boundary. */}
-                                <g clipPath={`url(#${provinceClipPathId(province.id)})`} aria-hidden="true" pointerEvents="none">
-                                    {settlementBuildings(province.development, province.cx, province.cy).map((building, i) => (
-                                        <g key={`building-${i}`} className="settlement-building">
-                                            <rect
-                                                x={building.x}
-                                                y={building.y}
-                                                width={building.width}
-                                                height={building.height}
-                                                fill="none"
-                                                stroke="rgba(24, 20, 11, 0.85)"
-                                                strokeWidth={0.35}
-                                            />
-                                            {/* Small roof indicator on top */}
-                                            <line
-                                                x1={building.x - 0.1}
-                                                y1={building.y}
-                                                x2={building.x + building.width / 2}
-                                                y2={building.y - 0.6}
-                                                stroke="rgba(24, 20, 11, 0.7)"
-                                                strokeWidth={0.25}
-                                            />
-                                            <line
-                                                x1={building.x + building.width / 2}
-                                                y1={building.y - 0.6}
-                                                x2={building.x + building.width + 0.1}
-                                                y2={building.y}
-                                                stroke="rgba(24, 20, 11, 0.7)"
-                                                strokeWidth={0.25}
-                                            />
-                                        </g>
-                                    ))}
-
-                                    {/* Infrastructure: roads, rails, ports, mines, fields. */}
-                                    {infrastructureElements(province).map((infra, i) => (
-                                        <g
-                                            key={`infra-${i}`}
-                                            className={`infrastructure-${infra.type}`}
-                                            stroke="rgba(24, 20, 11, 0.7)"
-                                            strokeWidth={infra.strokeWidth ?? 0.5}
-                                            fill="none"
-                                            strokeLinecap="round"
-                                        >
-                                            {infra.type === 'rail' ? (
-                                                // Dashed line for rails
-                                                infra.paths.map((p, j) => (
-                                                    <path
-                                                        key={`rail-${j}`}
-                                                        d={p}
-                                                        strokeDasharray="1.5 1"
-                                                        strokeWidth={0.5}
+                                    development. Clipped to the province boundary. Stroke color adapts to
+                                    fill brightness: cream on dark fills, dark on light fills (matching terrain glyph logic). */}
+                                {(() => {
+                                    const buildingStroke = isDarkFill(province.development) ? 'rgba(248, 242, 226, 0.75)' : 'rgba(24, 20, 11, 0.85)';
+                                    const roofStroke = isDarkFill(province.development) ? 'rgba(248, 242, 226, 0.6)' : 'rgba(24, 20, 11, 0.7)';
+                                    return (
+                                        <g clipPath={`url(#${provinceClipPathId(province.id)})`} aria-hidden="true" pointerEvents="none">
+                                            {settlementBuildings(province.development, province.cx, province.cy).map((building, i) => (
+                                                <g key={`building-${i}`} className="settlement-building">
+                                                    <rect
+                                                        x={building.x}
+                                                        y={building.y}
+                                                        width={building.width}
+                                                        height={building.height}
+                                                        fill="none"
+                                                        stroke={buildingStroke}
+                                                        strokeWidth={0.55}
                                                     />
-                                                ))
-                                            ) : (
-                                                // Regular paths for other infrastructure
-                                                infra.paths.map((p, j) => (
-                                                    <path key={`path-${j}`} d={p} />
-                                                ))
-                                            )}
+                                                    {/* Small roof indicator on top */}
+                                                    <line
+                                                        x1={building.x - 0.1}
+                                                        y1={building.y}
+                                                        x2={building.x + building.width / 2}
+                                                        y2={building.y - 1.2}
+                                                        stroke={roofStroke}
+                                                        strokeWidth={0.4}
+                                                    />
+                                                    <line
+                                                        x1={building.x + building.width / 2}
+                                                        y1={building.y - 1.2}
+                                                        x2={building.x + building.width + 0.1}
+                                                        y2={building.y}
+                                                        stroke={roofStroke}
+                                                        strokeWidth={0.4}
+                                                    />
+                                                </g>
+                                            ))}
                                         </g>
-                                    ))}
-                                </g>
+                                    );
+                                })()}
+
+                                    {/* Infrastructure: roads, rails, ports, mines, fields. Stroke color adapts to
+                                        fill brightness like the buildings: cream on dark, dark on light. */}
+                                    {(() => {
+                                        const infraStroke = isDarkFill(province.development) ? 'rgba(248, 242, 226, 0.8)' : 'rgba(24, 20, 11, 0.8)';
+                                        return infrastructureElements(province).map((infra, i) => (
+                                            <g
+                                                key={`infra-${i}`}
+                                                className={`infrastructure-${infra.type}`}
+                                                stroke={infraStroke}
+                                                strokeWidth={infra.strokeWidth ? infra.strokeWidth * 1.4 : 0.7}
+                                                fill="none"
+                                                strokeLinecap="round"
+                                            >
+                                                {infra.type === 'rail' ? (
+                                                    // Dashed line for rails
+                                                    infra.paths.map((p, j) => (
+                                                        <path
+                                                            key={`rail-${j}`}
+                                                            d={p}
+                                                            strokeDasharray="2.1 1.4"
+                                                            strokeWidth={0.7}
+                                                        />
+                                                    ))
+                                                ) : (
+                                                    // Regular paths for other infrastructure
+                                                    infra.paths.map((p, j) => (
+                                                        <path key={`path-${j}`} d={p} />
+                                                    ))
+                                                )}
+                                            </g>
+                                        ));
+                                    })()}
 
                                 {isInvestedThisYear && (
                                     <circle
