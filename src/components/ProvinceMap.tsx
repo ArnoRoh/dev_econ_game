@@ -15,6 +15,8 @@ interface ProvinceMapProps {
     selectedId: string | null;
     onSelect: (provinceId: string | null) => void;
     onBuild: (provinceId: string, programmeId: ProgrammeId, cost: number) => void;
+    /** Year-over-year changes by province id. Absent/empty in the first year. */
+    deltas?: Record<string, { development: number; unrest: number; minerals: number }>;
 }
 
 /* --- development ramp: deep ink -> antique gold -> pale cream ---
@@ -304,6 +306,164 @@ const terrainGlyph = (terrain: Terrain, stroke: string): JSX.Element => {
 };
 
 /**
+ * Settlement buildings are rendered as small inked structures whose quantity and height
+ * scale with development. They appear at thresholds: a couple of dwellings at ~10, a
+ * village cluster at ~30, a town at ~60, and a dense skyline at ~85. Each is drawn with
+ * fine lines matching the antique cartography style.
+ */
+interface SettlementBuilding {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
+/**
+ * Derive settlement buildings positioned below the label anchor to avoid occlusion.
+ * Buildings appear progressively as development rises, and are clipped to stay inside the polygon.
+ * Offset by +8 units vertically positions the cluster below the text label while staying in bounds.
+ * Sizes are 2–3× larger than before so buildings read clearly at typical map zoom levels.
+ */
+const settlementBuildings = (development: number, cx: number, cy: number): SettlementBuilding[] => {
+    const buildings: SettlementBuilding[] = [];
+    const dev = clamp(development, 0, 100);
+    // Offset downward from label anchor to avoid overlap with the province name
+    const offsetY = 8;
+
+    // Threshold 1: ~10 dev — two dwellings, 4×6 and 4×5 units
+    if (dev >= 8) {
+        buildings.push(
+            { x: cx - 6, y: cy + offsetY - 2, width: 4, height: 6 },
+            { x: cx + 2, y: cy + offsetY, width: 4, height: 5 }
+        );
+    }
+
+    // Threshold 2: ~30 dev — village cluster adds 3 more buildings
+    if (dev >= 25) {
+        buildings.push(
+            { x: cx - 9, y: cy + offsetY + 4, width: 4, height: 5 },
+            { x: cx - 2, y: cy + offsetY + 5, width: 4, height: 6 },
+            { x: cx + 5, y: cy + offsetY + 3, width: 4, height: 5 }
+        );
+    }
+
+    // Threshold 3: ~60 dev — town adds 3 taller structures (8–9 units high)
+    if (dev >= 55) {
+        buildings.push(
+            { x: cx - 11, y: cy + offsetY - 4, width: 3.5, height: 9 },
+            { x: cx + 7, y: cy + offsetY - 2, width: 3.5, height: 8 },
+            { x: cx - 5, y: cy + offsetY - 3, width: 3.5, height: 8.5 }
+        );
+    }
+
+    // Threshold 4: ~85 dev — dense skyline adds 3 tallest structures (9–10.5 units high)
+    if (dev >= 80) {
+        buildings.push(
+            { x: cx - 1, y: cy + offsetY - 8, width: 3, height: 10.5 },
+            { x: cx + 3, y: cy + offsetY - 6, width: 3, height: 9.5 },
+            { x: cx - 7, y: cy + offsetY - 1, width: 3, height: 7 }
+        );
+    }
+
+    return buildings;
+};
+
+/**
+ * Infrastructure elements: roads, ports, mines, cultivated fields. Each appears at
+ * appropriate development/resource thresholds and is drawn with fine ink lines.
+ */
+interface InfrastructureElement {
+    type: 'road' | 'rail' | 'port' | 'mine' | 'field';
+    paths: string[];
+    strokeWidth?: number;
+}
+
+const infrastructureElements = (province: Province): InfrastructureElement[] => {
+    const elements: InfrastructureElement[] = [];
+    const { development, cx, cy, coastal, minerals, farmland } = province;
+    const dev = clamp(development, 0, 100);
+
+    // Roads: simple lines extending from the anchor, branching as dev rises
+    if (dev >= 15) {
+        elements.push({
+            type: 'road',
+            paths: [
+                // Main road north
+                `M${cx},${cy} L${cx},${cy - 8}`,
+                // Main road south
+                `M${cx},${cy} L${cx},${cy + 8}`,
+            ],
+            strokeWidth: 0.6,
+        });
+
+        // Branches at higher development
+        if (dev >= 45) {
+            elements.push({
+                type: 'road',
+                paths: [
+                    `M${cx - 3},${cy - 4} L${cx - 7},${cy - 6}`,
+                    `M${cx + 3},${cy - 4} L${cx + 7},${cy - 6}`,
+                ],
+                strokeWidth: 0.5,
+            });
+        }
+    }
+
+    // Rail: dashed lines, only if development is significant
+    if (dev >= 50) {
+        elements.push({
+            type: 'rail',
+            paths: [`M${cx - 6},${cy + 3} L${cx + 6},${cy + 3}`],
+            strokeWidth: 0.5,
+        });
+    }
+
+    // Port: a small anchor symbol on coastal provinces past 50 dev
+    if (coastal && dev >= 50) {
+        elements.push({
+            type: 'port',
+            paths: [
+                // Anchor: vertical shaft
+                `M${cx + 8},${cy + 6} L${cx + 8},${cy + 10}`,
+                // Anchor: flukes
+                `M${cx + 6.5},${cy + 8.5} L${cx + 9.5},${cy + 8.5}`,
+            ],
+            strokeWidth: 0.45,
+        });
+    }
+
+    // Mine: a small headframe where minerals are high
+    if (minerals >= 40 && dev >= 25) {
+        elements.push({
+            type: 'mine',
+            paths: [
+                // Headframe: posts
+                `M${cx - 9},${cy - 8} L${cx - 9},${cy - 5}`,
+                `M${cx - 8},${cy - 8} L${cx - 8},${cy - 5}`,
+                // Headframe: crossbeam
+                `M${cx - 9.2},${cy - 6.8} L${cx - 7.8},${cy - 6.8}`,
+            ],
+            strokeWidth: 0.4,
+        });
+    }
+
+    // Cultivated fields: rows of ploughed furrows where farmland is high
+    if (farmland >= 40 && dev >= 20) {
+        elements.push({
+            type: 'field',
+            paths: [
+                `M${cx - 5},${cy + 5} Q${cx - 2.5},${cy + 6} ${cx},${cy + 5}`,
+                `M${cx - 5},${cy + 7} Q${cx - 2.5},${cy + 8} ${cx},${cy + 7}`,
+                `M${cx - 5},${cy + 9} Q${cx - 2.5},${cy + 10} ${cx},${cy + 9}`,
+            ],
+            strokeWidth: 0.35,
+        });
+    }
+
+    return elements;
+};
+
+/**
  * Provinces render as <polygon role="button"> rather than a real <button> wrapping
  * a <path>: `shape` is a set of points meant for a single shared 100x100 viewBox, so
  * every province has to live inside one <svg> for the choropleth to line up. Nesting
@@ -319,12 +479,14 @@ export function ProvinceMap({
     selectedId,
     onSelect,
     onBuild,
+    deltas,
 }: ProvinceMapProps): JSX.Element {
     const uid = useId();
     const hatchLowId = `pm-hatch-low-${uid}`;
     const hatchHighId = `pm-hatch-high-${uid}`;
     const seaPatternId = `pm-sea-${uid}`;
     const terrainPatternId = (terrain: Terrain, tone: 'ink' | 'cream'): string => `pm-terrain-${terrain}-${tone}-${uid}`;
+    const provinceClipPathId = (provinceId: string): string => `pm-clip-${provinceId}-${uid}`;
     const [hoveredId, setHoveredId] = useState<string | null>(null);
     const [focusedId, setFocusedId] = useState<string | null>(null);
 
@@ -427,6 +589,14 @@ export function ProvinceMap({
                                 </pattern>,
                             ];
                         })}
+
+                        {/* Clip paths: one per province, so settlement and infrastructure
+                            elements stay contained inside their polygon boundaries. */}
+                        {provinces.map(province => (
+                            <clipPath key={`clip-${province.id}`} id={provinceClipPathId(province.id)}>
+                                <polygon points={province.shape} />
+                            </clipPath>
+                        ))}
                     </defs>
 
                     {/* Hydrography and the land frontier sit behind every province and are
@@ -528,6 +698,70 @@ export function ProvinceMap({
                                     />
                                 )}
 
+                                {/* Settlement buildings: small inked structures that grow with
+                                    development. Clipped to the province boundary. */}
+                                <g clipPath={`url(#${provinceClipPathId(province.id)})`} aria-hidden="true" pointerEvents="none">
+                                    {settlementBuildings(province.development, province.cx, province.cy).map((building, i) => (
+                                        <g key={`building-${i}`} className="settlement-building">
+                                            <rect
+                                                x={building.x}
+                                                y={building.y}
+                                                width={building.width}
+                                                height={building.height}
+                                                fill="none"
+                                                stroke="rgba(24, 20, 11, 0.85)"
+                                                strokeWidth={0.35}
+                                            />
+                                            {/* Small roof indicator on top */}
+                                            <line
+                                                x1={building.x - 0.1}
+                                                y1={building.y}
+                                                x2={building.x + building.width / 2}
+                                                y2={building.y - 0.6}
+                                                stroke="rgba(24, 20, 11, 0.7)"
+                                                strokeWidth={0.25}
+                                            />
+                                            <line
+                                                x1={building.x + building.width / 2}
+                                                y1={building.y - 0.6}
+                                                x2={building.x + building.width + 0.1}
+                                                y2={building.y}
+                                                stroke="rgba(24, 20, 11, 0.7)"
+                                                strokeWidth={0.25}
+                                            />
+                                        </g>
+                                    ))}
+
+                                    {/* Infrastructure: roads, rails, ports, mines, fields. */}
+                                    {infrastructureElements(province).map((infra, i) => (
+                                        <g
+                                            key={`infra-${i}`}
+                                            className={`infrastructure-${infra.type}`}
+                                            stroke="rgba(24, 20, 11, 0.7)"
+                                            strokeWidth={infra.strokeWidth ?? 0.5}
+                                            fill="none"
+                                            strokeLinecap="round"
+                                        >
+                                            {infra.type === 'rail' ? (
+                                                // Dashed line for rails
+                                                infra.paths.map((p, j) => (
+                                                    <path
+                                                        key={`rail-${j}`}
+                                                        d={p}
+                                                        strokeDasharray="1.5 1"
+                                                        strokeWidth={0.5}
+                                                    />
+                                                ))
+                                            ) : (
+                                                // Regular paths for other infrastructure
+                                                infra.paths.map((p, j) => (
+                                                    <path key={`path-${j}`} d={p} />
+                                                ))
+                                            )}
+                                        </g>
+                                    ))}
+                                </g>
+
                                 {isInvestedThisYear && (
                                     <circle
                                         key={`ring-${province.id}-${province.lastInvestedYear}`}
@@ -538,6 +772,31 @@ export function ProvinceMap({
                                         aria-hidden="true"
                                         pointerEvents="none"
                                     />
+                                )}
+
+                                {/* Year-over-year delta indicator: small, quiet change badge. */}
+                                {deltas && deltas[province.id] && (
+                                    (() => {
+                                        const delta = deltas[province.id];
+                                        const deltaDev = Math.round(delta.development);
+                                        // Only show if there was measurable change
+                                        if (deltaDev !== 0) {
+                                            const displayDelta = deltaDev > 0 ? `+${deltaDev}` : String(deltaDev);
+                                            return (
+                                                <text
+                                                    className={`province-delta-indicator ${deltaDev > 0 ? 'is-positive' : 'is-negative'}`}
+                                                    x={province.cx}
+                                                    y={province.cy - 11}
+                                                    textAnchor="middle"
+                                                    aria-hidden="true"
+                                                    pointerEvents="none"
+                                                >
+                                                    {displayDelta}
+                                                </text>
+                                            );
+                                        }
+                                        return null;
+                                    })()
                                 )}
 
                                 {/* Last in the group so the name sits above the hatching, the
@@ -686,6 +945,15 @@ export function ProvinceMap({
                                     </span>
                                     <span className="province-stat-value">{Math.round(selected.development)} / 100</span>
                                 </dd>
+                                {deltas && deltas[selected.id] && (
+                                    <div className="province-stat-delta">
+                                        <span className={deltas[selected.id].development !== 0 ? 'has-change' : ''}>
+                                            {deltas[selected.id].development !== 0
+                                                ? `${Math.round(selected.development - deltas[selected.id].development)} → ${Math.round(selected.development)}  (${deltas[selected.id].development > 0 ? '+' : ''}${Math.round(deltas[selected.id].development)} since ${year - 1})`
+                                                : `No change since ${year - 1}`}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <dt>Unrest</dt>
@@ -695,7 +963,26 @@ export function ProvinceMap({
                                     </span>
                                     <span className="province-stat-value">{unrestLabel(selected.unrest)} · {Math.round(selected.unrest)} / 100</span>
                                 </dd>
+                                {deltas && deltas[selected.id] && (
+                                    <div className="province-stat-delta">
+                                        <span className={deltas[selected.id].unrest !== 0 ? 'has-change' : ''}>
+                                            {deltas[selected.id].unrest !== 0
+                                                ? `${Math.round(selected.unrest - deltas[selected.id].unrest)} → ${Math.round(selected.unrest)}  (${deltas[selected.id].unrest > 0 ? '+' : ''}${Math.round(deltas[selected.id].unrest)} since ${year - 1})`
+                                                : `No change since ${year - 1}`}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
+                            {deltas && deltas[selected.id] && deltas[selected.id].minerals !== 0 && (
+                                <div>
+                                    <dt>Minerals</dt>
+                                    <dd>
+                                        <span className="province-stat-delta">
+                                            {Math.round(selected.minerals - deltas[selected.id].minerals)} → {Math.round(selected.minerals)}  ({deltas[selected.id].minerals > 0 ? '+' : ''}{Math.round(deltas[selected.id].minerals)} since {year - 1})
+                                        </span>
+                                    </dd>
+                                </div>
+                            )}
                         </dl>
 
                         <div className="province-detail-tags">

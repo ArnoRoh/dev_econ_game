@@ -1,4 +1,4 @@
-import type { CountryStats, GameState, ProgrammeId, Province, ProvinceSummary, Terrain } from './types';
+import type { CountryStats, GameState, ProgrammeId, Province, ProvinceDelta, ProvinceSummary, Terrain } from './types';
 
 /** The unit the province-investment UI spends per click, in $M. */
 export const INVESTMENT_STEP = 10;
@@ -375,4 +375,54 @@ export function summariseProvinces(provinces: Province[]): ProvinceSummary {
         neglectedId: neglected.id,
         restiveIds,
     };
+}
+
+/**
+ * Compute year-over-year changes in province condition.
+ *
+ * Returns a map keyed by province id, one entry per province where at least one
+ * field changed by 0.5 or more (float noise suppression). When `previous` is
+ * undefined or empty — the first year, or a province new to this run —
+ * returns an empty object. Never throws.
+ *
+ * Values are rounded to the nearest integer so they display cleanly on the map,
+ * matching how province development is shown throughout.
+ */
+export function provinceDeltas(
+    current: Province[],
+    previous: Province[] | undefined,
+): Record<string, ProvinceDelta> {
+    if (!previous || previous.length === 0) {
+        return {};
+    }
+
+    // Index previous provinces by id for O(1) lookup
+    const previousById = new Map(previous.map(p => [p.id, p]));
+
+    const deltas: Record<string, ProvinceDelta> = {};
+    const epsilon = 0.5;
+
+    current.forEach(curr => {
+        const prev = previousById.get(curr.id);
+        if (!prev) return;
+
+        const devDelta = curr.development - prev.development;
+        const unrestDelta = curr.unrest - prev.unrest;
+        const mineralsDelta = curr.minerals - prev.minerals;
+
+        // Only report if at least one field changed meaningfully
+        if (
+            Math.abs(devDelta) >= epsilon ||
+            Math.abs(unrestDelta) >= epsilon ||
+            Math.abs(mineralsDelta) >= epsilon
+        ) {
+            deltas[curr.id] = {
+                development: Math.round(devDelta),
+                unrest: Math.round(unrestDelta),
+                minerals: Math.round(mineralsDelta),
+            };
+        }
+    });
+
+    return deltas;
 }

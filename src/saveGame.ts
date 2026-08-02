@@ -3,6 +3,7 @@ import { createProvinces } from './data/provinces';
 
 const ACTIVE_RUN_KEY = 'dev_econ_active_run';
 /**
+ * v7 adds year-over-year change tracking for provinces (`previousProvinces`).
  * v6 adds per-province development programmes (`works`).
  * v5 added the territorial layer and achievements.
  * v4 added the cabinet turn phase; v3 and earlier have no agenda at all.
@@ -10,9 +11,9 @@ const ACTIVE_RUN_KEY = 'dev_econ_active_run';
  * Old saves are migrated rather than discarded — a run can be forty years deep
  * by the time a version changes, and throwing that away over an added field is
  * not a defensible thing to do to a player. Migration chains, so a v4 save is
- * carried through v5 to v6 rather than needing its own path.
+ * carried through v5 to v6 to v7 rather than needing separate paths.
  */
-const SAVE_VERSION = 6;
+const SAVE_VERSION = 7;
 const MIGRATABLE_FROM = 4;
 
 export interface SavedRun {
@@ -63,11 +64,26 @@ const migrateToV6 = (state: GameState): GameState => ({
     })),
 });
 
+/**
+ * v6 -> v7: initialize year-over-year change tracking for provinces.
+ *
+ * `previousProvinces` is optional and absent (the first year after loading) simply
+ * means deltas cannot be calculated yet, which is correct behaviour. The field is
+ * left undefined here because a loaded save has no "previous year" to compare against.
+ */
+const migrateToV7 = (state: GameState): GameState => ({
+    ...state,
+    // previousProvinces is intentionally left undefined; it will be populated
+    // by the turn advance after the save is restored, once the player advances
+    // the year.
+});
+
 /** Run a stored state forward through every migration newer than its version. */
 const migrate = (state: GameState, from: number): GameState => {
     let next = state;
     if (from < 5) next = migrateToV5(next);
     if (from < 6) next = migrateToV6(next);
+    if (from < 7) next = migrateToV7(next);
     return next;
 };
 

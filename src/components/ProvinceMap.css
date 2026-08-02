@@ -197,6 +197,77 @@
     }
 }
 
+/* --- settlement buildings: appear progressively with development --- */
+
+.settlement-building {
+    animation: settlement-fade-in 400ms ease-out forwards;
+}
+
+@keyframes settlement-fade-in {
+    0% {
+        opacity: 0;
+        transform-origin: center bottom;
+        transform: scaleY(0.8);
+    }
+    100% {
+        opacity: 1;
+        transform: scaleY(1);
+    }
+}
+
+/* --- infrastructure elements: roads, rails, ports, mines, fields --- */
+
+.infrastructure-road,
+.infrastructure-rail,
+.infrastructure-port,
+.infrastructure-mine,
+.infrastructure-field {
+    animation: infrastructure-fade-in 350ms ease-out forwards;
+}
+
+@keyframes infrastructure-fade-in {
+    0% {
+        opacity: 0;
+        stroke-dashoffset: 4;
+    }
+    100% {
+        opacity: 1;
+        stroke-dashoffset: 0;
+    }
+}
+
+/* --- year-over-year delta indicator on map --- */
+
+.province-delta-indicator {
+    font-family: var(--font-serif);
+    font-size: calc(2.5px * var(--pm-scale));
+    font-weight: 600;
+    pointer-events: none;
+    animation: delta-rise-fade 1800ms ease-out forwards;
+}
+
+.province-delta-indicator.is-positive {
+    fill: var(--verdigris-dim);
+}
+
+.province-delta-indicator.is-negative {
+    fill: var(--color-danger);
+}
+
+@keyframes delta-rise-fade {
+    0% {
+        opacity: 0.9;
+        transform: translateY(0);
+    }
+    50% {
+        opacity: 0.8;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-3px);
+    }
+}
+
 /* --- province names --- */
 
 /* The fill ramp runs from near-black to near-white, so no single text colour is
@@ -519,6 +590,19 @@
     color: var(--ink-600);
 }
 
+.province-stat-delta {
+    display: block;
+    margin-top: 3px;
+    font-size: 0.7rem;
+    color: var(--ink-400);
+    line-height: 1.4;
+}
+
+.province-stat-delta .has-change {
+    font-weight: 500;
+    color: var(--ink-500);
+}
+
 .province-detail-tags {
     display: flex;
     flex-wrap: wrap;
@@ -694,6 +778,13 @@
     .province-hatch,
     .province-restive-edge,
     .province-invest-ring,
+    .settlement-building,
+    .infrastructure-road,
+    .infrastructure-rail,
+    .infrastructure-port,
+    .infrastructure-mine,
+    .infrastructure-field,
+    .province-delta-indicator,
     .province-stat-track i,
     .province-programme-button,
     .province-map-wrap.anim-settle,
@@ -709,7 +800,8 @@
         transform: none;
     }
 
-    .province-invest-ring {
+    .province-invest-ring,
+    .province-delta-indicator {
         opacity: 0;
     }
 }
@@ -719,6 +811,13 @@
 :root[data-reduce-motion="true"] .province-hatch,
 :root[data-reduce-motion="true"] .province-restive-edge,
 :root[data-reduce-motion="true"] .province-invest-ring,
+:root[data-reduce-motion="true"] .settlement-building,
+:root[data-reduce-motion="true"] .infrastructure-road,
+:root[data-reduce-motion="true"] .infrastructure-rail,
+:root[data-reduce-motion="true"] .infrastructure-port,
+:root[data-reduce-motion="true"] .infrastructure-mine,
+:root[data-reduce-motion="true"] .infrastructure-field,
+:root[data-reduce-motion="true"] .province-delta-indicator,
 :root[data-reduce-motion="true"] .province-stat-track i,
 :root[data-reduce-motion="true"] .province-programme-button,
 :root[data-reduce-motion="true"] .province-map-wrap.anim-settle,
@@ -734,6 +833,7 @@
     transform: none;
 }
 
-:root[data-reduce-motion="true"] .province-invest-ring {
+:root[data-reduce-motion="true"] .province-invest-ring,
+:root[data-reduce-motion="true"] .province-delta-indicator {
     opacity: 0;
 }

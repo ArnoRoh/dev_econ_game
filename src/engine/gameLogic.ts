@@ -218,6 +218,11 @@ export function advanceTurn(
     }
     const nextYear = state.year + 1;
 
+    // Capture provinces before they advance, so the next turn's delta reporting has
+    // them to compare against. This happens every year so the snapshot is always
+    // exactly one year behind.
+    const snapshotProvinces = state.provinces && state.provinces.length > 0 ? state.provinces : undefined;
+
     return {
         ...state,
         year: nextYear,
@@ -225,6 +230,7 @@ export function advanceTurn(
         country: finalStats,
         treasury,
         lastFiscalBalance: fiscalBalance,
+        previousProvinces: snapshotProvinces,
         economicHistory: [
             ...state.economicHistory,
             {

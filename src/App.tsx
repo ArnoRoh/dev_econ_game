@@ -13,6 +13,7 @@ import {
   INVESTMENT_STEP,
   applyProvincialPressure,
   buildProgramme,
+  provinceDeltas,
   provinceRevenue,
   summariseProvinces,
   tickProvinces,
@@ -772,6 +773,7 @@ function App() {
               selectedId={selectedProvince}
               onSelect={setSelectedProvince}
               onBuild={handleBuild}
+              deltas={provinceDeltas(state.provinces ?? [], state.previousProvinces)}
             />
           )}
 

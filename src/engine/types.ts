@@ -236,6 +236,13 @@ export interface Province {
     works?: Partial<Record<ProgrammeId, number>>;
 }
 
+/** Year-over-year change in a province's condition. */
+export interface ProvinceDelta {
+    development: number; // Signed change since the previous year
+    unrest: number;
+    minerals: number;
+}
+
 /** National roll-up of the territorial layer. */
 export interface ProvinceSummary {
     meanDevelopment: number;
@@ -503,6 +510,8 @@ export interface GameState {
     endingId?: string;
     /** The territorial layer. */
     provinces?: Province[];
+    /** Snapshot of provinces from the prior year, for year-over-year delta reporting. */
+    previousProvinces?: Province[];
     /** Investment budget available to spend on provinces this year, $M. */
     provinceBudget?: number;
     /** Achievement ids already earned. */
