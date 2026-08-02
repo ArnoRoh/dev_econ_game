@@ -1,6 +1,13 @@
 import type { GameState, CountryStats, EventOption, Artifact, GameEvent, DevelopmentProject, DiplomaticPartner } from './types';
 import { createInitialCharacterStates, createInitialFactionStates } from './factionLogic.ts';
 import { createProvinces } from '../data/provinces.ts';
+import { worldPressure } from './worldLogic.ts';
+import {
+    FINAL_YEAR,
+    FIRST_YEAR,
+    isDevelopmentPlanChapter,
+    isSummitChapter,
+} from '../data/chapters.ts';
 
 export const INITIAL_STATS: CountryStats = {
     gdp: 1000,
@@ -76,7 +83,7 @@ export function createInitialState(
 export function buildProject(state: GameState, project: DevelopmentProject): GameState {
     const currentLevel = state.projectLevels[project.id] ?? 0;
     if (
-        state.year % 5 !== 0 ||
+        !isDevelopmentPlanChapter(state.turn) ||
         currentLevel >= project.maxLevel ||
         state.lastProjectYear === state.year ||
         state.treasury < project.treasuryCost
@@ -103,7 +110,7 @@ export function buildProject(state: GameState, project: DevelopmentProject): Gam
 }
 
 export function issueDevelopmentBonds(state: GameState): GameState {
-    if (state.year % 5 !== 0 || state.lastProjectYear === state.year || state.lastBondYear === state.year) return state;
+    if (!isDevelopmentPlanChapter(state.turn) || state.lastProjectYear === state.year || state.lastBondYear === state.year) return state;
 
     return {
         ...state,
@@ -117,11 +124,18 @@ export function issueDevelopmentBonds(state: GameState): GameState {
 }
 
 export function deferDevelopmentPlan(state: GameState): GameState {
-    if (state.year % 5 !== 0 || state.lastProjectYear === state.year) return state;
+    if (!isDevelopmentPlanChapter(state.turn) || state.lastProjectYear === state.year) return state;
     return { ...state, lastProjectYear: state.year };
 }
 
-export function advanceTurn(
+/**
+ * Simulate a single year. Advances `year`; leaves `turn` alone.
+ *
+ * A cabinet session now covers several years (`src/data/chapters.ts`), so the
+ * year loop and the session counter had to come apart. `advanceTurn` below keeps
+ * the old one-year-per-turn behaviour for the legacy annual-event path.
+ */
+export function advanceYear(
     state: GameState,
     projects: DevelopmentProject[] = [],
     partners: DiplomaticPartner[] = [],
@@ -129,6 +143,8 @@ export function advanceTurn(
     if (state.gameOver) return state;
 
     const newStats = { ...state.country };
+    // What the world is doing this year, and how much of it this economy feels.
+    const pressure = worldPressure(state);
 
     // Economic Simulation
     // Stability and Education drive growth potential
@@ -138,15 +154,21 @@ export function advanceTurn(
     const stabilityFactor = (newStats.stability - 50) * 0.05; // +/- 2.5%
     const educationFactor = newStats.educationLevel * 0.03; // +0% to 3%
     const debtServiceCost = (newStats.externalDebt / Math.max(1, newStats.gdp)) * 2.0; // Debt drag
-    const targetGrowth = baseGrowth + stabilityFactor + educationFactor - debtServiceCost;
+    // The decade is part of the target, weighted by how exposed this economy is
+    // to it. A diversified, low-debt republic barely registers a commodity slump;
+    // a mining economy that borrowed abroad feels it twice.
+    const targetGrowth =
+        baseGrowth + stabilityFactor + educationFactor - debtServiceCost + pressure.growthModifier;
 
     // Growth rate creates momentum but trends toward target
     newStats.gdpGrowthRate = newStats.gdpGrowthRate * 0.8 + targetGrowth * 0.2;
 
     newStats.gdp = newStats.gdp * (1 + newStats.gdpGrowthRate / 100);
 
-    // Debt Interest (5%)
-    newStats.externalDebt = newStats.externalDebt * 1.05;
+    // Debt accrues at the world's rate, not a flat one. This is the difference
+    // between borrowing into the petrodollar glut and borrowing into Volcker,
+    // and it is the mechanism the 1982 crisis is built on.
+    newStats.externalDebt = newStats.externalDebt * (1 + pressure.debtInterestRate);
 
     // Dynamic Population Growth (v2.0 Tuned)
     // Base 3.0% (Harder Malthusian Trap)
@@ -209,7 +231,9 @@ export function advanceTurn(
     const finalStats = clampStats(newStats);
     const collectionEfficiency = Math.min(0.85, 0.35 + finalStats.stability * 0.003 + finalStats.educationLevel * 0.002);
     const taxRevenue = finalStats.gdp * 0.04 * collectionEfficiency;
-    const debtService = finalStats.externalDebt * 0.03;
+    // Servicing tracks the same world rate that accrues the principal, so an
+    // era of expensive money shows up in the budget as well as on the balance.
+    const debtService = finalStats.externalDebt * pressure.debtInterestRate * 0.6;
     const fiscalBalance = taxRevenue - debtService;
     let treasury = state.treasury + fiscalBalance;
     if (treasury < 0) {
@@ -226,11 +250,11 @@ export function advanceTurn(
     return {
         ...state,
         year: nextYear,
-        turn: state.turn + 1,
         country: finalStats,
         treasury,
         lastFiscalBalance: fiscalBalance,
         previousProvinces: snapshotProvinces,
+        worldPressure: pressure,
         economicHistory: [
             ...state.economicHistory,
             {
@@ -251,9 +275,24 @@ export function advanceTurn(
     };
 }
 
+/**
+ * One year, one session — the legacy annual path.
+ *
+ * `npm run balance` still exercises the original one-event-per-year loop, and
+ * the annual event corpus is written against it. The cabinet game advances
+ * through `runChapter` in `chapterLogic.ts` instead.
+ */
+export function advanceTurn(
+    state: GameState,
+    projects: DevelopmentProject[] = [],
+    partners: DiplomaticPartner[] = [],
+): GameState {
+    const next = advanceYear(state, projects, partners);
+    return next === state ? state : { ...next, turn: state.turn + 1 };
+}
+
 export function signDiplomaticPact(state: GameState, partner: DiplomaticPartner): GameState {
-    const isSummitYear = state.year >= 1965 && (state.year - 1965) % 10 === 0;
-    if (!isSummitYear || state.lastDiplomacyYear === state.year) return state;
+    if (!isSummitChapter(state.turn) || state.lastDiplomacyYear === state.year) return state;
 
     const newStats = { ...state.country };
     Object.entries(partner.pactEffects).forEach(([key, value]) => {
@@ -287,8 +326,7 @@ export function signDiplomaticPact(state: GameState, partner: DiplomaticPartner)
  * cost you something with every bloc that wanted a commitment.
  */
 export function remainNonAligned(state: GameState): GameState {
-    const isSummitYear = state.year >= 1965 && (state.year - 1965) % 10 === 0;
-    if (!isSummitYear || state.lastDiplomacyYear === state.year) return state;
+    if (!isSummitChapter(state.turn) || state.lastDiplomacyYear === state.year) return state;
 
     const neighborRelations = Object.fromEntries(
         Object.entries(state.neighborRelations).map(([partnerId, relations]) => [
@@ -347,18 +385,23 @@ export const checkGameOver = (state: GameState): GameState => {
     const { stability, eliteSatisfaction, famineRisk, militaryPower } = state.country;
 
     // v1.3 Hard End Date
-    if (state.year >= 2030) {
+    if (state.year >= FINAL_YEAR) {
         return {
             ...state,
             gameOver: true,
-            gameOverReason: 'Term Limit Reached (2030). History will judge your legacy.'
+            gameOverReason: `Term Limit Reached (${FINAL_YEAR}). History will judge your legacy.`
         };
     }
 
-    // The transitional government has a short founding mandate. Let the player
-    // reach the first diplomacy summit and development plan before collapse rules
-    // become active; the underlying risks continue accumulating during this time.
-    if (state.year <= 1965) return state;
+    // The transitional government has a short founding mandate: collapse rules
+    // stay inactive until the player has reached a development plan and a
+    // summit. The underlying risks keep accumulating throughout.
+    //
+    // Both clauses are load-bearing because two loops run through here. The
+    // cabinet game counts sessions, where the founding mandate is the first two
+    // sittings; the legacy annual path counts years, where turn 6 is 1965 and a
+    // session test would end the mandate five years early.
+    if (state.turn <= 2 || state.year <= FIRST_YEAR + 5) return state;
 
     // Coup Logic (Updated v1.3)
     // If military is too strong (>80), they are harder to control.

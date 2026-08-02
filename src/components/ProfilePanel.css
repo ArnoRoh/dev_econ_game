@@ -1,0 +1,136 @@
+/*
+ * The post-run profile. Sits between the ending and the leaderboard, and is
+ * styled to read as a ledger of what carries forward rather than as a reward
+ * screen — the tone of the ending should survive it.
+ */
+
+.profile-panel {
+    max-width: 46rem;
+    margin: 1.5rem auto;
+    padding: 1.25rem 1.4rem;
+    border: 1px solid var(--color-border, #4a4036);
+    border-radius: 6px;
+    text-align: left;
+}
+
+.profile-panel__head h2 {
+    margin: 0 0 0.4rem;
+    font-size: 1.35rem;
+}
+
+.profile-panel__earned {
+    margin: 0 0 1rem;
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+.profile-panel__earned strong {
+    font-size: 1.15rem;
+    color: var(--color-accent, #c8a24a);
+}
+
+.profile-panel__earned span { opacity: 0.72; }
+
+.profile-unlocked {
+    border-left: 3px solid var(--color-accent, #c8a24a);
+    padding: 0.6rem 0 0.6rem 0.9rem;
+    margin-bottom: 1.1rem;
+    animation: profile-unlock-in 520ms ease-out both;
+}
+
+@keyframes profile-unlock-in {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .profile-unlocked { animation: none; }
+}
+
+.profile-unlocked h3,
+.profile-advisors h3 {
+    margin: 0 0 0.5rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    opacity: 0.72;
+}
+
+.profile-unlocked ul,
+.profile-advisors ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.75rem;
+}
+
+.profile-unlocked li strong { font-size: 1rem; }
+
+.profile-unlocked li p {
+    margin: 0.15rem 0;
+    line-height: 1.5;
+    font-size: 0.93rem;
+}
+
+.profile-unlocked li em {
+    font-size: 0.86rem;
+    opacity: 0.68;
+}
+
+.profile-next { margin-bottom: 1.1rem; }
+
+.profile-next__bar {
+    height: 5px;
+    border-radius: 3px;
+    background: color-mix(in srgb, currentColor 14%, transparent);
+    overflow: hidden;
+    margin-bottom: 0.45rem;
+}
+
+.profile-next__fill {
+    height: 100%;
+    background: var(--color-accent, #c8a24a);
+    transition: width 700ms ease-out;
+}
+
+.profile-next p {
+    margin: 0;
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.profile-next__gap { opacity: 0.65; }
+
+.profile-advisors__note {
+    margin: 0 0 0.7rem;
+    font-size: 0.88rem;
+    opacity: 0.75;
+    line-height: 1.5;
+}
+
+.profile-advisor__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.profile-advisor__title {
+    font-size: 0.8rem;
+    opacity: 0.65;
+}
+
+.profile-advisor__score {
+    margin-left: auto;
+    font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.8;
+}
+
+.profile-advisors li p {
+    margin: 0.2rem 0 0;
+    font-size: 0.91rem;
+    line-height: 1.5;
+    opacity: 0.88;
+}

@@ -440,9 +440,36 @@ export interface ForecastAudit {
     verdict?: 'right' | 'wrong' | 'partial';
 }
 
+/**
+ * The world's conditions for one year, and how much of them this republic feels.
+ *
+ * Derived, never stored as authored content: `src/data/worldEras.ts` holds the
+ * decade, `src/engine/worldLogic.ts` decides what it does to a country built
+ * this way.
+ */
+export interface WorldPressure {
+    year: number;
+    era: string;
+    note: string;
+    interestRate: number;
+    commodityPrice: number;
+    exportDemand: number;
+    capitalAvailability: number;
+    /** Era interest rate as a fraction, applied to external debt. */
+    debtInterestRate: number;
+    /** Percentage points added to or taken off growth this year. */
+    growthModifier: number;
+    /** Multiplier on revenue from extractive provinces. */
+    commodityRevenueMultiplier: number;
+    commodityExposure: number;
+    exportExposure: number;
+    debtExposure: number;
+}
+
 /** The phases a single turn moves through. */
 export type TurnPhase =
     | 'newspaper'
+    | 'crisis'
     | 'agenda'
     | 'dossier'
     | 'debrief'
@@ -516,4 +543,37 @@ export interface GameState {
     provinceBudget?: number;
     /** Achievement ids already earned. */
     achievements?: string[];
+    /** World conditions as of the current year, recomputed each session. */
+    worldPressure?: WorldPressure;
+    /** Crisis demanding this session's attention, if the world has intervened. */
+    activeCrisisId?: string | null;
+    /** Crises already answered, so none returns. */
+    resolvedCrisisIds?: string[];
+    /** Running per-advisor forecast record for this run. */
+    advisorCalibration?: Partial<Record<CharacterId, AdvisorRecord>>;
+    /** Years simulated by the session just closed, oldest first — drives the montage. */
+    lastChapterYears?: number[];
+    /** Unlock ids carried in from the player's profile, fixed at run start. */
+    unlockedIds?: string[];
+}
+
+/**
+ * What an advisor's forecasts have been worth, so far.
+ *
+ * The corpus authors some forecasts to be wrong — `AGENTS.md` is explicit that
+ * they are audited rather than generated. Until now that produced a trap with no
+ * counterplay: the player had no way to learn who was unreliable and about what.
+ * This is the record that makes the deception legible, and eventually beatable.
+ */
+export interface AdvisorRecord {
+    /** Forecasts that have reached an observable outcome. */
+    judged: number;
+    right: number;
+    partial: number;
+    wrong: number;
+    /**
+     * Signed drift of this advisor's errors. Positive means they overpromise:
+     * outcomes come in below what they forecast. Negative means they cry wolf.
+     */
+    bias: number;
 }

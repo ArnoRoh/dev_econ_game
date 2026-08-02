@@ -1,0 +1,221 @@
+/*
+ * The crisis session should not look like the cabinet agenda.
+ *
+ * The agenda is a table of business the player chooses among; this is the world
+ * arriving. It reads as a wire dispatch — heavier rule, alarm accent, no card
+ * grid — so that the change of mode is legible before a word is read.
+ */
+
+.crisis-session {
+    max-width: 62rem;
+    margin: 0 auto;
+    padding: 1.5rem 1.25rem 3rem;
+    animation: crisis-arrive 420ms ease-out both;
+}
+
+@keyframes crisis-arrive {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .crisis-session { animation: none; }
+}
+
+.crisis-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0.5rem 0.9rem;
+    border-radius: 4px 4px 0 0;
+    font-family: var(--font-display, inherit);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.78rem;
+    color: #fff;
+    background: #8c2f21;
+}
+
+.crisis-banner--serious { background: #a8451f; }
+.crisis-banner--severe {
+    background: #7d1d13;
+    animation: crisis-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes crisis-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(190, 45, 30, 0.5); }
+    50% { box-shadow: 0 0 0 7px rgba(190, 45, 30, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .crisis-banner--severe { animation: none; }
+}
+
+.crisis-banner__year {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.08em;
+}
+
+.crisis-title {
+    margin: 1rem 0 0.5rem;
+    font-size: clamp(1.9rem, 5vw, 2.9rem);
+    line-height: 1.05;
+    border-bottom: 3px double var(--color-border, #4a4036);
+    padding-bottom: 0.5rem;
+}
+
+.crisis-dispatch {
+    font-size: 1.06rem;
+    line-height: 1.65;
+    margin: 0 0 1.25rem;
+}
+
+.crisis-exposure {
+    border-left: 4px solid #a8451f;
+    background: color-mix(in srgb, #a8451f 8%, transparent);
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.25rem;
+    border-radius: 0 4px 4px 0;
+}
+
+.crisis-exposure--contained { border-left-color: #4b7a4f; background: color-mix(in srgb, #4b7a4f 8%, transparent); }
+.crisis-exposure--severe { border-left-color: #7d1d13; background: color-mix(in srgb, #7d1d13 10%, transparent); }
+.crisis-exposure--unknown { border-left-color: var(--color-border, #4a4036); background: transparent; }
+
+.crisis-exposure__label {
+    display: block;
+    font-size: 0.74rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    margin-bottom: 0.25rem;
+}
+
+.crisis-exposure p { margin: 0; line-height: 1.55; }
+
+.crisis-theory-toggle {
+    background: none;
+    border: 1px solid var(--color-border, #4a4036);
+    border-radius: 3px;
+    padding: 0.4rem 0.8rem;
+    font: inherit;
+    font-size: 0.88rem;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.85;
+}
+
+.crisis-theory-toggle:hover { opacity: 1; }
+
+.crisis-theory {
+    margin: 0.85rem 0 1.25rem;
+    padding: 0.9rem 1.1rem;
+    border: 1px solid var(--color-border, #4a4036);
+    border-radius: 4px;
+    line-height: 1.65;
+}
+
+.crisis-theory p { margin: 0 0 0.8rem; }
+.crisis-theory p:last-of-type { margin-bottom: 0.5rem; }
+
+.crisis-sources {
+    margin: 0;
+    padding-left: 1.1rem;
+    font-size: 0.83rem;
+    opacity: 0.75;
+}
+
+.crisis-instruction {
+    font-style: italic;
+    opacity: 0.8;
+    margin: 1.4rem 0 0.9rem;
+}
+
+.crisis-options {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.crisis-option {
+    border: 1px solid var(--color-border, #4a4036);
+    border-radius: 5px;
+    overflow: hidden;
+    transition: border-color 160ms ease;
+}
+
+.crisis-option--open { border-color: #a8451f; }
+
+.crisis-option__head {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: 0;
+    padding: 0.9rem 1.05rem;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+.crisis-option__head:hover { background: color-mix(in srgb, currentColor 5%, transparent); }
+
+.crisis-option__head h3 {
+    margin: 0 0 0.35rem;
+    font-size: 1.08rem;
+}
+
+.crisis-option__head p {
+    margin: 0;
+    opacity: 0.82;
+    line-height: 1.55;
+    font-size: 0.94rem;
+}
+
+.crisis-option__body {
+    padding: 0 1.05rem 1rem;
+    border-top: 1px dashed var(--color-border, #4a4036);
+}
+
+.crisis-forecasts {
+    list-style: none;
+    margin: 0.85rem 0 1rem;
+    padding: 0;
+    display: grid;
+    gap: 0.7rem;
+}
+
+.crisis-forecasts li {
+    padding-left: 0.8rem;
+    border-left: 2px solid var(--color-border, #4a4036);
+}
+
+.crisis-forecasts strong { font-size: 0.94rem; }
+
+.crisis-forecast__confidence {
+    font-size: 0.72rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    opacity: 0.65;
+    margin-left: 0.5rem;
+}
+
+.crisis-forecasts p {
+    margin: 0.25rem 0 0;
+    line-height: 1.55;
+    font-size: 0.93rem;
+}
+
+.crisis-commit {
+    width: 100%;
+    padding: 0.65rem 1rem;
+    font: inherit;
+    font-size: 0.95rem;
+    cursor: pointer;
+    color: #fff;
+    background: #8c2f21;
+    border: 0;
+    border-radius: 4px;
+    transition: background 160ms ease;
+}
+
+.crisis-commit:hover { background: #a8451f; }

@@ -1,7 +1,56 @@
 import type { SourceCitation } from '../engine/types.ts';
 
-/** Structured sources used by the educational concept cards and policy dossiers. */
+/**
+ * Structured sources used by the educational concept cards and policy dossiers.
+ *
+ * `url` is optional and is left off where a stable identifier could not be
+ * confirmed. An unverified link is worse than none in a work that asks the
+ * player to trust its citations.
+ */
 export const SOURCES = [
+    // The crisis layer (`src/data/crises.ts`) cites this block.
+    {
+        id: 'hamilton_1983_oil_macroeconomy',
+        title: 'Oil and the Macroeconomy since World War II',
+        author: 'James D. Hamilton',
+        year: 1983,
+        publisher: 'Journal of Political Economy',
+        url: 'https://doi.org/10.1086/261140',
+        sourceType: 'paper',
+    },
+    {
+        id: 'krugman_1988_debt_overhang',
+        title: 'Financing vs. Forgiving a Debt Overhang',
+        author: 'Paul Krugman',
+        year: 1988,
+        publisher: 'Journal of Development Economics',
+        url: 'https://doi.org/10.1016/0304-3878(88)90044-2',
+        sourceType: 'paper',
+    },
+    {
+        id: 'calvo_1998_sudden_stops',
+        title: 'Capital Flows and Capital-Market Crises: The Simple Economics of Sudden Stops',
+        author: 'Guillermo A. Calvo',
+        year: 1998,
+        publisher: 'Journal of Applied Economics',
+        sourceType: 'paper',
+    },
+    {
+        id: 'easterly_2005_structural_adjustment',
+        title: 'What did Structural Adjustment Adjust? The Association of Policies and Growth with Repeated IMF and World Bank Adjustment Loans',
+        author: 'William Easterly',
+        year: 2005,
+        publisher: 'Journal of Development Economics',
+        sourceType: 'paper',
+    },
+    {
+        id: 'stiglitz_2002_globalization',
+        title: 'Globalization and Its Discontents',
+        author: 'Joseph E. Stiglitz',
+        year: 2002,
+        publisher: 'W. W. Norton',
+        sourceType: 'book',
+    },
     {
         id: 'besley_1995_property_rights',
         title: 'Property Rights and Investment Incentives: Theory and Evidence from Ghana',

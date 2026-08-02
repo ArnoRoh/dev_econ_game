@@ -1,4 +1,6 @@
 import { ALL_POLICY_PROPOSALS } from '../data/arcs/index.ts';
+import { yearsToChapters } from '../data/chapters.ts';
+import { crisisForChapter } from '../data/crises.ts';
 import { applyCharacterMemory, applyFactionEffects } from './factionLogic.ts';
 import { applyOption } from './gameLogic.ts';
 import { makePromise } from './consequenceLogic.ts';
@@ -13,8 +15,19 @@ import type {
 
 export const AGENDA_ACTIONS_PER_TURN = 2;
 
-/** Years before a recurring matter may return to the agenda. */
-export const RECURRENCE_GAP_TURNS = 14;
+/** With `third_action` unlocked, an experienced cabinet gets one more. */
+export const AGENDA_ACTIONS_UNLOCKED = 3;
+
+/**
+ * Sessions before a recurring matter may return to the agenda.
+ *
+ * This was 14 when a turn was a year. Sessions now cover roughly three years
+ * each, so the same fourteen-year interval is five of them — and left at 14 it
+ * would have meant standing business could recur at most once in a
+ * twenty-five-session campaign, emptying the agenda in the back half exactly as
+ * the original comment warned.
+ */
+export const RECURRENCE_GAP_TURNS = 5;
 
 const getAgendaIds = (state: GameState): string[] => state.agendaProposalIds ?? [];
 const getDecisions = (state: GameState): PolicyDecisionRecord[] => state.policyDecisions ?? [];
@@ -139,10 +152,27 @@ export function startAgendaTurn(
     proposals: PolicyProposal[] = ALL_POLICY_PROPOSALS,
     random: () => number = Math.random,
 ): GameState {
+    // A crisis session has no agenda. The world has already decided what this
+    // cabinet is discussing, and the whole sitting goes to it.
+    const crisis = crisisForChapter(state.turn);
+    if (crisis && !(state.resolvedCrisisIds ?? []).includes(crisis.id)) {
+        return {
+            ...state,
+            agendaProposalIds: [],
+            actionsRemaining: 0,
+            activeCrisisId: crisis.id,
+        };
+    }
+
+    const actions = (state.unlockedIds ?? []).includes('third_action')
+        ? AGENDA_ACTIONS_UNLOCKED
+        : AGENDA_ACTIONS_PER_TURN;
+
     return {
         ...state,
         agendaProposalIds: generateAgenda(proposals, state, random),
-        actionsRemaining: AGENDA_ACTIONS_PER_TURN,
+        actionsRemaining: actions,
+        activeCrisisId: null,
     };
 }
 
@@ -160,7 +190,9 @@ const scheduleConsequences = (
 ): ScheduledConsequence[] => specs.map(spec => ({
     id: `${decisionId}-${spec.id}`,
     sourceDecisionId: decisionId,
-    dueTurn: state.turn + Math.max(1, spec.delayTurns),
+    // Authored delays are in years — the corpus predates multi-year sessions —
+    // so they are converted to sessions here rather than rewritten in `src/data`.
+    dueTurn: state.turn + yearsToChapters(spec.delayTurns),
     spec,
 }));
 
@@ -218,7 +250,7 @@ export function confirmProposal(
             madeTurn: state.turn,
             factionId: promise.factionId,
             description: promise.description,
-            deadlineTurn: state.turn + Math.max(1, promise.deadlineTurns),
+            deadlineTurn: state.turn + yearsToChapters(promise.deadlineTurns),
             completionFlag: promise.completionFlag,
         });
     }

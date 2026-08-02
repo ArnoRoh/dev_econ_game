@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { createInitialState, advanceTurn, buildProject, checkGameOver, deferDevelopmentPlan, issueDevelopmentBonds, remainNonAligned, signDiplomaticPact } from './engine/gameLogic';
+import { createInitialState, buildProject, checkGameOver, deferDevelopmentPlan, issueDevelopmentBonds, remainNonAligned, signDiplomaticPact } from './engine/gameLogic';
 import { calculateLegacyScore } from './engine/missionLogic';
 import {
   confirmProposal,
@@ -7,16 +7,19 @@ import {
   rejectProposal,
   startAgendaTurn,
 } from './engine/agendaLogic';
-import { newspaperForTurn, resolveDueConsequences, resolveDuePromises } from './engine/consequenceLogic';
-import { driftFactions } from './engine/factionLogic';
+import { runChapter } from './engine/chapterLogic';
+import { activeCrisis, resolveCrisis, severityOf } from './engine/crisisLogic';
+import { TOTAL_CHAPTERS, chapterAt, isDevelopmentPlanChapter, isSummitChapter } from './data/chapters';
+import { loadProfile, recordRun, saveProfile } from './metaProgression';
+import type { MetaProfile } from './metaProgression';
+import { CrisisSession } from './components/CrisisSession';
+import { ProfilePanel } from './components/ProfilePanel';
+import { newspaperForTurn } from './engine/consequenceLogic';
 import {
   INVESTMENT_STEP,
-  applyProvincialPressure,
   buildProgramme,
   provinceDeltas,
-  provinceRevenue,
   summariseProvinces,
-  tickProvinces,
 } from './engine/provinceLogic';
 import { ProvinceMap } from './components/ProvinceMap';
 import { answerKnowledgeCheck, headlineMetric, recordConceptExposure, scorePrediction, selectKnowledgeCheck, spendAdvisorInsight, summariseLearning } from './engine/learningLogic';
@@ -148,6 +151,14 @@ function App() {
   /** The menu sits in front of setup so a run is never one stray click away. */
   const [atTitle, setAtTitle] = useState(true);
 
+  /**
+   * What previous runs left behind. Loaded once — the profile only changes when
+   * a run ends, and `handleGameOver` sets it directly at that point.
+   */
+  const [profile, setProfile] = useState<MetaProfile>(() => loadProfile());
+  const [memoryEarned, setMemoryEarned] = useState(0);
+  const [freshUnlocks, setFreshUnlocks] = useState<string[]>([]);
+
   useEffect(() => {
     if (!gameState || gameState.gameOver) return;
     saveRun({ gameState, currentEvent: null, lastOutcome: null, turnPhase });
@@ -161,7 +172,10 @@ function App() {
   const finalizeGameStart = (name: string) => {
     if (!selectedMissionId) return;
     const initial = createInitialState(selectedArtifacts, name, selectedMissionId, DIPLOMATIC_PARTNERS);
-    setGameState(startAgendaTurn(initial, ALL_POLICY_PROPOSALS));
+    // Unlocks are fixed at run start rather than read live, so a threshold
+    // crossed mid-run cannot change the rules of a campaign already in progress.
+    const withProfile: GameState = { ...initial, unlockedIds: profile.unlocked };
+    setGameState(startAgendaTurn(withProfile, ALL_POLICY_PROPOSALS));
     setTurnPhase('agenda');
     setDebriefEntries([]);
     setIgnoredTitles([]);
@@ -196,11 +210,25 @@ function App() {
   const handleGameOver = useCallback((finalState: GameState) => {
     clearSavedRun();
     setHasActiveSave(false);
-    setGameState(finalState);
 
     // Save to Leaderboard
     const mission = NATIONAL_MISSIONS.find(item => item.id === finalState.missionId) ?? NATIONAL_MISSIONS[0];
     const score = calculateLegacyScore(finalState, mission);
+
+    // Resolve the ending before the profile is written, so a run is recorded
+    // under the settlement it actually reached rather than as an unknown.
+    const ending = resolveEnding(buildEndingContext(finalState));
+    const settled: GameState = { ...finalState, endingId: ending.id };
+    setGameState(settled);
+
+    // Fold the run into the persistent profile. This is the only place a run
+    // becomes institutional memory, and it happens whether the republic reached
+    // 2030 or came apart in 1974 — learning from a collapse is still learning.
+    const { profile: nextProfile, earned, newUnlocks } = recordRun(loadProfile(), settled, score.total);
+    saveProfile(nextProfile);
+    setProfile(nextProfile);
+    setMemoryEarned(earned);
+    setFreshUnlocks(newUnlocks);
 
     const entry: LeaderboardEntry = {
       name: finalState.countryName,
@@ -223,38 +251,22 @@ function App() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
   }, []);
 
-  /** Advance the world by one year and open the next cabinet session. */
+  /**
+   * Play out the years this cabinet session bought, then open the next one.
+   *
+   * The per-year sequence lives in `runChapter` so the balance simulations
+   * exercise the same code the game does rather than a reimplementation of it.
+   */
   const runYear = useCallback((fromState: GameState) => {
-    let state = checkGameOver(fromState);
-    if (state.gameOver) {
-      handleGameOver(state);
+    const opening = checkGameOver(fromState);
+    if (opening.gameOver) {
+      handleGameOver(opening);
       return;
     }
 
-    state = advanceTurn(state, DEVELOPMENT_PROJECTS, DIPLOMATIC_PARTNERS);
-    state = driftFactions(state);
-    state = tickProvinces(state);
-    // The provinces' condition presses back on the centre: restive districts and a
-    // widening regional gap cost national stability.
-    state = applyProvincialPressure(state);
+    const result = runChapter(opening, DEVELOPMENT_PROJECTS, DIPLOMATIC_PARTNERS);
+    let state = result.state;
 
-    // The provinces pay into the treasury, and a slice comes back as the
-    // development budget the player allocates across them next year. Routing it
-    // through a separate budget keeps province building from competing directly
-    // with the cabinet's cash, which would make every year a false choice.
-    const fromProvinces = provinceRevenue(state.provinces ?? [], state.country);
-    state = {
-      ...state,
-      treasury: state.treasury + fromProvinces,
-      provinceBudget: Math.round(fromProvinces * 0.6) + 20,
-    };
-
-    // Everything scheduled by earlier decisions lands here, before the player
-    // is asked for anything new.
-    state = resolveDueConsequences(state);
-    state = resolveDuePromises(state);
-
-    state = checkGameOver(state);
     if (state.gameOver) {
       handleGameOver(state);
       return;
@@ -272,6 +284,7 @@ function App() {
     state = startAgendaTurn(state, ALL_POLICY_PROPOSALS);
 
     const crossedInto = state.year;
+    const spanned = result.years;
     setGameState(state);
     setDebriefEntries([]);
     setIgnoredTitles([]);
@@ -289,9 +302,48 @@ function App() {
         window.setTimeout(() => playCue('warn'), 520);
       }
     }
-    setTurnPhase(headlines.length > 0 ? 'newspaper' : 'agenda');
-    setYearTurn({ from: crossedInto - 1, to: crossedInto });
+    // A crisis session goes straight to the emergency once the paper has been
+    // read. There is no agenda to route to — the world set it.
+    const opensOnCrisis = Boolean(state.activeCrisisId);
+    setTurnPhase(headlines.length > 0 ? 'newspaper' : opensOnCrisis ? 'crisis' : 'agenda');
+
+    // The montage covers every year the session bought, so the transition runs
+    // from the year the cabinet last sat to the year it is sitting in now.
+    setYearTurn({ from: spanned[0] ? spanned[0] - 1 : crossedInto - 1, to: crossedInto });
   }, [handleGameOver]);
+
+  /**
+   * Answer a world crisis. This closes the sitting outright — there is no
+   * remaining agenda to work through, so it runs straight into the debrief.
+   */
+  const handleCrisisChoice = (option: EducationalPolicyOption) => {
+    if (!gameState) return;
+    const crisis = activeCrisis(gameState);
+    if (!crisis) return;
+
+    playCue('confirm');
+    let next = resolveCrisis(gameState, crisis, option);
+    next = recordConceptExposure(next, option.conceptIds);
+
+    const decision = (next.policyDecisions ?? [])[(next.policyDecisions ?? []).length - 1];
+    setDebriefEntries([
+      {
+        decisionId: decision?.id ?? crisis.id,
+        proposalTitle: crisis.title,
+        optionText: option.text,
+        sponsorId: decision?.sponsorId ?? 'finance_minister',
+        narrative: option.immediateNarrative,
+        effects: decision?.immediateEffects ?? option.effects,
+        treasuryEffect: decision?.treasuryEffect,
+        factionEffects: option.factionEffects,
+        conceptIds: option.conceptIds,
+        watchFor: option.delayedConsequences.map(consequence => consequence.headline),
+      },
+    ]);
+
+    setGameState(next);
+    setTurnPhase('debrief');
+  };
 
   const handleBuild = (provinceId: string, programmeId: ProgrammeId, cost: number) => {
     if (!gameState) return;
@@ -643,6 +695,13 @@ function App() {
           onRestart={() => { setGameState(null); setLedgerOpen(false); setAtTitle(true); }}
         />
 
+        <ProfilePanel
+          profile={profile}
+          earned={memoryEarned}
+          fresh={freshUnlocks}
+          state={gameState}
+        />
+
         <MissionPanel mission={mission} stats={gameState.country} />
         <Leaderboard />
 
@@ -662,8 +721,17 @@ function App() {
   const state = gameState!;
   const activeMission = NATIONAL_MISSIONS.find(item => item.id === state.missionId) ?? NATIONAL_MISSIONS[0];
   const hasAvailableProject = DEVELOPMENT_PROJECTS.some(project => (state.projectLevels[project.id] ?? 0) < project.maxLevel);
-  const projectDue = state.year % 5 === 0 && state.lastProjectYear !== state.year && hasAvailableProject;
-  const diplomacyDue = state.year >= 1965 && (state.year - 1965) % 10 === 0 && state.lastDiplomacyYear !== state.year;
+  // Cadence is per session, not per year: the sitting years are irregular, and
+  // only four of the twenty-five are divisible by five. These must stay in step
+  // with `buildProject` and `signDiplomaticPact`, which read the same helpers.
+  // The crisis, if the world has intervened in this sitting. Plan and summit
+  // sessions are authored not to collide with crisis sessions, so a milestone
+  // and an emergency can never contend for the same screen.
+  const sessionCrisis = activeCrisis(state);
+  const session = chapterAt(state.turn);
+
+  const projectDue = isDevelopmentPlanChapter(state.turn) && state.lastProjectYear !== state.year && hasAvailableProject;
+  const diplomacyDue = isSummitChapter(state.turn) && state.lastDiplomacyYear !== state.year;
   const milestoneDue = projectDue || diplomacyDue;
 
   const provinceStanding = summariseProvinces(state.provinces ?? []);
@@ -680,6 +748,12 @@ function App() {
         <div className="shell-identity">
           <span className="shell-country">{state.countryName}</span>
           <span className="shell-year">{state.year}</span>
+          {/* Sessions are numbered so the player can see how much campaign is
+              left — twenty-five sittings is a shape you can hold in your head,
+              seventy turns was not. */}
+          <span className="shell-session">
+            Session {session.index}/{TOTAL_CHAPTERS} · {session.title}
+          </span>
         </div>
 
         <div className="shell-meters">
@@ -737,7 +811,16 @@ function App() {
               countryName={state.countryName}
               year={state.year}
               items={headlines}
-              onContinue={() => setTurnPhase('agenda')}
+              onContinue={() => setTurnPhase(sessionCrisis ? 'crisis' : 'agenda')}
+            />
+          )}
+
+          {turnPhase === 'crisis' && sessionCrisis && (
+            <CrisisSession
+              crisis={sessionCrisis}
+              severity={severityOf(sessionCrisis, state)}
+              showSeverity={(state.unlockedIds ?? []).includes('crisis_briefing')}
+              onChoose={handleCrisisChoice}
             />
           )}
 

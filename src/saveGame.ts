@@ -1,8 +1,11 @@
 import type { DecisionOutcome, GameEvent, GameState, TurnPhase } from './engine/types';
 import { createProvinces } from './data/provinces';
+import { chapterIndexForYear } from './data/chapters';
 
 const ACTIVE_RUN_KEY = 'dev_econ_active_run';
 /**
+ * v8 moves the campaign from seventy annual turns to twenty-five multi-year
+ * cabinet sessions, and adds the world, crisis and calibration layers.
  * v7 adds year-over-year change tracking for provinces (`previousProvinces`).
  * v6 adds per-province development programmes (`works`).
  * v5 added the territorial layer and achievements.
@@ -13,7 +16,7 @@ const ACTIVE_RUN_KEY = 'dev_econ_active_run';
  * not a defensible thing to do to a player. Migration chains, so a v4 save is
  * carried through v5 to v6 to v7 rather than needing separate paths.
  */
-const SAVE_VERSION = 7;
+const SAVE_VERSION = 8;
 const MIGRATABLE_FROM = 4;
 
 export interface SavedRun {
@@ -78,12 +81,55 @@ const migrateToV7 = (state: GameState): GameState => ({
     // the year.
 });
 
+/**
+ * v7 -> v8: re-anchor a year-per-turn run onto the session schedule.
+ *
+ * This is the only migration so far that has to *reinterpret* a stored field
+ * rather than add one. `turn` used to count years from 1960 and now counts
+ * cabinet sessions, so a run paused in 1977 has a stored turn of 18 that must
+ * become session 7 — the one that covers 1977 — or the campaign would resume
+ * two decades out of step with its own calendar.
+ *
+ * Everything scheduled against the old counter is re-anchored the same way:
+ * a consequence due at old-turn 22 was due in 1981, so it becomes due in
+ * whichever session covers 1981. Anything already overdue lands on the next
+ * session rather than being silently dropped.
+ */
+const migrateToV8 = (state: GameState): GameState => {
+    const yearOfOldTurn = (oldTurn: number): number => 1959 + oldTurn;
+    const sessionForOldTurn = (oldTurn: number): number =>
+        chapterIndexForYear(yearOfOldTurn(oldTurn));
+
+    const session = chapterIndexForYear(state.year);
+
+    return {
+        ...state,
+        turn: session,
+        resolvedCrisisIds: state.resolvedCrisisIds ?? [],
+        unlockedIds: state.unlockedIds ?? [],
+        scheduledConsequences: (state.scheduledConsequences ?? []).map(consequence => ({
+            ...consequence,
+            dueTurn: Math.max(session + 1, sessionForOldTurn(consequence.dueTurn)),
+        })),
+        promises: (state.promises ?? []).map(promise => ({
+            ...promise,
+            madeTurn: sessionForOldTurn(promise.madeTurn),
+            deadlineTurn: Math.max(session + 1, sessionForOldTurn(promise.deadlineTurn)),
+        })),
+        policyDecisions: (state.policyDecisions ?? []).map(decision => ({
+            ...decision,
+            turn: sessionForOldTurn(decision.turn),
+        })),
+    };
+};
+
 /** Run a stored state forward through every migration newer than its version. */
 const migrate = (state: GameState, from: number): GameState => {
     let next = state;
     if (from < 5) next = migrateToV5(next);
     if (from < 6) next = migrateToV6(next);
     if (from < 7) next = migrateToV7(next);
+    if (from < 8) next = migrateToV8(next);
     return next;
 };
 

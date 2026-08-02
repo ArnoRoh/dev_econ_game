@@ -11,24 +11,18 @@
  * deliberate play cannot reach the 1970s, the loop is unplayable.
  */
 import {
-    advanceTurn,
     checkGameOver,
     createInitialState,
 } from '../src/engine/gameLogic.ts';
+import { runChapter } from '../src/engine/chapterLogic.ts';
+import { activeCrisis, resolveCrisis } from '../src/engine/crisisLogic.ts';
 import {
     confirmProposal,
     ignoreRemainingProposals,
     startAgendaTurn,
 } from '../src/engine/agendaLogic.ts';
-import { driftFactions } from '../src/engine/factionLogic.ts';
-import {
-    applyProvincialPressure,
-    buildProgramme,
-    provinceRevenue,
-    tickProvinces,
-} from '../src/engine/provinceLogic.ts';
+import { buildProgramme } from '../src/engine/provinceLogic.ts';
 import { PROGRAMMES, isProgrammeAvailable } from '../src/data/programmes.ts';
-import { resolveDueConsequences, resolveDuePromises } from '../src/engine/consequenceLogic.ts';
 import { ALL_POLICY_PROPOSALS } from '../src/data/arcs/index.ts';
 import { ARTIFACTS } from '../src/data/artifacts.ts';
 import { DIPLOMATIC_PARTNERS } from '../src/data/diplomacy.ts';
@@ -109,8 +103,15 @@ const PROVINCE_POLICY = {
     firstListed: state => state,
 };
 
-/** Run the whole territorial year: build, tick, collect revenue, feel the pressure. */
-function runProvinceYear(state, strategyName, random) {
+/**
+ * Spend the session's development budget on the map.
+ *
+ * Ticking, pressure and revenue used to live here too; they now run inside
+ * `runChapter`, which is the same code the game uses. All that is left for the
+ * simulation to decide is where the money goes — which is the only part that
+ * was ever a strategy question.
+ */
+function spendProvinceBudget(state, strategyName, random) {
     let next = state;
 
     let guard = 0;
@@ -120,15 +121,7 @@ function runProvinceYear(state, strategyName, random) {
         next = spent;
     }
 
-    next = tickProvinces(next);
-    next = applyProvincialPressure(next);
-
-    const revenue = provinceRevenue(next.provinces ?? [], next.country);
-    return {
-        ...next,
-        treasury: next.treasury + revenue,
-        provinceBudget: Math.round(revenue * 0.6) + 20,
-    };
+    return next;
 }
 
 const STRATEGIES = {
@@ -172,29 +165,44 @@ function runOnce(strategyName, seed) {
     state = startAgendaTurn(state, ALL_POLICY_PROPOSALS, random);
 
     let guard = 0;
-    while (!state.gameOver && guard++ < 200) {
-        const agenda = (state.agendaProposalIds ?? [])
-            .map(id => PROPOSALS_BY_ID.get(id))
-            .filter(Boolean);
+    while (!state.gameOver && guard++ < 60) {
+        const crisis = activeCrisis(state);
 
-        for (const pick of STRATEGIES[strategyName](agenda, state, random)) {
-            if ((state.actionsRemaining ?? 0) <= 0) break;
-            if (!pick?.option) continue;
-            state = confirmProposal(state, pick.proposal, pick.option);
+        if (crisis) {
+            // A crisis takes the whole sitting. Each cabinet answers it the same
+            // way it answers everything else, so the bands still measure the gap
+            // between reading the situation and not.
+            const choice = strategyName === 'deliberate'
+                ? crisis.options.reduce(
+                    (best, option) => (optionScore(option, state) > optionScore(best, state) ? option : best),
+                    crisis.options[0],
+                )
+                : strategyName === 'careless'
+                    ? crisis.options[Math.floor(random() * crisis.options.length)]
+                    : crisis.options[0];
+
+            state = resolveCrisis(state, crisis, choice);
+        } else {
+            const agenda = (state.agendaProposalIds ?? [])
+                .map(id => PROPOSALS_BY_ID.get(id))
+                .filter(Boolean);
+
+            for (const pick of STRATEGIES[strategyName](agenda, state, random)) {
+                if ((state.actionsRemaining ?? 0) <= 0) break;
+                if (!pick?.option) continue;
+                state = confirmProposal(state, pick.proposal, pick.option);
+            }
+
+            state = ignoreRemainingProposals(state, ALL_POLICY_PROPOSALS);
         }
-
-        state = ignoreRemainingProposals(state, ALL_POLICY_PROPOSALS);
 
         state = checkGameOver(state);
         if (state.gameOver) break;
 
-        state = advanceTurn(state, DEVELOPMENT_PROJECTS, DIPLOMATIC_PARTNERS);
-        state = driftFactions(state);
-        state = runProvinceYear(state, strategyName, random);
-        state = resolveDueConsequences(state);
-        state = resolveDuePromises(state);
+        state = spendProvinceBudget(state, strategyName, random);
 
-        state = checkGameOver(state);
+        // The session's years, run through the same orchestrator the game uses.
+        state = runChapter(state, DEVELOPMENT_PROJECTS, DIPLOMATIC_PARTNERS).state;
         if (state.gameOver) break;
 
         state = startAgendaTurn(state, ALL_POLICY_PROPOSALS, random);
