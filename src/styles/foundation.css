@@ -1,0 +1,303 @@
+/**
+ * Visual foundation — "Ministry Print, 1962".
+ *
+ * The game is meant to look like physical matter on a desk in a government
+ * building the year after independence: printed paper, stamped ink, tarnished
+ * brass, worn baize. Flat rectangles of dark grey with gold text read as a
+ * dashboard, not a place, so everything here exists to give surfaces material.
+ *
+ * Everything is CSS and inline SVG. There are no image assets and no font
+ * downloads, because the project is deliberately dependency-light and ships
+ * inside Electron where a missing CDN would simply mean a broken build.
+ *
+ * Load order matters: this file is imported first by src/index.css so that
+ * component styles can use every token below.
+ */
+
+:root {
+    /* --- ink: the dark end. Never pure black — printing black is warm. --- */
+    --ink-900: #0a0b07;
+    --ink-800: #101208;
+    --ink-700: #16180f;
+    --ink-600: #1d1f14;
+    --ink-500: #24261a;
+    --ink-400: #2e3122;
+    --ink-300: #3b3e2c;
+    --ink-200: #4a4d39;
+
+    /* --- paper: the light end. Aged stock, never white. --- */
+    --paper-100: #f6efdc;
+    --paper-200: #e8dfc6;
+    --paper-300: #d5cbae;
+    --paper-400: #b3a988;
+    --paper-500: #8d8570;
+
+    /* --- brass: the accent. Tarnished, not shiny. --- */
+    --brass-100: #f4e2a8;
+    --brass-200: #e2c76b;
+    --brass-300: #d4af37;
+    --brass-400: #a8892c;
+    --brass-500: #6f5b1e;
+
+    /* --- signal colours, chosen to survive a colour-blind read by also
+           differing in lightness, not only hue --- */
+    --oxblood: #b4483f;
+    --oxblood-dim: #7d2f29;
+    --verdigris: #6fa88b;
+    --verdigris-dim: #3f6b58;
+
+    /* --- legacy aliases: every existing component references these --- */
+    --color-bg: var(--ink-800);
+    --color-text: #ddd6c2;
+    --color-primary: var(--brass-300);
+    --color-danger: #e08b7f;
+    --color-success: #8fc9a8;
+
+    /* --- type --- */
+    --font-main: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    /* A stack rather than one family: the first that exists wins, and every
+       fallback is a transitional/old-style serif so the page keeps its period
+       feel on Windows, macOS and Linux alike. */
+    --font-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua',
+        'URW Palladio L', Georgia, 'Times New Roman', serif;
+    /* Headlines and mastheads want condensed, high-contrast type. */
+    --font-display: 'Playfair Display', 'Bodoni MT', 'Didot', 'Hoefler Text',
+        var(--font-serif);
+
+    --type-xs: 0.68rem;
+    --type-sm: 0.78rem;
+    --type-base: 0.88rem;
+    --type-lg: 1.06rem;
+    --type-xl: 1.4rem;
+    --type-2xl: 1.95rem;
+    --type-3xl: 2.7rem;
+
+    /* --- depth. Warm shadows; a cold grey shadow on a warm palette
+           immediately reads as CSS rather than as a lit object. --- */
+    --lift-1: 0 1px 2px rgba(6, 5, 2, 0.4);
+    --lift-2: 0 3px 8px rgba(6, 5, 2, 0.5);
+    --lift-3: 0 8px 22px rgba(6, 5, 2, 0.55);
+    --lift-4: 0 18px 46px rgba(6, 5, 2, 0.62);
+    --glow-brass: 0 0 18px rgba(212, 175, 55, 0.28);
+
+    /* --- motion. One easing for entrances, one for exits, one for weight. --- */
+    --ease-out: cubic-bezier(0.2, 0.8, 0.3, 1);
+    --ease-in: cubic-bezier(0.6, 0, 0.9, 0.4);
+    --ease-press: cubic-bezier(0.35, 1.6, 0.5, 1);
+    --dur-fast: 160ms;
+    --dur-base: 300ms;
+    --dur-slow: 620ms;
+
+    /* --- Fractal-noise tile, used as the grain on every material below.
+           feTurbulence generates it in the browser, so it costs no asset and
+           no network request. `#` must be written %23 inside a url(). --- */
+    --grain-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+    /* Coarser and more directional — reads as paper fibre rather than dust. */
+    --fibre-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.03 0.6' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23f)'/%3E%3C/svg%3E");
+}
+
+/* ---------------------------------------------------------------------------
+   Materials
+   ---------------------------------------------------------------------------
+   Each of these is applied as a pseudo-element overlay rather than a background
+   on the element itself, so a component keeps its own background, gradient and
+   border and simply gains a surface. They are all `pointer-events: none` and
+   aria-invisible by construction.
+   --------------------------------------------------------------------------- */
+
+/* Fine tooth over any dark panel. Subtle on purpose: grain you can consciously
+   see is grain that will look like noise on a bad monitor. */
+.mat-grain {
+    position: relative;
+    isolation: isolate;
+}
+
+.mat-grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background-image: var(--grain-tile);
+    opacity: 0.038;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+/* Aged stock: warm base, uneven tone across the sheet, and a fibre pass. Used
+   for anything that is supposed to be a printed document. */
+.mat-paper {
+    position: relative;
+    isolation: isolate;
+    background-color: var(--paper-200);
+    background-image:
+        radial-gradient(ellipse at 18% 12%, rgba(255, 252, 240, 0.85), transparent 55%),
+        radial-gradient(ellipse at 82% 88%, rgba(170, 150, 106, 0.28), transparent 60%),
+        linear-gradient(168deg, rgba(255, 250, 235, 0.5), rgba(186, 172, 136, 0.32));
+    color: var(--ink-700);
+}
+
+.mat-paper::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background-image: var(--fibre-tile);
+    opacity: 0.07;
+    mix-blend-mode: multiply;
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+/* Worn baize — the cabinet table itself. */
+.mat-baize {
+    position: relative;
+    isolation: isolate;
+    background-color: #1b2419;
+    background-image:
+        radial-gradient(ellipse at 50% 0%, rgba(120, 150, 110, 0.14), transparent 62%),
+        linear-gradient(180deg, rgba(30, 42, 28, 0.9), rgba(12, 18, 12, 0.96));
+}
+
+.mat-baize::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background-image: var(--grain-tile);
+    opacity: 0.09;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+/* Darkening toward the edges. A flat panel with a vignette stops looking like a
+   rectangle and starts looking like something lit from the front. */
+.mat-vignette {
+    position: relative;
+    isolation: isolate;
+}
+
+.mat-vignette::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: radial-gradient(ellipse at 50% 42%, transparent 42%, rgba(6, 6, 3, 0.55) 100%);
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+/* ---------------------------------------------------------------------------
+   Type treatments
+   --------------------------------------------------------------------------- */
+
+/* Struck into the surface rather than sitting on it: a dark shadow above and a
+   light one below reads as debossed under front lighting. */
+.type-letterpress {
+    text-shadow:
+        0 -1px 0 rgba(0, 0, 0, 0.55),
+        0 1px 0 rgba(255, 240, 200, 0.09);
+}
+
+/* Brass with a highlight running across it. `background-clip: text` needs a
+   transparent fill; the solid `color` beneath is the fallback for anything that
+   cannot clip, so the text is never invisible. */
+.type-foil {
+    color: var(--brass-300);
+    background: linear-gradient(
+        100deg,
+        var(--brass-400) 0%,
+        var(--brass-200) 34%,
+        var(--brass-100) 47%,
+        var(--brass-200) 60%,
+        var(--brass-400) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Small caps used as a label: wide tracking, never for running text. */
+.type-eyebrow {
+    font-size: var(--type-xs);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--paper-500);
+}
+
+/* ---------------------------------------------------------------------------
+   Rules and edging
+   --------------------------------------------------------------------------- */
+
+/* A printer's rule: thick, thin, gap. Reads as typesetting rather than a border. */
+.rule-double {
+    border: none;
+    height: 4px;
+    background:
+        linear-gradient(var(--brass-400), var(--brass-400)) top / 100% 2px no-repeat,
+        linear-gradient(var(--brass-500), var(--brass-500)) bottom / 100% 1px no-repeat;
+    opacity: 0.75;
+}
+
+/* Hairline inner highlight along the top edge — the way light catches the lip of
+   a raised object. Applied via box-shadow so it costs no extra element. */
+.edge-lit {
+    box-shadow:
+        inset 0 1px 0 rgba(255, 238, 197, 0.09),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+        var(--lift-2);
+}
+
+/* ---------------------------------------------------------------------------
+   Shared keyframes. Components should reuse these rather than each declaring
+   its own near-identical entrance.
+   --------------------------------------------------------------------------- */
+
+@keyframes rise-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes settle-in {
+    from { opacity: 0; transform: translateY(-14px) rotate(-0.6deg) scale(0.985); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes press-in {
+    from { opacity: 0; transform: scale(1.14); }
+    60% { opacity: 1; }
+    to { opacity: 1; transform: none; }
+}
+
+/* A highlight travelling once across brass. Animates background-position, which
+   is compositor-friendly, rather than moving a pseudo-element. */
+@keyframes foil-sweep {
+    from { background-position: -220% 0; }
+    to { background-position: 220% 0; }
+}
+
+.anim-rise { animation: rise-in var(--dur-base) var(--ease-out) both; }
+.anim-settle { animation: settle-in var(--dur-slow) var(--ease-out) both; }
+.anim-press { animation: press-in var(--dur-base) var(--ease-press) both; }
+
+/* ---------------------------------------------------------------------------
+   Reduced motion. Kept at the end of this file so it wins over everything above.
+   Materials and type treatments are static and deliberately survive: turning off
+   motion should not turn off the art direction.
+   --------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .anim-rise,
+    .anim-settle,
+    .anim-press {
+        animation: none;
+    }
+}
+
+:root[data-reduce-motion="true"] .anim-rise,
+:root[data-reduce-motion="true"] .anim-settle,
+:root[data-reduce-motion="true"] .anim-press {
+    animation: none;
+}

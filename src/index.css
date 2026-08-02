@@ -1,12 +1,7 @@
-:root {
-  --color-bg: #1a1a1a;
-  --color-text: #e0e0e0;
-  --color-primary: #d4af37;
-  --color-danger: #e57373;
-  --color-success: #81c784;
-  --font-main: 'Inter', system-ui, sans-serif;
-  --font-serif: 'Times New Roman', serif;
-}
+/* The palette, type stack, materials and shared keyframes live in the foundation
+   and are imported first so every rule below — and every component stylesheet —
+   can use them. @import must precede all other statements in the file. */
+@import './styles/foundation.css';
 
 body {
   margin: 0;
