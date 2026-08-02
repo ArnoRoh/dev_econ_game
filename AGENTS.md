@@ -1,5 +1,19 @@
 # Repository guidance
 
+## Branch workflow
+
+Active development happens on short-lived `agent/*` and `claude/*` branches, and `main`
+regularly falls behind them. Before starting work, find the most recently updated branch
+and base new work on it instead of `main`:
+
+```sh
+git fetch origin
+git for-each-ref --sort=-committerdate --format='%(committerdate:iso8601) %(refname:short)' refs/remotes/origin
+```
+
+Branch from the top result (skip `gh-pages`, which holds only the built site, not source).
+Only fall back to `main` when no other branch is ahead of it.
+
 ## Project shape
 
 This is a small, client-only economic policy roguelite built with React 19, TypeScript, and Vite. It can run in a browser or inside the Electron shell in `electron/`.
