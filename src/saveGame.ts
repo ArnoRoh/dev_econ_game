@@ -24,7 +24,15 @@ export interface SavedRun {
     turnPhase?: TurnPhase;
 }
 
-export const hasSavedRun = () => localStorage.getItem(ACTIVE_RUN_KEY) !== null;
+/**
+ * Whether there is a run that can actually be resumed.
+ *
+ * This deliberately does the full load rather than checking the key exists. A
+ * stored payload that `loadRun` will refuse — one written by a newer build, or
+ * by a version too old to migrate — would otherwise still put a Continue button
+ * on the title screen, and pressing it lands the player on nothing at all.
+ */
+export const hasSavedRun = () => loadRun() !== null;
 
 export const saveRun = (save: Omit<SavedRun, 'version'>) => {
     const payload: SavedRun = { version: SAVE_VERSION, ...save };

@@ -168,12 +168,13 @@ function App() {
     setIsNaming(false);
   }
 
-  const continueSavedGame = () => {
+  /** Returns false when there was nothing loadable, so callers can stay put. */
+  const continueSavedGame = (): boolean => {
     const saved = loadRun();
     if (!saved) {
       clearSavedRun();
       setHasActiveSave(false);
-      return;
+      return false;
     }
 
     // A save from before the cabinet loop has no agenda; open one so the
@@ -188,6 +189,7 @@ function App() {
     setDebriefEntries([]);
     setIgnoredTitles([]);
     setIsNaming(false);
+    return true;
   };
 
   const handleGameOver = useCallback((finalState: GameState) => {
@@ -582,7 +584,13 @@ function App() {
       <>
       <TitleScreen
         hasActiveSave={hasActiveSave}
-        onContinue={() => { initAudio(); setAtTitle(false); continueSavedGame(); }}
+        onContinue={() => {
+          initAudio();
+          // Only leave the title if the run actually loaded — otherwise the
+          // title is gone, there is no game state, and the player is looking
+          // at an empty screen with no way back.
+          if (continueSavedGame()) setAtTitle(false);
+        }}
         onNewGame={() => { initAudio(); setAtTitle(false); }}
         onOpenAchievements={() => setGalleryOpen(true)}
         version={APP_VERSION}
